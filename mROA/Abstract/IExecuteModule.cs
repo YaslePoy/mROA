@@ -1,6 +1,8 @@
+using mROA.Implementation;
+
 namespace mROA;
 
 public interface IExecuteModule
 {
-    ICommandExecution Execute(int objectId, int commandId, object parameter);
+    ICommandExecution Execute(ICallRequest command);
 }
