@@ -2,10 +2,7 @@ namespace mROA;
 
 public interface ICommandExecution
 {
-    int ExecutionId { get; set; }
-
+    Guid ExecutionId { get; init; }
     int ClientId { get; set; }
     int CommandId { get; set; }
-    
-    void Cancel();
 }
