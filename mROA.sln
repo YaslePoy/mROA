@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA", "mROA\mROA.csproj", "{AE4E93F6-7B91-41FC-9BEA-2C8C2CBE1CB6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA.Test", "mROA.Test\mROA.Test.csproj", "{D0E5760B-BB6E-453A-B396-A972CD94F133}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{AE4E93F6-7B91-41FC-9BEA-2C8C2CBE1CB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE4E93F6-7B91-41FC-9BEA-2C8C2CBE1CB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE4E93F6-7B91-41FC-9BEA-2C8C2CBE1CB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0E5760B-BB6E-453A-B396-A972CD94F133}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0E5760B-BB6E-453A-B396-A972CD94F133}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0E5760B-BB6E-453A-B396-A972CD94F133}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0E5760B-BB6E-453A-B396-A972CD94F133}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

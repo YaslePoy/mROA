@@ -4,9 +4,18 @@ using System.Text.Json.Serialization;
 
 namespace mROA.Implementation;
 
-public class InputModule(IInteractionModule dataSource, IExecuteModule executeModule)
-    : IInputModule
+public class InputModule : IInputModule
 {
+    private readonly IInteractionModule _dataSource;
+    private readonly IExecuteModule _executeModule;
+
+    public InputModule(IInteractionModule dataSource, IExecuteModule executeModule)
+    {
+        _dataSource = dataSource;
+        _executeModule = executeModule;
+        _dataSource.SetMessageHandler(HandleIncomingRequest);
+    }
+
     public void HandleIncomingRequest(int clientId, string command)
     {
         var type = JsonDocument.Parse(command).RootElement.GetProperty("RequestTypeId").GetInt32();
@@ -29,17 +38,24 @@ public class InputModule(IInteractionModule dataSource, IExecuteModule executeMo
                 break;
         }
 
-        var response = executeModule.Execute(request);
-        
-        var texted = JsonSerializer.Serialize(response);
+        request.ClientId = clientId;
+        var response = _executeModule.Execute(request);
+        var texted = string.Empty;
+        if (response is FinalCommandExecution finalCommand)
+        {
+            texted = JsonSerializer.Serialize(finalCommand);
+        }else if (response is AsyncCommandExecution asyncCommand)
+        {
+            texted = JsonSerializer.Serialize(asyncCommand);
+        }
         var binary = Encoding.UTF8.GetBytes(texted);
-        dataSource.SendTo(clientId, binary);
+        _dataSource.SendTo(clientId, binary);
     }
 
     public void PostResponse(ICommandExecution call)
     {
         var texted = JsonSerializer.Serialize(call);
         var binary = Encoding.UTF8.GetBytes(texted);
-        dataSource.SendTo(call.ClientId, binary);
+        _dataSource.SendTo(call.ClientId, binary);
     }
 }
