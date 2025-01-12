@@ -18,27 +18,13 @@ public class JsonSerialisationModule : ISerialisationModule
     
     public void HandleIncomingRequest(int clientId, string command)
     {
-        var type = JsonDocument.Parse(command).RootElement.GetProperty("RequestTypeId").GetInt32();
+        
 
-        ICallRequest? request;
+        HardCallRequest request = JsonSerializer.Deserialize<HardCallRequest>(command);
 
-        switch (type)
-        {
-            case 0:
-                request = JsonSerializer.Deserialize<SingletonCallRequest>(command);
-                break;
-            case 1:
-                request = JsonSerializer.Deserialize<CallRequest>(command);
-                break;
-            case 2:
-                request = JsonSerializer.Deserialize<ParametrizedCallRequest>(command);
-                break;
-            default:
-                request = JsonSerializer.Deserialize<SingletonCallRequest>(command);
-                break;
-        }
+        
 
-        request.ClientId = clientId;
+        request.Client = clientId;
         var response = _executeModule.Execute(request);
         PostResponse(response);
     }

@@ -26,8 +26,8 @@ public class PrepairedExecutionModule : IExecuteModule
         if (currentCommand == null)
             throw new Exception($"Command {command.CommandId} not found");
 
-        var context = command is CallRequest request ? _contextRepo.GetObject(request.ObjectId) : _contextRepo.GetSingleObject(currentCommand.DeclaringType);
-        var parameter = command is ParametrizedCallRequest callRequest ? callRequest.Parameter : null;
+        var context = command.CommandId != -1 ? _contextRepo.GetObject(command.ObjectId) : _contextRepo.GetSingleObject(currentCommand.DeclaringType);
+        var parameter = command.Parameter;
 
         if (currentCommand.ReturnType.BaseType == typeof(Task) && currentCommand.ReturnType.GenericTypeArguments.Length == 1)
         {
@@ -49,16 +49,6 @@ public class PrepairedExecutionModule : IExecuteModule
                 });
             }, token);
             
-            // result.ContinueWith(task =>
-            // {
-            //     var result = task.Result;
-            //     _serialisationModule.PostResponse(new FinalCommandExecution
-            //     {
-            //         ExecutionId = exec.ExecutionId, Result = result, CommandId = command.CommandId,
-            //         ClientId = command.ClientId
-            //     });
-            // }, token);
-
             return exec;
         }
 

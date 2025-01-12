@@ -2,33 +2,36 @@
 
 public interface ICallRequest
 {
-    int RequestTypeId { get; }
-    int CommandId { get; set; }
-    int ClientId { get; set; }
+    int CommandId { get; }
+    int ClientId { get; }
+    public int ObjectId { get; }
+    public object Parameter { get; }
+
+
 }
 
-public class SingletonCallRequest : ICallRequest
-{
-    public virtual int RequestTypeId => (int)RequestType.Singleton;
-    public int CommandId { get; set; }
-    public int ClientId { get; set; }
-}
 
-public class CallRequest : SingletonCallRequest
+public struct HardCallRequest : ICallRequest
 {
-    public override int RequestTypeId => (int)RequestType.NonParametrized;
-    public int ObjectId { get; set; }
-}
-
-public class ParametrizedCallRequest : CallRequest
-{
-    public override int RequestTypeId => (int)RequestType.Parametrized;
+    public int CommandId => Command;
+    public int ClientId => Client;
+    public int ObjectId => Object;
+    
+    public int Command;
+    public int Client;
+    public int Object;
     public object Parameter { get; set; }
-}
 
-enum RequestType
-{
-    Singleton,
-    NonParametrized,
-    Parametrized
 }
+// public class CallRequest : SingletonCallRequest
+// {
+//     public override int RequestTypeId => (int)RequestType.NonParametrized;
+//     public int ObjectId { get; set; }
+// }
+//
+// public class ParametrizedCallRequest : CallRequest
+// {
+//     public override int RequestTypeId => (int)RequestType.Parametrized;
+//     public object Parameter { get; set; }
+// }
+
