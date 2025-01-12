@@ -4,13 +4,13 @@ namespace mROA.Implementation;
 
 public class MethodRepository : IMethodRepository
 {
-    private List<MethodInfo> _methods;
-    
+    private List<MethodInfo> _methods = [];
+
     public MethodInfo GetMethod(int id)
     {
-        if (_methods.Count >= id)
+        if (_methods.Count <= id)
             return null;
-        
+
         return _methods[id];
     }
 
@@ -23,5 +23,15 @@ public class MethodRepository : IMethodRepository
     public IEnumerable<MethodInfo> GetMethods()
     {
         return _methods;
+    }
+
+    public void CollectForAssembly(Assembly assembly)
+    {
+        var types = assembly.GetTypes().Where(i => i.IsInterface && i.GetCustomAttributes(typeof(SharedObjectInterafceAttribute), true).Length > 0);
+        foreach (var type in types)
+        {
+            foreach (var method in type.GetMethods())
+                RegisterMethod(method);
+        }
     }
 }

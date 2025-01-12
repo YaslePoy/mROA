@@ -7,14 +7,14 @@ public interface ICallRequest
     int ClientId { get; set; }
 }
 
-public class StaticCallRequest : ICallRequest
+public class SingletonCallRequest : ICallRequest
 {
-    public virtual int RequestTypeId => (int)RequestType.Static;
+    public virtual int RequestTypeId => (int)RequestType.Singleton;
     public int CommandId { get; set; }
     public int ClientId { get; set; }
 }
 
-public class CallRequest : StaticCallRequest
+public class CallRequest : SingletonCallRequest
 {
     public override int RequestTypeId => (int)RequestType.NonParametrized;
     public int ObjectId { get; set; }
@@ -28,7 +28,7 @@ public class ParametrizedCallRequest : CallRequest
 
 enum RequestType
 {
-    Static,
+    Singleton,
     NonParametrized,
     Parametrized
 }

@@ -4,18 +4,18 @@ using System.Text.Json.Serialization;
 
 namespace mROA.Implementation;
 
-public class InputModule : IInputModule
+public class JsonSerialisationModule : ISerialisationModule
 {
     private readonly IInteractionModule _dataSource;
-    private readonly IExecuteModule _executeModule;
-
-    public InputModule(IInteractionModule dataSource, IExecuteModule executeModule)
+    private IExecuteModule _executeModule;
+    public JsonSerialisationModule(IInteractionModule dataSource)
     {
         _dataSource = dataSource;
-        _executeModule = executeModule;
         _dataSource.SetMessageHandler(HandleIncomingRequest);
     }
 
+    public void SetExecuteModule(IExecuteModule executeModule) => _executeModule = executeModule;
+    
     public void HandleIncomingRequest(int clientId, string command)
     {
         var type = JsonDocument.Parse(command).RootElement.GetProperty("RequestTypeId").GetInt32();
@@ -25,7 +25,7 @@ public class InputModule : IInputModule
         switch (type)
         {
             case 0:
-                request = JsonSerializer.Deserialize<StaticCallRequest>(command);
+                request = JsonSerializer.Deserialize<SingletonCallRequest>(command);
                 break;
             case 1:
                 request = JsonSerializer.Deserialize<CallRequest>(command);
@@ -34,27 +34,25 @@ public class InputModule : IInputModule
                 request = JsonSerializer.Deserialize<ParametrizedCallRequest>(command);
                 break;
             default:
-                request = JsonSerializer.Deserialize<StaticCallRequest>(command);
+                request = JsonSerializer.Deserialize<SingletonCallRequest>(command);
                 break;
         }
 
         request.ClientId = clientId;
         var response = _executeModule.Execute(request);
-        var texted = string.Empty;
-        if (response is FinalCommandExecution finalCommand)
-        {
-            texted = JsonSerializer.Serialize(finalCommand);
-        }else if (response is AsyncCommandExecution asyncCommand)
-        {
-            texted = JsonSerializer.Serialize(asyncCommand);
-        }
-        var binary = Encoding.UTF8.GetBytes(texted);
-        _dataSource.SendTo(clientId, binary);
+        PostResponse(response);
     }
 
     public void PostResponse(ICommandExecution call)
     {
-        var texted = JsonSerializer.Serialize(call);
+        var texted = string.Empty;
+        if (call is FinalCommandExecution finalCommand)
+        {
+            texted = JsonSerializer.Serialize(finalCommand);
+        }else if (call is AsyncCommandExecution asyncCommand)
+        {
+            texted = JsonSerializer.Serialize(asyncCommand);
+        }
         var binary = Encoding.UTF8.GetBytes(texted);
         _dataSource.SendTo(call.ClientId, binary);
     }
