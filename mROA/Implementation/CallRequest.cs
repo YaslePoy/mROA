@@ -4,13 +4,17 @@ public interface ICallRequest
 {
     int CommandId { get; }
     int ClientId { get; }
-    public int ObjectId { get; }
-    public object Parameter { get; }
-
-
+    int ObjectId { get; }
+    object Parameter { get; }
 }
 
-
+public class JsonCallRequest : ICallRequest
+{
+    public int CommandId { get; set; }
+    public int ClientId { get; set; }
+    public int ObjectId { get; set; } = -1;
+    public object Parameter { get; set; }
+}
 public struct HardCallRequest : ICallRequest
 {
     public int CommandId => Command;

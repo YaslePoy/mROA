@@ -20,11 +20,11 @@ public class JsonSerialisationModule : ISerialisationModule
     {
         
 
-        HardCallRequest request = JsonSerializer.Deserialize<HardCallRequest>(command);
+        JsonCallRequest request = JsonSerializer.Deserialize<JsonCallRequest>(command);
 
         
 
-        request.Client = clientId;
+        request.ClientId = clientId;
         var response = _executeModule.Execute(request);
         PostResponse(response);
     }
