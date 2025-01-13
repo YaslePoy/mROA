@@ -41,13 +41,12 @@ public class Tests
                                               "CommandId": 2
                                             }
                                             """);
-        Assert.Pass(sw.ElapsedMilliseconds.ToString());
+        Assert.Pass(_interactionModule.OutputBuffer.Last());
     }
 
     [Test]
     public void CommandPipelineTestAsync()
     {
-        var sw = Stopwatch.StartNew();
         _interactionModule.PassCommand(132, """
                                             {
                                               "RequestTypeId": 0,
@@ -55,8 +54,8 @@ public class Tests
                                             }
                                             """);
         while (_interactionModule.OutputBuffer.Count != 2) ;
-        
-        Assert.Pass(sw.ElapsedMilliseconds.ToString());
+
+        Assert.Pass(_interactionModule.OutputBuffer.Last());
     }
     
     [Test]

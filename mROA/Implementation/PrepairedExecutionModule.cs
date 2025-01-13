@@ -26,7 +26,7 @@ public class PrepairedExecutionModule : IExecuteModule
         if (currentCommand == null)
             throw new Exception($"Command {command.CommandId} not found");
 
-        var context = command.CommandId != -1 ? _contextRepo.GetObject(command.ObjectId) : _contextRepo.GetSingleObject(currentCommand.DeclaringType);
+        var context = command.ObjectId != -1 ? _contextRepo.GetObject(command.ObjectId) : _contextRepo.GetSingleObject(currentCommand.DeclaringType);
         var parameter = command.Parameter;
 
         if (currentCommand.ReturnType.BaseType == typeof(Task) && currentCommand.ReturnType.GenericTypeArguments.Length == 1)

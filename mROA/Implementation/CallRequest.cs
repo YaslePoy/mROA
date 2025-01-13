@@ -10,6 +10,13 @@ public interface ICallRequest
 
 }
 
+public class JsonCallRequest : ICallRequest
+{
+    public int CommandId { get; set; }
+    public int ClientId { get; set; }
+    public int ObjectId { get; set; } = -1;
+    public object Parameter { get; set; }
+}
 
 public struct HardCallRequest : ICallRequest
 {
