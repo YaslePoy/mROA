@@ -6,4 +6,5 @@ public interface IContextRepository
     void ClearObject(int id);
     object GetObject(int id);
     object GetSingleObject(Type type);
+    int GetObjectIndex(object o);
 }

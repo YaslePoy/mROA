@@ -7,9 +7,8 @@ public class ContextRepository : IContextRepository
 {
     private FrozenDictionary<int, object?> _singletons;
     private object[] _storage;
-    private int _lastIndex;
 
-    private Task<int>? _lastIndexFinder;
+    private Task<int>? _lastIndexFinder = Task.FromResult(0);
 
     const int StartupSize = 1024;
     const int GrowSize = 128;
@@ -32,15 +31,13 @@ public class ContextRepository : IContextRepository
     {
         if (_lastIndexFinder is not null)
             _lastIndexFinder.Wait();
+        
+        _storage[_lastIndexFinder.Result] = o;
 
-        var oldIndex = _lastIndex;
-        _lastIndex = _lastIndexFinder.Result;
-
-        _storage[oldIndex] = o;
-
+        var last = _lastIndexFinder.Result;
         _lastIndexFinder = FindLastIndex();
 
-        return _lastIndex;
+        return last;
     }
 
     public void ClearObject(int id)
@@ -57,6 +54,14 @@ public class ContextRepository : IContextRepository
     public object GetSingleObject(Type type)
     {
         return _singletons.TryGetValue(type.GetHashCode(), out var value) ? value : null;
+    }
+
+    public int GetObjectIndex(object o)
+    {
+        var index = Array.IndexOf(_storage, o);
+        if (index == -1)
+            return ResisterObject(o);
+        return index;
     }
 
     private async Task<int> FindLastIndex()

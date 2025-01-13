@@ -12,19 +12,15 @@ public class JsonSerialisationModule : ISerialisationModule
     {
         _dataSource = dataSource;
         _dataSource.SetMessageHandler(HandleIncomingRequest);
-    }
+    } 
 
     public void SetExecuteModule(IExecuteModule executeModule) => _executeModule = executeModule;
     
     public void HandleIncomingRequest(int clientId, string command)
     {
-        
-
         JsonCallRequest request = JsonSerializer.Deserialize<JsonCallRequest>(command);
-
-        
-
         request.ClientId = clientId;
+        
         var response = _executeModule.Execute(request);
         PostResponse(response);
     }
