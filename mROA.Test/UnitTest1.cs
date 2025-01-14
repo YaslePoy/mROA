@@ -21,13 +21,13 @@ public class Tests
     public void Setup()
     {
         _interactionModule = new ProgramlyInteractionChanel();
-        _serialisationModule = new JsonSerialisationModule(_interactionModule);
         var repo = new MethodRepository();
         repo.CollectForAssembly(Assembly.GetExecutingAssembly());
         _methodRepository = repo;
         var repo2 = new ContextRepository();
         repo2.FillSingletons(Assembly.GetExecutingAssembly());
         _contextRepository = repo2;
+        _serialisationModule = new JsonSerialisationModule(_interactionModule, _methodRepository);
 
         _executeModule = new PrepairedExecutionModule(_methodRepository, _serialisationModule, _contextRepository);
         TransmissionConfig.DefaultContextRepository = _contextRepository;
@@ -67,7 +67,7 @@ public class Tests
     {
         var repo = new MethodRepository();
         repo.CollectForAssembly(Assembly.GetExecutingAssembly());
-        Assert.That(repo.GetMethods().ToList().Count == 5);
+        Assert.That(repo.GetMethods().ToList().Count == 8);
     }
 
     [Test]
@@ -99,7 +99,7 @@ public class Tests
 
         var firstFull = JsonDocument.Parse(_interactionModule.OutputBuffer.Last()).RootElement.GetProperty("Result")
             .GetInt32();
-        
+
         _interactionModule.PassCommand(132,
             JsonSerializer.Serialize(new JsonCallRequest { CommandId = 4, ObjectId = response.ContextId }));
 
@@ -108,16 +108,45 @@ public class Tests
                 JsonSerializer.Deserialize<FinalCommandExecution>(_interactionModule.OutputBuffer.Last())
                     ?.Result.ToString()
             );
-        
+
         _interactionModule.PassCommand(132,
             JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId }));
         _interactionModule.PassCommand(132,
             JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId }));
-        
+
         var secondFull = JsonDocument.Parse(_interactionModule.OutputBuffer.Last()).RootElement.GetProperty("Result")
             .GetInt32();
-        
-        Assert.That(firstFull == 456789 && secondFull == 6);
 
+        Assert.That(firstFull == 456789 && secondFull == 6);
+    }
+
+    [Test]
+    public void LinkedObjectsAndParametersTest()
+    {
+        _interactionModule.PassCommand(132, """
+                                            {
+                                              "CommandId": 6
+                                            }
+                                            """);
+        var response =
+            JsonSerializer.Deserialize<TransmittedSharedObject<ITestParameter>>(
+                JsonSerializer.Deserialize<FinalCommandExecution>(_interactionModule.OutputBuffer.Last())
+                    ?.Result.ToString()
+            );
+        var x = response.ContextId;
+        _interactionModule.PassCommand(132,
+            JsonSerializer.Serialize(new JsonCallRequest
+            {
+                CommandId = 5,
+                Parameter = new TestParameter
+                {
+                    A = 10,
+                    LinkedObject = new TransmittedSharedObject<ITestParameter> { ContextId = x }
+                }
+            }));
+        
+        var finalResponse = JsonDocument.Parse(_interactionModule.OutputBuffer.Last()).RootElement.GetProperty("Result").GetInt32();
+        
+        Assert.That(finalResponse, Is.EqualTo(20));
     }
 }

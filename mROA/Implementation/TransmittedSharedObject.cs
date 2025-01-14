@@ -12,7 +12,7 @@ public class TransmittedSharedObject<T>
     public int ContextId { get; set; } = -1;
 
     [JsonIgnore]
-    public T Value { get; set; }
+    public T Value => (T)TransmissionConfig.DefaultContextRepository.GetObject(ContextId);
 
     [JsonIgnore]
     public IContextRepository Context { get; set; }
@@ -20,7 +20,7 @@ public class TransmittedSharedObject<T>
     public static implicit operator T(TransmittedSharedObject<T> value) => value.Value;
 
     public static implicit operator TransmittedSharedObject<T>(T value) =>
-        new() { Value = value, ContextId = TransmissionConfig.DefaultContextRepository.GetObjectIndex(value) };
+        new() { ContextId = TransmissionConfig.DefaultContextRepository.GetObjectIndex(value) };
 
     // public void Fill() => Value = (T)TransmissionConfig.DefaultContextRepository.GetObject(ContextId);
     // public void Collect() => ContextId = TransmissionConfig.DefaultContextRepository.GetObjectIndex(ContextId);

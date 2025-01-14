@@ -8,9 +8,11 @@ public class JsonSerialisationModule : ISerialisationModule
 {
     private readonly IInteractionModule _dataSource;
     private IExecuteModule _executeModule;
-    public JsonSerialisationModule(IInteractionModule dataSource)
+    private IMethodRepository _methodRepository;
+    public JsonSerialisationModule(IInteractionModule dataSource, IMethodRepository methodRepository)
     {
         _dataSource = dataSource;
+        _methodRepository = methodRepository;
         _dataSource.SetMessageHandler(HandleIncomingRequest);
     } 
 
@@ -20,6 +22,12 @@ public class JsonSerialisationModule : ISerialisationModule
     {
         JsonCallRequest request = JsonSerializer.Deserialize<JsonCallRequest>(command);
         request.ClientId = clientId;
+
+        if (request.Parameter is not null)
+        {
+            var parameter = _methodRepository.GetMethod(request.CommandId).GetParameters().First().ParameterType;
+            request.Parameter = (( JsonElement)request.Parameter).Deserialize(parameter);
+        }
         
         var response = _executeModule.Execute(request);
         PostResponse(response);

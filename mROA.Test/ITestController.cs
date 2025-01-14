@@ -9,8 +9,9 @@ public interface ITestController
     Task AAsync(CancellationToken cancellationToken);
     int B();
     Task<int> BAsync(CancellationToken cancellationToken);
-
     TransmittedSharedObject<ITestController> SharedObjectTransmitionTest();
+    int Parametrized(TestParameter parameter);
+    TransmittedSharedObject<ITestParameter> GetTestParameter();
 }
 
 [SharedObjectSingleton]
@@ -41,11 +42,32 @@ public class TestController : ITestController
 
     public TransmittedSharedObject<ITestController> SharedObjectTransmitionTest()
     {
-        return new TransmittionTestController { ReturnIfNotNull = ReturnIfNotNull ?? new TestController() };
+        return new TransmissionTestController { ReturnIfNotNull = ReturnIfNotNull ?? new TestController() };
+    }
+
+    public int Parametrized(TestParameter parameter)
+    {
+        return parameter.A + parameter.LinkedObject.Value.Test;
+    }
+
+    public TransmittedSharedObject<ITestParameter> GetTestParameter()
+    {
+        return new TestParameterInstance();
     }
 }
 
-public class TransmittionTestController : ITestController
+[SharedObjectInterafce]
+public interface ITestParameter
+{
+    public int Test { get; }
+}
+
+public class TestParameterInstance : ITestParameter
+{
+    public int Test => 10;
+}
+
+public class TransmissionTestController : ITestController
 {
     public ITestController ReturnIfNotNull;
 
@@ -72,6 +94,26 @@ public class TransmittionTestController : ITestController
 
     public TransmittedSharedObject<ITestController> SharedObjectTransmitionTest()
     {
+        TransmittedSharedObject<ITestController> x = new TestController();
+        
+        
+        
         return new TestController { ReturnIfNotNull = this };
     }
+
+    public int Parametrized(TestParameter parameter)
+    {
+        return parameter.A * parameter.LinkedObject.Value.Test;
+    }
+
+    public TransmittedSharedObject<ITestParameter> GetTestParameter()
+    {
+        return new TestParameterInstance();
+    }
+}
+
+public class TestParameter
+{
+    public int A { get; set; }
+    public TransmittedSharedObject<ITestParameter> LinkedObject { get; set; }
 }
