@@ -59,11 +59,13 @@ public class PrepairedExecutionModule : IExecuteModule
 
         result.ContinueWith(_ =>
         {
-            _serialisationModule.PostResponse(new FinalCommandExecution
-            {
-                ExecutionId = exec.ExecutionId, Result = null, CommandId = command.CommandId,
-                ClientId = command.ClientId
-            });
+            //_serialisationModule.PostResponse(new FinalCommandExecution
+            //{
+            //    ExecutionId = exec.ExecutionId, Result = null, CommandId = command.CommandId,
+            //    ClientId = command.ClientId
+            //});
+            PostFinalizedCallback(exec, null);
+
         }, token);
 
         return exec;
@@ -82,14 +84,26 @@ public class PrepairedExecutionModule : IExecuteModule
 
         result.ContinueWith(task =>
         {
-            var result = task.GetType().GetProperty("Result").GetValue(task);
-            _serialisationModule.PostResponse(new FinalCommandExecution
-            {
-                ExecutionId = exec.ExecutionId, Result = result, CommandId = command.CommandId,
-                ClientId = command.ClientId
-            });
+            var finalResult = task.GetType().GetProperty("Result").GetValue(task);
+            //_serialisationModule.PostResponse(new FinalCommandExecution
+            //{
+            //    ExecutionId = exec.ExecutionId, Result = result, CommandId = command.CommandId,
+            //    ClientId = command.ClientId
+            //});
+            PostFinalizedCallback(exec, finalResult);
         }, token);
 
         return exec;
+    }
+
+    private void PostFinalizedCallback(ICommandExecution request, object result)
+    {
+        _serialisationModule.PostResponse(new FinalCommandExecution
+        {
+            ExecutionId = request.ExecutionId,
+            Result = request,
+            CommandId = request.CommandId,
+            ClientId = request.ClientId
+        });
     }
 }
