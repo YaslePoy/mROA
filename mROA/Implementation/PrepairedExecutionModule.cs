@@ -8,7 +8,7 @@ public class PrepairedExecutionModule : IExecuteModule
     private readonly ISerialisationModule _serialisationModule;
     private readonly IContextRepository _contextRepo;
     private readonly MethodInfo _resultExtractionMethod;
-    
+
     public PrepairedExecutionModule(IMethodRepository methodRepo,
         ISerialisationModule serialisationModule,
         IContextRepository contextRepo)
@@ -17,7 +17,6 @@ public class PrepairedExecutionModule : IExecuteModule
         _serialisationModule = serialisationModule;
         _contextRepo = contextRepo;
         _serialisationModule.SetExecuteModule(this);
-        
     }
 
     public ICommandExecution Execute(ICallRequest command)
@@ -26,54 +25,71 @@ public class PrepairedExecutionModule : IExecuteModule
         if (currentCommand == null)
             throw new Exception($"Command {command.CommandId} not found");
 
-        var context = command.ObjectId != -1 ? _contextRepo.GetObject(command.ObjectId) : _contextRepo.GetSingleObject(currentCommand.DeclaringType);
+        var context = command.ObjectId != -1
+            ? _contextRepo.GetObject(command.ObjectId)
+            : _contextRepo.GetSingleObject(currentCommand.DeclaringType);
         var parameter = command.Parameter;
 
-        if (currentCommand.ReturnType.BaseType == typeof(Task) && currentCommand.ReturnType.GenericTypeArguments.Length == 1)
-        {
-            var tokenSource = new CancellationTokenSource();
-            var token = tokenSource.Token;
-
-            var result =
-                currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token]) as Task;
-            var exec = new AsyncCommandExecution(tokenSource)
-                { CommandId = command.CommandId, ClientId = command.ClientId };
-            
-            result.ContinueWith(task =>
-            {
-                var result = task.GetType().GetProperty("Result").GetValue(task);
-                _serialisationModule.PostResponse(new FinalCommandExecution
-                {
-                    ExecutionId = exec.ExecutionId, Result = result, CommandId = command.CommandId,
-                    ClientId = command.ClientId
-                });
-            }, token);
-            
-            return exec;
-        }
-
+        if (currentCommand.ReturnType.BaseType == typeof(Task) &&
+            currentCommand.ReturnType.GenericTypeArguments.Length == 1)
+            return TypedExecuteAsync(currentCommand, context, parameter, command);
+        
         if (currentCommand.ReturnType == typeof(Task))
-        {
-            var tokenSource = new CancellationTokenSource();
-            var token = tokenSource.Token;
+            return ExecuteAsync(currentCommand, context, parameter, command);
+        
+        return Execute(currentCommand, context, parameter, command);
+    }
 
-            var result = currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token]) as Task;
-            var exec = new AsyncCommandExecution(tokenSource)
-                { CommandId = command.CommandId, ClientId = command.ClientId };
-
-            result.ContinueWith(_ =>
-            {
-                _serialisationModule.PostResponse(new FinalCommandExecution
-                {
-                    ExecutionId = exec.ExecutionId, Result = null, CommandId = command.CommandId,
-                    ClientId = command.ClientId
-                });
-            }, token);
-
-            return exec;
-        }
-
+    private ICommandExecution Execute(MethodInfo currentCommand, object context, object parameter, ICallRequest request)
+    {
         var finalResult = currentCommand.Invoke(context, parameter is null ? [] : [parameter]);
-        return new FinalCommandExecution { CommandId = command.CommandId, Result = finalResult };
+        return new FinalCommandExecution
+            { CommandId = request.CommandId, Result = finalResult, ClientId = request.ClientId };
+    }
+
+    private ICommandExecution ExecuteAsync(MethodInfo currentCommand, object context, object parameter,
+        ICallRequest command)
+    {
+        var tokenSource = new CancellationTokenSource();
+        var token = tokenSource.Token;
+
+        var result = currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token]) as Task;
+        var exec = new AsyncCommandExecution(tokenSource)
+            { CommandId = command.CommandId, ClientId = command.ClientId };
+
+        result.ContinueWith(_ =>
+        {
+            _serialisationModule.PostResponse(new FinalCommandExecution
+            {
+                ExecutionId = exec.ExecutionId, Result = null, CommandId = command.CommandId,
+                ClientId = command.ClientId
+            });
+        }, token);
+
+        return exec;
+    }
+
+    private ICommandExecution TypedExecuteAsync(MethodInfo currentCommand, object context, object parameter,
+        ICallRequest command)
+    {
+        var tokenSource = new CancellationTokenSource();
+        var token = tokenSource.Token;
+
+        var result =
+            currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token]) as Task;
+        var exec = new AsyncCommandExecution(tokenSource)
+            { CommandId = command.CommandId, ClientId = command.ClientId };
+
+        result.ContinueWith(task =>
+        {
+            var result = task.GetType().GetProperty("Result").GetValue(task);
+            _serialisationModule.PostResponse(new FinalCommandExecution
+            {
+                ExecutionId = exec.ExecutionId, Result = result, CommandId = command.CommandId,
+                ClientId = command.ClientId
+            });
+        }, token);
+
+        return exec;
     }
 }

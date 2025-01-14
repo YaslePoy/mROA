@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("mROA.Performance")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2f1a1e250b1a9c031df21e3ec1087cb18b8fa784")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9128f3f6ee0d3c89e7e0538ac244a133c746e4df")]
 [assembly: System.Reflection.AssemblyProductAttribute("mROA.Performance")]
 [assembly: System.Reflection.AssemblyTitleAttribute("mROA.Performance")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
