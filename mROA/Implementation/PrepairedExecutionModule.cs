@@ -101,7 +101,7 @@ public class PrepairedExecutionModule : IExecuteModule
         _serialisationModule.PostResponse(new FinalCommandExecution
         {
             ExecutionId = request.ExecutionId,
-            Result = request,
+            Result = result,
             CommandId = request.CommandId,
             ClientId = request.ClientId
         });
