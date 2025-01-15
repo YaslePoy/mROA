@@ -29,7 +29,7 @@ public class Tests
         _contextRepository = repo2;
         _serialisationModule = new JsonSerialisationModule(_interactionModule, _methodRepository);
 
-        _executeModule = new PrepairedExecutionModule(_methodRepository, _serialisationModule, _contextRepository);
+        _executeModule = new LaunchReadyExecutionModule(_methodRepository, _serialisationModule, _contextRepository);
         TransmissionConfig.DefaultContextRepository = _contextRepository;
     }
 

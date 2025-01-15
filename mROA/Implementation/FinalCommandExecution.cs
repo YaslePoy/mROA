@@ -1,16 +1,20 @@
-﻿namespace mROA.Implementation;
+﻿using System.Text.Json.Serialization;
+
+namespace mROA.Implementation;
 
 public class FinalCommandExecution : ICommandExecution
 {
-    public Guid ExecutionId { get; init; } = Guid.NewGuid();
+    public Guid CallRequestId { get; init; }
+    [JsonIgnore]
     public int ClientId { get; set; }
+    [JsonIgnore]
     public int CommandId { get; set; }
     public object? Result { get; set; }
 }
 
 public class ExeptionCommandExecution : ICommandExecution
 {
-    public Guid ExecutionId { get; init; } = Guid.NewGuid();
+    public Guid CallRequestId { get; init; }
     public int ClientId { get; set; }
     public int CommandId { get; set; }
     public string Reason { get; set; }
@@ -18,8 +22,10 @@ public class ExeptionCommandExecution : ICommandExecution
 
 public class AsyncCommandExecution : ICommandExecution
 {
-    public Guid ExecutionId { get; init; } = Guid.NewGuid();
+    public Guid CallRequestId { get; init; }
+    [JsonIgnore]
     public int ClientId { get; set; }
+    [JsonIgnore]
     public int CommandId { get; set; }
 
     public void Cancel()

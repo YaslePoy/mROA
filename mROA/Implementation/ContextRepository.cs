@@ -8,7 +8,7 @@ public class ContextRepository : IContextRepository
     private FrozenDictionary<int, object?> _singletons;
     private object[] _storage;
 
-    private Task<int>? _lastIndexFinder = Task.FromResult(0);
+    private Task<int> _lastIndexFinder = Task.FromResult(0);
 
     const int StartupSize = 1024;
     const int GrowSize = 128;
@@ -29,7 +29,7 @@ public class ContextRepository : IContextRepository
 
     public int ResisterObject(object o)
     {
-        if (_lastIndexFinder is not null)
+        if (!_lastIndexFinder.IsCompleted)
             _lastIndexFinder.Wait();
         
         _storage[_lastIndexFinder.Result] = o;
@@ -48,12 +48,12 @@ public class ContextRepository : IContextRepository
 
     public object GetObject(int id)
     {
-        return _storage.Length == -1 || _storage.Length <= id ? null : _storage[id];
+        return id == -1 || _storage.Length <= id ? null : _storage[id];
     }
 
     public object GetSingleObject(Type type)
     {
-        return _singletons.TryGetValue(type.GetHashCode(), out var value) ? value : null;
+        return _singletons.GetValueOrDefault(type.GetHashCode());
     }
 
     public int GetObjectIndex(object o)
