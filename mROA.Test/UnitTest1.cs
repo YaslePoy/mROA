@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using mROA.Implementation;
 using Newtonsoft.Json;
@@ -43,7 +44,7 @@ public class Tests
                                               "RequestTypeId": 0,
                                               "CommandId": 2
                                             }
-                                            """);
+                                            """u8.ToArray());
         Assert.Pass(_interactionModule.OutputBuffer.Last());
     }
 
@@ -56,7 +57,7 @@ public class Tests
                                               "RequestTypeId": 0,
                                               "CommandId": 3
                                             }
-                                            """);
+                                            """u8.ToArray());
         while (_interactionModule.OutputBuffer.Count != 2) ;
 
         Assert.Pass(_interactionModule.OutputBuffer.Last());
@@ -87,21 +88,21 @@ public class Tests
                                             {
                                               "CommandId": 4
                                             }
-                                            """);
+                                            """u8.ToArray());
         var response =
             JsonSerializer.Deserialize<TransmittedSharedObject<IContextRepository>>(
                 JsonSerializer.Deserialize<FinalCommandExecution>(_interactionModule.OutputBuffer.Last())
                     ?.Result.ToString()
             );
 
-        _interactionModule.PassCommand(132,
-            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId }));
+        _interactionModule.PassCommand(132, Encoding.UTF8.GetBytes(
+            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId })));
 
         var firstFull = JsonDocument.Parse(_interactionModule.OutputBuffer.Last()).RootElement.GetProperty("Result")
             .GetInt32();
 
-        _interactionModule.PassCommand(132,
-            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 4, ObjectId = response.ContextId }));
+        _interactionModule.PassCommand(132, Encoding.UTF8.GetBytes(
+            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 4, ObjectId = response.ContextId })));
 
         response =
             JsonSerializer.Deserialize<TransmittedSharedObject<IContextRepository>>(
@@ -109,10 +110,10 @@ public class Tests
                     ?.Result.ToString()
             );
 
-        _interactionModule.PassCommand(132,
-            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId }));
-        _interactionModule.PassCommand(132,
-            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId }));
+        _interactionModule.PassCommand(132, Encoding.UTF8.GetBytes(
+            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId })));
+        _interactionModule.PassCommand(132, Encoding.UTF8.GetBytes(
+            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId })));
 
         var secondFull = JsonDocument.Parse(_interactionModule.OutputBuffer.Last()).RootElement.GetProperty("Result")
             .GetInt32();
@@ -127,14 +128,14 @@ public class Tests
                                             {
                                               "CommandId": 6
                                             }
-                                            """);
+                                            """u8.ToArray());
         var response =
             JsonSerializer.Deserialize<TransmittedSharedObject<ITestParameter>>(
                 JsonSerializer.Deserialize<FinalCommandExecution>(_interactionModule.OutputBuffer.Last())
                     ?.Result.ToString()
             );
         var x = response.ContextId;
-        _interactionModule.PassCommand(132,
+        _interactionModule.PassCommand(132,Encoding.UTF8.GetBytes(
             JsonSerializer.Serialize(new JsonCallRequest
             {
                 CommandId = 5,
@@ -143,7 +144,7 @@ public class Tests
                     A = 10,
                     LinkedObject = new TransmittedSharedObject<ITestParameter> { ContextId = x }
                 }
-            }));
+            })));
         
         var finalResponse = JsonDocument.Parse(_interactionModule.OutputBuffer.Last()).RootElement.GetProperty("Result").GetInt32();
         

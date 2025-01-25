@@ -4,13 +4,12 @@ namespace mROA;
 
 public interface ISerialisationModule
 {
-    void HandleIncomingRequest(int clientId, string command);
+    void HandleIncomingRequest(int clientId, byte[] command);
     void PostResponse(ICommandExecution call);
     void SetExecuteModule(IExecuteModule executeModule);
     public interface IFrontendSerialisationModule
     {
-        void HandlePostedResponse(string response);
+        ICommandExecution GetNextCommandExecution(Guid requestId);
         void PostCallRequest(ICallRequest callRequest);
-        Task<T> GetCommandExecutionResult<T>(Guid callRequestId, CancellationToken cancellationToken);
     }
 }

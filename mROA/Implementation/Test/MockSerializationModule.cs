@@ -2,7 +2,7 @@
 
 public class MockSerializationModule : ISerialisationModule
 {
-    public void HandleIncomingRequest(int clientId, string command)
+    public void HandleIncomingRequest(int clientId, byte[] command)
     {
         
     }

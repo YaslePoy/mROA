@@ -2,12 +2,12 @@
 
 public class ProgramlyInteractionChanel : IInteractionModule
 {
-    public void PassCommand(int clientId, string message) => _handler(clientId, message);
-    private Action<int, string> _handler;
+    public void PassCommand(int clientId, byte[] message) => _handler(clientId, message);
+    private Action<int, byte[]> _handler;
     
     public List<string> OutputBuffer = new List<string>();
     
-    public void SetMessageHandler(Action<int, string> handler)
+    public void SetMessageHandler(Action<int, byte[]> handler)
     {
         _handler = handler;
     }

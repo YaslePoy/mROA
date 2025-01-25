@@ -18,7 +18,7 @@ public class JsonSerialisationModule : ISerialisationModule
 
     public void SetExecuteModule(IExecuteModule executeModule) => _executeModule = executeModule;
     
-    public void HandleIncomingRequest(int clientId, string command)
+    public void HandleIncomingRequest(int clientId, byte[] command)
     {
         JsonCallRequest request = JsonSerializer.Deserialize<JsonCallRequest>(command);
         request.ClientId = clientId;
