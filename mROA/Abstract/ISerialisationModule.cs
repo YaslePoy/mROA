@@ -9,7 +9,7 @@ public interface ISerialisationModule
     void SetExecuteModule(IExecuteModule executeModule);
     public interface IFrontendSerialisationModule
     {
-        ICommandExecution GetNextCommandExecution(Guid requestId);
+        ICommandExecution GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution;
         void PostCallRequest(ICallRequest callRequest);
     }
 }
