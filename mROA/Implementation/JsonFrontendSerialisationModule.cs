@@ -6,7 +6,7 @@ namespace mROA.Implementation;
 public class JsonFrontendSerialisationModule(IInteractionModule.IFrontendInteractionModule interactionModule)
     : ISerialisationModule.IFrontendSerialisationModule
 {
-    public ICommandExecution GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution
+    public T GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution
     {
         var receiveMessage = interactionModule.ReceiveMessage();
         var parsed = JsonSerializer.Deserialize<T>(receiveMessage);

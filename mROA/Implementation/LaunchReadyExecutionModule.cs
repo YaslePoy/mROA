@@ -45,7 +45,7 @@ public class LaunchReadyExecutionModule : IExecuteModule
         var finalResult = currentCommand.Invoke(context, parameter is null ? [] : [parameter]);
         return new FinalCommandExecution
         {
-            CommandId = command.CommandId, Result = finalResult, ClientId = command.ClientId,
+            CommandId = command.CommandId, Result = finalResult,
             CallRequestId = command.CallRequestId
         };
     }
@@ -58,7 +58,7 @@ public class LaunchReadyExecutionModule : IExecuteModule
 
         var result = (Task)currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token])!;
         var exec = new AsyncCommandExecution(tokenSource)
-            { CommandId = command.CommandId, ClientId = command.ClientId, CallRequestId = command.CallRequestId };
+            { CommandId = command.CommandId, CallRequestId = command.CallRequestId };
 
         result.ContinueWith(_ => { PostFinalizedCallback(exec, null); }, token);
 
@@ -74,7 +74,7 @@ public class LaunchReadyExecutionModule : IExecuteModule
         var result =
             (Task)currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token])!;
         var exec = new AsyncCommandExecution(tokenSource)
-            { CommandId = command.CommandId, ClientId = command.ClientId, CallRequestId = command.CallRequestId };
+            { CommandId = command.CommandId, CallRequestId = command.CallRequestId };
 
         result.ContinueWith(task =>
         {

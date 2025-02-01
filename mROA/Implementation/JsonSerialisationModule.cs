@@ -21,7 +21,6 @@ public class JsonSerialisationModule : ISerialisationModule
     public void HandleIncomingRequest(int clientId, byte[] command)
     {
         JsonCallRequest request = JsonSerializer.Deserialize<JsonCallRequest>(command);
-        request.ClientId = clientId;
 
         if (request.Parameter is not null)
         {
@@ -30,6 +29,7 @@ public class JsonSerialisationModule : ISerialisationModule
         }
         
         var response = _executeModule.Execute(request);
+        response.ClientId = clientId;
         PostResponse(response);
     }
 
