@@ -6,7 +6,7 @@ public class ConsoleFrontendInteractionModule : IInteractionModule.IFrontendInte
 {
     public byte[] ReceiveMessage()
     {
-        
+        return [];
     }
 
     public void PostMessage(byte[] message)
