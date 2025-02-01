@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using System.Windows.Input;
 
 namespace mROA.Implementation;
 
@@ -11,6 +10,11 @@ public class JsonFrontendSerialisationModule(IInteractionModule.IFrontendInterac
     {
         var receiveMessage = interactionModule.ReceiveMessage();
         var parsed = JsonSerializer.Deserialize<T>(receiveMessage);
+        while (parsed.CallRequestId != requestId)
+        {
+            receiveMessage = interactionModule.ReceiveMessage();
+            parsed = JsonSerializer.Deserialize<T>(receiveMessage);
+        }
         return parsed;
     }
 
