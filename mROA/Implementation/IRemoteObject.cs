@@ -2,5 +2,5 @@
 
 public interface IRemoteObject
 {
-    internal int Id { get; }
+    public int Id { get; }
 }

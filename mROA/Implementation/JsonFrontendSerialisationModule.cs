@@ -6,13 +6,13 @@ namespace mROA.Implementation;
 public class JsonFrontendSerialisationModule(IInteractionModule.IFrontendInteractionModule interactionModule)
     : ISerialisationModule.IFrontendSerialisationModule
 {
-    public T GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution
+    public async Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution
     {
-        var receiveMessage = interactionModule.ReceiveMessage();
+        var receiveMessage = await interactionModule.ReceiveMessage();
         var parsed = JsonSerializer.Deserialize<T>(receiveMessage);
         while (parsed.CallRequestId != requestId)
         {
-            receiveMessage = interactionModule.ReceiveMessage();
+            receiveMessage = await interactionModule.ReceiveMessage();
             parsed = JsonSerializer.Deserialize<T>(receiveMessage);
         }
         return parsed;

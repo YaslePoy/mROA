@@ -52,7 +52,7 @@ public class StreamTest
         
         var req = new JsonCallRequest { CommandId = 1, ObjectId = -1 };
         _frontendSerialisationModule.PostCallRequest(req);
-        var res = ((JsonElement)_frontendSerialisationModule.GetNextCommandExecution<FinalCommandExecution>(req.CallRequestId).Result).Deserialize<MockResult>();
+        var res = ((JsonElement)_frontendSerialisationModule.GetNextCommandExecution<FinalCommandExecution>(req.CallRequestId).GetAwaiter().GetResult().Result!).Deserialize<MockResult>();
         isTestNotFinished = false;
         Assert.That(res.A == "wqer" && res.B == 5);
     }

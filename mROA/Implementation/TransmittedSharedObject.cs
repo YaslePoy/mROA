@@ -21,4 +21,5 @@ public class TransmittedSharedObject<T>
 
     public static implicit operator TransmittedSharedObject<T>(T value) =>
         new() { ContextId = TransmissionConfig.DefaultContextRepository.GetObjectIndex(value) };
+
 }

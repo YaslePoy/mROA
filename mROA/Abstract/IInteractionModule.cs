@@ -6,7 +6,7 @@ public interface IInteractionModule
     void SendTo(int clientId, byte[] message);
     public interface IFrontendInteractionModule
     {
-        public byte[] ReceiveMessage();
+        public Task<byte[]> ReceiveMessage();
         public void PostMessage(byte[] message);
     }
 }

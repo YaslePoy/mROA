@@ -4,16 +4,16 @@ public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontend
 {
     public Stream ServerStream { get; set; }
 
-    public byte[] ReceiveMessage()
+    public async Task<byte[]> ReceiveMessage()
     {
         const int bufferSize = ushort.MaxValue;
 
         byte[] buffer = new byte[bufferSize];
         if (!ServerStream.CanRead) throw new IOException("Server is not connected.");
 
-        ServerStream.ReadExactly(buffer, 0, 2);
+        await ServerStream.ReadExactlyAsync(buffer, 0, 2);
         var len = BitConverter.ToUInt16(buffer, 0);
-        ServerStream.ReadExactly(buffer, 0, len);
+        await ServerStream.ReadExactlyAsync(buffer, 0, len);
 
         return buffer[..len];
     }
