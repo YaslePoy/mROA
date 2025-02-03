@@ -4,14 +4,14 @@ public class StreamBasedInteractionModule : IInteractionModule
 {
     private Dictionary<int, Stream> _streams = new();
     private Action<int, byte[]> _handler;
-    
+
     public void RegisterClient(Stream stream)
     {
         var id = Random.Shared.Next();
         _streams.Add(id, stream);
         ListenTo((id, stream), _handler);
     }
-    
+
     public void SetMessageHandler(Action<int, byte[]> handler)
     {
         _handler = handler;
@@ -26,7 +26,6 @@ public class StreamBasedInteractionModule : IInteractionModule
 
         stream.Write(BitConverter.GetBytes((ushort)message.Length), 0, sizeof(ushort));
         stream.Write(message, 0, message.Length);
-        
     }
 
     private async Task ListenTo((int id, Stream stream) client, Action<int, byte[]> action)
@@ -40,15 +39,13 @@ public class StreamBasedInteractionModule : IInteractionModule
                 await client.stream.ReadExactlyAsync(buffer, 0, 2);
                 var len = BitConverter.ToUInt16(buffer, 0);
                 await client.stream.ReadExactlyAsync(buffer, 0, len);
-                
-                action(client.id, buffer[..len]);
+                Task.Run(() => action(client.id, buffer[..len]));
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
             Console.WriteLine($"Client handling finished:{client.id}");
             _streams.Remove(client.id);
         }
-  
     }
 }

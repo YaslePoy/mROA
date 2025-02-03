@@ -117,3 +117,48 @@ public class TestParameter
     public int A { get; set; }
     public TransmittedSharedObject<ITestParameter> LinkedObject { get; set; }
 }
+
+public class TestControllerRemoteEndoint : ITestController, IRemoteObject
+{
+    public TestControllerRemoteEndoint(int id)
+    {
+        _id = id;
+    }
+    public void A()
+    {
+        
+    }
+
+    public Task AAsync(CancellationToken cancellationToken)
+    {
+        
+    }
+
+    public int B()
+    {
+        
+    }
+
+    public Task<int> BAsync(CancellationToken cancellationToken)
+    {
+        
+    }
+
+    public TransmittedSharedObject<ITestController> SharedObjectTransmitionTest()
+    {
+        
+    }
+
+    public int Parametrized(TestParameter parameter)
+    {
+        
+    }
+
+    public TransmittedSharedObject<ITestParameter> GetTestParameter()
+    {
+        
+    }
+
+    private int _id;
+    public int Id => _id;
+}

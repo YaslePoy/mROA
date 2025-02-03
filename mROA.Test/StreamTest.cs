@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Text.Json;
 using mROA.Implementation;
 using mROA.Implementation.Test;
 
@@ -12,6 +13,7 @@ public class StreamTest
     private JsonFrontendSerialisationModule _frontendSerialisationModule;
     private ISerialisationModule _serialisationModule;
     private IExecuteModule _executeModule;
+    bool isTestNotFinished = true;
 
     [SetUp]
     public void Setup()
@@ -25,12 +27,7 @@ public class StreamTest
 
         _frontendInteractionModule = new StreamBasedFrontendInteractionModule();
         _frontendSerialisationModule = new JsonFrontendSerialisationModule(_frontendInteractionModule);
-    }
-
-    [Test]
-    public void StreamingTest()
-    {
-        bool isTestNotFinished = true;
+        
         Task.Run(() =>
         {
             TcpListener listener = new TcpListener(IPAddress.Loopback, 4567);
@@ -44,13 +41,26 @@ public class StreamTest
 
             while (isTestNotFinished) ;
         });
+    }
+
+    [Test]
+    public void StreamingTest()
+    {
         var tcpClient = new TcpClient();
         tcpClient.Connect(IPAddress.Loopback, 4567);
         _frontendInteractionModule.ServerStream = tcpClient.GetStream();
         
         var req = new JsonCallRequest { CommandId = 1, ObjectId = -1 };
         _frontendSerialisationModule.PostCallRequest(req);
-        var res =_frontendSerialisationModule.GetNextCommandExecution<FinalCommandExecution>(req.CallRequestId).Result;
+        var res = ((JsonElement)_frontendSerialisationModule.GetNextCommandExecution<FinalCommandExecution>(req.CallRequestId).Result).Deserialize<MockResult>();
         isTestNotFinished = false;
+        Assert.That(res.A == "wqer" && res.B == 5);
     }
+
+    [Test]
+    public void RemoteObjectTest()
+    {
+        
+    }
+    
 }

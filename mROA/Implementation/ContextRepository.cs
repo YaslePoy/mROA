@@ -24,14 +24,18 @@ public class ContextRepository : IContextRepository
         var types = assembly.GetTypes().Where(type =>
             type is { IsClass: true, IsAbstract: false, IsGenericType: false } &&
             type.GetCustomAttributes(typeof(SharedObjectSingletonAttribute), true).Length > 0);
-        _singletons = types.ToFrozenDictionary(t => t.GetInterfaces().FirstOrDefault(i => i.GetCustomAttributes(typeof(SharedObjectInterafceAttribute), true).Length > 0)!.GetHashCode(), Activator.CreateInstance);
+        _singletons =
+            types.ToFrozenDictionary(
+                t => t.GetInterfaces().FirstOrDefault(i =>
+                    i.GetCustomAttributes(typeof(SharedObjectInterafceAttribute), true).Length > 0)!.GetHashCode(),
+                Activator.CreateInstance);
     }
 
     public int ResisterObject(object o)
     {
         if (!_lastIndexFinder.IsCompleted)
             _lastIndexFinder.Wait();
-        
+
         _storage[_lastIndexFinder.Result] = o;
 
         var last = _lastIndexFinder.Result;
@@ -46,14 +50,19 @@ public class ContextRepository : IContextRepository
         _lastIndexFinder = Task.FromResult(id);
     }
 
-    public object GetObject(int id)
+    public object? GetObject(int id)
     {
         return id == -1 || _storage.Length <= id ? null : _storage[id];
     }
 
+    public T GetObject<T>(int id)
+    {
+        return id == -1 || _storage.Length <= id ? throw new NullReferenceException("Cannot find that object. It is null"): (T)_storage[id];
+    }
+
     public object GetSingleObject(Type type)
     {
-        return _singletons.GetValueOrDefault(type.GetHashCode());
+        return _singletons.GetValueOrDefault(type.GetHashCode()) ?? throw new ArgumentException("Unregistered singleton type");
     }
 
     public int GetObjectIndex(object o)
