@@ -2,7 +2,7 @@
 
 namespace mROA.Example;
 
-[SharedObjectInterafce]
+[SharedObjectInterface]
 public interface ITestController
 {
     void A();

@@ -2,7 +2,7 @@ using mROA.Implementation;
 
 namespace mROA.Example;
 
-[SharedObjectInterafce]
+[SharedObjectInterface]
 public interface ITestParameter
 {
     public int Test();

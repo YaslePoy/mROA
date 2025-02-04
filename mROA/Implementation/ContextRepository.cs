@@ -27,7 +27,7 @@ public class ContextRepository : IContextRepository
         _singletons =
             types.ToFrozenDictionary(
                 t => t.GetInterfaces().FirstOrDefault(i =>
-                    i.GetCustomAttributes(typeof(SharedObjectInterafceAttribute), true).Length > 0)!.GetHashCode(),
+                    i.GetCustomAttributes(typeof(SharedObjectInterfaceAttribute), true).Length > 0)!.GetHashCode(),
                 Activator.CreateInstance);
     }
 

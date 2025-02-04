@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("mROA.Test")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1888db3522e2880c8ef7146ee78cc413905212c4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d732510a9fde122ff874ca08ed8c0f85b5fe6c02")]
 [assembly: System.Reflection.AssemblyProductAttribute("mROA.Test")]
 [assembly: System.Reflection.AssemblyTitleAttribute("mROA.Test")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

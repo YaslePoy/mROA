@@ -27,7 +27,7 @@ public class MethodRepository : IMethodRepository
 
     public void CollectForAssembly(Assembly assembly)
     {
-        var types = assembly.GetTypes().Where(i => i.IsInterface && i.GetCustomAttributes(typeof(SharedObjectInterafceAttribute), true).Length > 0);
+        var types = assembly.GetTypes().Where(i => i.IsInterface && i.GetCustomAttributes(typeof(SharedObjectInterfaceAttribute), true).Length > 0);
         foreach (var type in types)
         {
             foreach (var method in type.GetMethods())
