@@ -35,10 +35,6 @@ public class FrontendFinalTest
 
         _frontendInteractionModule = new StreamBasedFrontendInteractionModule();
         _frontendSerialisationModule = new JsonFrontendSerialisationModule(_frontendInteractionModule);
-        _frontendContextRepository = new FrontendContextRepository(new Dictionary<Type, Type> {
-            { typeof(ITestController), typeof(TestControllerRemoteEndpoint) },
-            {typeof(ITestParameter), typeof(TestParameterRemoteEndpoint)}
-        }, _frontendSerialisationModule);
 
         Task.Run(() =>
         {
