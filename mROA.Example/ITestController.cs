@@ -12,4 +12,5 @@ public interface ITestController
     TransmittedSharedObject<ITestController> SharedObjectTransmitionTest();
     int Parametrized(TestParameter parameter);
     TransmittedSharedObject<ITestParameter> GetTestParameter();
+    string Alphabet();
 }

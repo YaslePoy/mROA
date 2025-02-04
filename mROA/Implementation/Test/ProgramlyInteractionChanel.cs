@@ -17,4 +17,9 @@ public class ProgramlyInteractionChanel : IInteractionModule
         Console.WriteLine("{0}: {1}", clientId, System.Text.Encoding.UTF8.GetString(message));
         OutputBuffer.Add(System.Text.Encoding.UTF8.GetString(message));
     }
+
+    public void RegisterSourse(Stream stream)
+    {
+        throw new NotImplementedException();
+    }
 }

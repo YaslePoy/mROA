@@ -37,7 +37,7 @@ public class StreamTest
 
             Console.WriteLine("Client connected");
 
-            _interactionModule.RegisterClient(stream);
+            _interactionModule.RegisterSourse(stream);
 
             while (isTestNotFinished) ;
         });

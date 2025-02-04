@@ -44,4 +44,9 @@ public class TransmissionTestController : ITestController
     {
         return new TestParameterInstance();
     }
+
+    public string Alphabet()
+    {
+        return "ABCDEFGHIJKLMNOPQRSTUVWXYZ".Reverse().ToString();
+    }
 }

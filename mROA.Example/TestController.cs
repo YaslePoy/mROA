@@ -44,4 +44,9 @@ public class TestController : ITestController
     {
         return new TestParameterInstance();
     }
+
+    public string Alphabet()
+    {
+        return "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    }
 }

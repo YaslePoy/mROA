@@ -32,7 +32,6 @@ public class FrontendFinalTest
         _serialisationModule = new JsonSerialisationModule(_interactionModule, _methodRepository);
 
         _executeModule = new LaunchReadyExecutionModule(_methodRepository, _serialisationModule, _contextRepository);
-        TransmissionConfig.BackendRepository = _contextRepository;
 
         _frontendInteractionModule = new StreamBasedFrontendInteractionModule();
         _frontendSerialisationModule = new JsonFrontendSerialisationModule(_frontendInteractionModule);
@@ -40,9 +39,7 @@ public class FrontendFinalTest
             { typeof(ITestController), typeof(TestControllerRemoteEndpoint) },
             {typeof(ITestParameter), typeof(TestParameterRemoteEndpoint)}
         }, _frontendSerialisationModule);
-        TransmissionConfig.FrontendRepository = _frontendContextRepository;
-        TransmissionConfig.SetupBackendRepository();
-        
+
         Task.Run(() =>
         {
             TcpListener listener = new TcpListener(IPAddress.Loopback, 4567);
@@ -52,7 +49,7 @@ public class FrontendFinalTest
 
             Console.WriteLine("Client connected");
 
-            _interactionModule.RegisterClient(stream);
+            _interactionModule.RegisterSourse(stream);
 
             while (isTestNotFinished) ;
         });
