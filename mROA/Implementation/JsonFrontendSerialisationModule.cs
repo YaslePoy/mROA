@@ -18,6 +18,19 @@ public class JsonFrontendSerialisationModule(IInteractionModule.IFrontendInterac
         return parsed;
     }
 
+    public async Task<FinalCommandExecution> GetFinalCommandExecution<T>(Guid requestId)
+    {
+        var receiveMessage = await interactionModule.ReceiveMessage();
+        var parsed = JsonSerializer.Deserialize<FinalCommandExecution>(receiveMessage);
+        while (parsed.CallRequestId != requestId)
+        {
+            receiveMessage = await interactionModule.ReceiveMessage();
+            parsed = JsonSerializer.Deserialize<FinalCommandExecution>(receiveMessage);
+        }
+        parsed.Result = parsed.Result! is JsonElement e ? e.Deserialize<T>() : (T)parsed.Result!;
+        return parsed;
+    }
+
     public void PostCallRequest(ICallRequest callRequest)
     {
         var post = JsonSerializer.Serialize(callRequest, callRequest.GetType());

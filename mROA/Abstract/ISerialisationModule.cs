@@ -10,6 +10,8 @@ public interface ISerialisationModule
     public interface IFrontendSerialisationModule
     {
         Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution;
+        Task<FinalCommandExecution> GetFinalCommandExecution<T>(Guid requestId);
+        
         void PostCallRequest(ICallRequest callRequest);
     }
 }

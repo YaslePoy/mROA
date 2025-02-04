@@ -1,122 +1,7 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using mROA.Implementation;
 
-namespace mROA.Test;
-
-[SharedObjectInterafce]
-public interface ITestController
-{
-    void A();
-    Task AAsync(CancellationToken cancellationToken);
-    int B();
-    Task<int> BAsync(CancellationToken cancellationToken);
-    TransmittedSharedObject<ITestController> SharedObjectTransmitionTest();
-    int Parametrized(TestParameter parameter);
-    TransmittedSharedObject<ITestParameter> GetTestParameter();
-}
-
-[SharedObjectSingleton]
-public class TestController : ITestController
-{
-    public ITestController? ReturnIfNotNull;
-    private int _bOut = 5;
-
-    public void A()
-    {
-        Console.WriteLine("A called");
-    }
-
-    public Task AAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    public int B()
-    {
-        return _bOut++;
-    }
-
-    public Task<int> BAsync(CancellationToken cancellationToken)
-    {
-        return Task.FromResult(5);
-    }
-
-    public TransmittedSharedObject<ITestController> SharedObjectTransmitionTest()
-    {
-        return new TransmissionTestController { ReturnIfNotNull = ReturnIfNotNull ?? new TestController() };
-    }
-
-    public int Parametrized(TestParameter parameter)
-    {
-        return parameter.A + parameter.LinkedObject.Value.Test();
-    }
-
-    public TransmittedSharedObject<ITestParameter> GetTestParameter()
-    {
-        return new TestParameterInstance();
-    }
-}
-
-[SharedObjectInterafce]
-public interface ITestParameter
-{
-    public int Test();
-}
-
-public class TestParameterInstance : ITestParameter
-{
-    public int Test() => 10;
-}
-
-public class TransmissionTestController : ITestController
-{
-    public ITestController ReturnIfNotNull;
-
-    public void A()
-    {
-        Console.WriteLine("A called alternative");
-    }
-
-    public Task AAsync(CancellationToken cancellationToken)
-    {
-        Thread.Sleep(500);
-        return Task.CompletedTask;
-    }
-
-    public int B()
-    {
-        return 456789;
-    }
-
-    public Task<int> BAsync(CancellationToken cancellationToken)
-    {
-        return Task.FromResult(465789);
-    }
-
-    public TransmittedSharedObject<ITestController> SharedObjectTransmitionTest()
-    {
-        TransmittedSharedObject<ITestController> x = new TestController();
-
-
-        return new TestController { ReturnIfNotNull = this };
-    }
-
-    public int Parametrized(TestParameter parameter)
-    {
-        return parameter.A * parameter.LinkedObject.Value.Test();
-    }
-
-    public TransmittedSharedObject<ITestParameter> GetTestParameter()
-    {
-        return new TestParameterInstance();
-    }
-}
-
-public class TestParameter
-{
-    public int A { get; set; }
-    public TransmittedSharedObject<ITestParameter> LinkedObject { get; set; }
-}
+namespace mROA.Example;
 
 public class TestControllerRemoteEndpoint(int id, ISerialisationModule.IFrontendSerialisationModule serialisationModule)
     : ITestController, IRemoteObject
@@ -193,22 +78,6 @@ public class TestControllerRemoteEndpoint(int id, ISerialisationModule.IFrontend
             .GetAwaiter().GetResult();
         TransmissionConfig.SetupFrontendRepository();
         var convertation = response.Result! is JsonElement e ? e.Deserialize<TransmittedSharedObject<ITestParameter>>() : (TransmittedSharedObject<ITestParameter>)response.Result!;
-        return convertation;
-    }
-
-    public int Id => id;
-}
-
-public class TestParameterRemoteEndpoint(int id, ISerialisationModule.IFrontendSerialisationModule serialisationModule) : ITestParameter, IRemoteObject{
-    public int Test()
-    {
-        var request = new JsonCallRequest { CommandId = 7, ObjectId = id };
-        serialisationModule.PostCallRequest(request);
-        var response = serialisationModule.GetNextCommandExecution<FinalCommandExecution>(request.CallRequestId)
-            .GetAwaiter().GetResult();
-        TransmissionConfig.SetupFrontendRepository();
-        var convertation = response.Result! is JsonElement e ? e.Deserialize<int>() : (int)response.Result!;
-        TransmissionConfig.SetupBackendRepository();
         return convertation;
     }
 

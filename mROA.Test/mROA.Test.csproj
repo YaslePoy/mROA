@@ -27,6 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\mROA.Example\mROA.Example.csproj" />
       <ProjectReference Include="..\mROA\mROA.csproj" />
     </ItemGroup>
 
