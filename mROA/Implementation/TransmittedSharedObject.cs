@@ -5,6 +5,17 @@ namespace mROA.Implementation;
 public static class TransmissionConfig
 {
     public static IContextRepository DefaultContextRepository { get; set; }
+    public static IContextRepository BackendRepository { get; set; }
+    public static IContextRepository FrontendRepository { get; set; }
+
+    public static void SetupBackendRepository()
+    {
+        DefaultContextRepository = BackendRepository;
+    }
+    public static void SetupFrontendRepository()
+    {
+        DefaultContextRepository = FrontendRepository;
+    }
 }
 
 public class TransmittedSharedObject<T>
@@ -17,9 +28,16 @@ public class TransmittedSharedObject<T>
     [JsonIgnore]
     public IContextRepository Context { get; set; }
 
+    public TransmittedSharedObject()
+    {
+    }
+    public TransmittedSharedObject(T value)
+    {
+        ContextId = TransmissionConfig.DefaultContextRepository.GetObjectIndex(value);
+    }
+
     public static implicit operator T(TransmittedSharedObject<T> value) => value.Value!;
 
     public static implicit operator TransmittedSharedObject<T>(T value) =>
         new() { ContextId = TransmissionConfig.DefaultContextRepository.GetObjectIndex(value) };
-
 }

@@ -1,4 +1,5 @@
-﻿using mROA.Implementation;
+﻿using System.Text.Json;
+using mROA.Implementation;
 
 namespace mROA.Test;
 
@@ -47,7 +48,7 @@ public class TestController : ITestController
 
     public int Parametrized(TestParameter parameter)
     {
-        return parameter.A + parameter.LinkedObject.Value.Test;
+        return parameter.A + parameter.LinkedObject.Value.Test();
     }
 
     public TransmittedSharedObject<ITestParameter> GetTestParameter()
@@ -59,12 +60,12 @@ public class TestController : ITestController
 [SharedObjectInterafce]
 public interface ITestParameter
 {
-    public int Test { get; }
+    public int Test();
 }
 
 public class TestParameterInstance : ITestParameter
 {
-    public int Test => 10;
+    public int Test() => 10;
 }
 
 public class TransmissionTestController : ITestController
@@ -102,7 +103,7 @@ public class TransmissionTestController : ITestController
 
     public int Parametrized(TestParameter parameter)
     {
-        return parameter.A * parameter.LinkedObject.Value.Test;
+        return parameter.A * parameter.LinkedObject.Value.Test();
     }
 
     public TransmittedSharedObject<ITestParameter> GetTestParameter()
@@ -117,9 +118,10 @@ public class TestParameter
     public TransmittedSharedObject<ITestParameter> LinkedObject { get; set; }
 }
 
-public class TestControllerRemoteEndoint(int id, ISerialisationModule.IFrontendSerialisationModule serialisationModule)
+public class TestControllerRemoteEndpoint(int id, ISerialisationModule.IFrontendSerialisationModule serialisationModule)
     : ITestController, IRemoteObject
 {
+    
     public void A()
     {
         serialisationModule.PostCallRequest(new JsonCallRequest { CommandId = 0, ObjectId = id });
@@ -134,46 +136,80 @@ public class TestControllerRemoteEndoint(int id, ISerialisationModule.IFrontendS
 
     public int B()
     {
+        TransmissionConfig.SetupBackendRepository();
         var request = new JsonCallRequest { CommandId = 2, ObjectId = id };
         serialisationModule.PostCallRequest(request);
         var response = serialisationModule.GetNextCommandExecution<FinalCommandExecution>(request.CallRequestId)
             .GetAwaiter().GetResult();
-        return (int)response.Result!;
+        TransmissionConfig.SetupFrontendRepository();
+        var convertation = response.Result! is JsonElement e ? e.Deserialize<int>() : (int)response.Result!;
+        return convertation;
     }
 
     public async Task<int> BAsync(CancellationToken cancellationToken)
     {
+        TransmissionConfig.SetupBackendRepository();
         var request = new JsonCallRequest { CommandId = 3, ObjectId = id };
         serialisationModule.PostCallRequest(request);
         var response = await serialisationModule.GetNextCommandExecution<FinalCommandExecution>(request.CallRequestId);
-        return (int)response.Result!;
+        TransmissionConfig.SetupFrontendRepository();
+        var convertation = response.Result! is JsonElement e ? e.Deserialize<int>() : (int)response.Result!;
+        return convertation;
     }
 
     public TransmittedSharedObject<ITestController> SharedObjectTransmitionTest()
     {
+        TransmissionConfig.SetupBackendRepository();
+
         var request = new JsonCallRequest { CommandId = 4, ObjectId = id };
         serialisationModule.PostCallRequest(request);
         var response = serialisationModule.GetNextCommandExecution<FinalCommandExecution>(request.CallRequestId)
             .GetAwaiter().GetResult();
-        return (TransmittedSharedObject<ITestController>)response.Result!;
+        TransmissionConfig.SetupFrontendRepository();
+        var convertation = response.Result! is JsonElement e ? e.Deserialize<TransmittedSharedObject<ITestController>>()! : (TransmittedSharedObject<ITestController>)response.Result!;
+        return convertation;
     }
 
     public int Parametrized(TestParameter parameter)
     {
         var request = new JsonCallRequest { CommandId = 5, ObjectId = id, Parameter = parameter };
+        TransmissionConfig.SetupBackendRepository();
+
         serialisationModule.PostCallRequest(request);
         var response = serialisationModule.GetNextCommandExecution<FinalCommandExecution>(request.CallRequestId)
             .GetAwaiter().GetResult();
-        return (int)response.Result!;
+        
+        TransmissionConfig.SetupFrontendRepository();
+        var convertation = response.Result! is JsonElement e ? e.Deserialize<int>() : (int)response.Result!;
+        return convertation;
     }
 
     public TransmittedSharedObject<ITestParameter> GetTestParameter()
     {
+        TransmissionConfig.SetupBackendRepository();
         var request = new JsonCallRequest { CommandId = 6, ObjectId = id };
         serialisationModule.PostCallRequest(request);
         var response = serialisationModule.GetNextCommandExecution<FinalCommandExecution>(request.CallRequestId)
             .GetAwaiter().GetResult();
-        return (TransmittedSharedObject<ITestParameter>)response.Result!;
+        TransmissionConfig.SetupFrontendRepository();
+        var convertation = response.Result! is JsonElement e ? e.Deserialize<TransmittedSharedObject<ITestParameter>>() : (TransmittedSharedObject<ITestParameter>)response.Result!;
+        return convertation;
+    }
+
+    public int Id => id;
+}
+
+public class TestParameterRemoteEndpoint(int id, ISerialisationModule.IFrontendSerialisationModule serialisationModule) : ITestParameter, IRemoteObject{
+    public int Test()
+    {
+        var request = new JsonCallRequest { CommandId = 7, ObjectId = id };
+        serialisationModule.PostCallRequest(request);
+        var response = serialisationModule.GetNextCommandExecution<FinalCommandExecution>(request.CallRequestId)
+            .GetAwaiter().GetResult();
+        TransmissionConfig.SetupFrontendRepository();
+        var convertation = response.Result! is JsonElement e ? e.Deserialize<int>() : (int)response.Result!;
+        TransmissionConfig.SetupBackendRepository();
+        return convertation;
     }
 
     public int Id => id;

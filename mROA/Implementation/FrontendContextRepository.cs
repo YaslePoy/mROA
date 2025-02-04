@@ -2,7 +2,7 @@
 
 namespace mROA.Implementation;
 
-public class FrontendContextRepository(Dictionary<Type, Type> remoteTypes, ISerialisationModule serialisationModule) : IContextRepository
+public class FrontendContextRepository(Dictionary<Type, Type> remoteTypes, ISerialisationModule.IFrontendSerialisationModule serialisationModule) : IContextRepository
 {
     private FrozenDictionary<Type, Type> _remoteTypes = remoteTypes.ToFrozenDictionary();
     
@@ -33,7 +33,7 @@ public class FrontendContextRepository(Dictionary<Type, Type> remoteTypes, ISeri
 
     public object GetSingleObject(Type type)
     {
-        throw new NotSupportedException();
+        return Activator.CreateInstance(remoteTypes[type], -1, serialisationModule)!;
     }
 
     public int GetObjectIndex(object o)
