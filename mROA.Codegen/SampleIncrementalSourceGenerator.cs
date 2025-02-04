@@ -123,21 +123,23 @@ namespace {Namespace}
                 //     sb.AppendLine($"public {method.ReturnType.ToDisplayString()} {method.Name}(){{");
                 // else
 
-                bool isAsync = method.ReturnType.ToDisplayString() == "Task";
+                bool isAsync = method.ReturnType.Name == "Task";
                 sb.AppendLine("public" + (isAsync
                                   ? " async "
                                   : " ") +
                               $"{method.ReturnType.ToDisplayString()} {method.Name}({string.Join(", ", method.Parameters.Select(p => p.ToDisplayString()))}){{");
 
                 //Creating request
-                if (method.Parameters.Length == 0)
-                    sb.AppendLine(
-                        $"\t\tvar request = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id }};");
-                else if (method.Parameters.Length == 1 && method.ReturnType.Name != "Task" ||
-                         method.Parameters.Length == 2 && method.ReturnType.Name == "Task")
+                if (method.Parameters.Length == 1 && !isAsync ||
+                    method.Parameters.Length == 2 && isAsync)
                 {
                     sb.AppendLine(
                         $"\t\tvar request = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id, Parameter = {method.Parameters.First().Name} }};");
+                }
+                else
+                {
+                    sb.AppendLine(
+                        $"\t\tvar request = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id }};");
                 }
 
                 //Post created request
