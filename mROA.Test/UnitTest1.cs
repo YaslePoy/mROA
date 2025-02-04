@@ -97,13 +97,13 @@ public class Tests
             );
 
         _interactionModule.PassCommand(132, Encoding.UTF8.GetBytes(
-            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId })));
+            JsonSerializer.Serialize(new DefaultCallRequest { CommandId = 2, ObjectId = response.ContextId })));
 
         var firstFull = JsonDocument.Parse(_interactionModule.OutputBuffer.Last()).RootElement.GetProperty("Result")
             .GetInt32();
 
         _interactionModule.PassCommand(132, Encoding.UTF8.GetBytes(
-            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 4, ObjectId = response.ContextId })));
+            JsonSerializer.Serialize(new DefaultCallRequest { CommandId = 4, ObjectId = response.ContextId })));
 
         response =
             JsonSerializer.Deserialize<TransmittedSharedObject<IContextRepository>>(
@@ -112,9 +112,9 @@ public class Tests
             );
 
         _interactionModule.PassCommand(132, Encoding.UTF8.GetBytes(
-            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId })));
+            JsonSerializer.Serialize(new DefaultCallRequest { CommandId = 2, ObjectId = response.ContextId })));
         _interactionModule.PassCommand(132, Encoding.UTF8.GetBytes(
-            JsonSerializer.Serialize(new JsonCallRequest { CommandId = 2, ObjectId = response.ContextId })));
+            JsonSerializer.Serialize(new DefaultCallRequest { CommandId = 2, ObjectId = response.ContextId })));
 
         var secondFull = JsonDocument.Parse(_interactionModule.OutputBuffer.Last()).RootElement.GetProperty("Result")
             .GetInt32();
@@ -137,7 +137,7 @@ public class Tests
             );
         var x = response.ContextId;
         _interactionModule.PassCommand(132,Encoding.UTF8.GetBytes(
-            JsonSerializer.Serialize(new JsonCallRequest
+            JsonSerializer.Serialize(new DefaultCallRequest
             {
                 CommandId = 5,
                 Parameter = new TestParameter

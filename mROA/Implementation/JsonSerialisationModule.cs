@@ -20,7 +20,7 @@ public class JsonSerialisationModule : ISerialisationModule
     
     public void HandleIncomingRequest(int clientId, byte[] command)
     {
-        JsonCallRequest request = JsonSerializer.Deserialize<JsonCallRequest>(command);
+        DefaultCallRequest request = JsonSerializer.Deserialize<DefaultCallRequest>(command);
 
         if (request.Parameter is not null)
         {

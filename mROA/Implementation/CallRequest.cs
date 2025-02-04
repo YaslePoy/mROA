@@ -8,7 +8,7 @@ public interface ICallRequest
     object Parameter { get; }
 }
 
-public class JsonCallRequest : ICallRequest
+public class DefaultCallRequest : ICallRequest
 {
     public Guid CallRequestId { get; set; } = Guid.NewGuid();
     public int CommandId { get; set; }

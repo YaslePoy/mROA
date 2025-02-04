@@ -50,7 +50,7 @@ public class StreamTest
         tcpClient.Connect(IPAddress.Loopback, 4567);
         _frontendInteractionModule.ServerStream = tcpClient.GetStream();
         
-        var req = new JsonCallRequest { CommandId = 1, ObjectId = -1 };
+        var req = new DefaultCallRequest { CommandId = 1, ObjectId = -1 };
         _frontendSerialisationModule.PostCallRequest(req);
         var res = ((JsonElement)_frontendSerialisationModule.GetNextCommandExecution<FinalCommandExecution>(req.CallRequestId).GetAwaiter().GetResult().Result!).Deserialize<MockResult>();
         isTestNotFinished = false;
