@@ -6,35 +6,36 @@ namespace mROA.Implementation;
 
 public static class BasicConfigurationExtensions
 {
-    public static void UseJsonSerialisation(this ServerBootstrap bootstrap)
+    public static void UseJsonSerialisation(this FullMixBuilder builder)
     {
-        bootstrap.Modules.Add(new JsonSerialisationModule());
+        builder.Modules.Add(new JsonSerialisationModule());
     }
 
-    public static void UseNetworkGateway(this ServerBootstrap bootstrap, IPEndPoint endPoint)
+    public static void UseNetworkGateway(this FullMixBuilder builder, IPEndPoint endPoint)
     {
-        bootstrap.Modules.Add(new NetworkGatewayModule(endPoint));
+        builder.Modules.Add(new NetworkGatewayModule(endPoint));
     }
 
-    public static void UseStreamInteraction(this ServerBootstrap bootstrap)
+    public static void UseStreamInteraction(this FullMixBuilder builder)
     {
-        bootstrap.Modules.Add(new StreamBasedInteractionModule());
+        builder.Modules.Add(new StreamBasedInteractionModule());
     }
     
-    public static void UseBasicExecution(this ServerBootstrap bootstrap)
+    public static void UseBasicExecution(this FullMixBuilder builder)
     {
-        bootstrap.Modules.Add(new BasicExecutionModule());
+        builder.Modules.Add(new BasicExecutionModule());
     }
 
-    public static void UseCollectableContextRepository(this ServerBootstrap bootstrap, params Assembly[] assemblies)
+    public static void UseCollectableContextRepository(this FullMixBuilder builder, params Assembly[] assemblies)
     {
         var repo = new ContextRepository();
         repo.FillSingletons(assemblies);
-        bootstrap.Modules.Add(repo);
+        TransmissionConfig.DefaultContextRepository = repo;
+        builder.Modules.Add(repo);
     }
 
-    public static void SetupMethodsRepository(this ServerBootstrap bootstrap, IMethodRepository methodRepository)
+    public static void SetupMethodsRepository(this FullMixBuilder builder, IMethodRepository methodRepository)
     {
-        bootstrap.Modules.Add(methodRepository);
+        builder.Modules.Add(methodRepository);
     }
 }

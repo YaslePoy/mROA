@@ -2,12 +2,12 @@ using mROA.Abstract;
 
 namespace mROA.Implementation.Bootstrap;
 
-public interface IBootstrap
+public interface ImRoaBuilder
 {
     void Build();
 }
 
-public class ServerBootstrap : IBootstrap
+public class FullMixBuilder : ImRoaBuilder
 {
     public List<IInjectableModule> Modules { get; private set; } = new();
     public void Build()
