@@ -8,12 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Reference Include="Example.Shared">
-        <HintPath>..\mROA.Test\bin\Debug\net9.0\Example.Shared.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\Example.Shared\Example.Shared.csproj" />
     </ItemGroup>
 

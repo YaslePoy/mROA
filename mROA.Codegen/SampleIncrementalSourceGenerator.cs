@@ -298,6 +298,9 @@ public class FrontendContextRepository : IContextRepository
     {{
         if (dependency is ISerialisationModule.IFrontendSerialisationModule serialisationModule)
             _serialisationModule = serialisationModule;
+        
+        TransmissionConfig.DefaultContextRepository = this;
+        Console.WriteLine(""Added"");
     }}
 
     public void Bake()

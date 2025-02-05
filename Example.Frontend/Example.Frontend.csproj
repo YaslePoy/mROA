@@ -11,4 +11,7 @@
       <ProjectReference Include="..\Example.Shared\Example.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+    </ItemGroup>
+
 </Project>
