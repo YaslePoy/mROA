@@ -6,6 +6,6 @@ namespace Example.Shared;
 public interface IPrinter
 {
     string GetName();
-    TransmittedSharedObject<IPage> Print(string text);
+    Task<TransmittedSharedObject<IPage>> Print(string text);
 
 }

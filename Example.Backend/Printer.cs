@@ -12,7 +12,7 @@ public class Printer : IPrinter
         return Name;
     }
 
-    public TransmittedSharedObject<IPage> Print(string text)
+    public async Task<TransmittedSharedObject<IPage>> Print(string text)
     {
         return new Page {Text = text};
     }

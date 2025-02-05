@@ -154,8 +154,10 @@ namespace {Namespace}
                 }
                 else if (method.ReturnType.OriginalDefinition.ToString() == "System.Threading.Tasks.Task<TResult>")
                 {
-                    var type = method.ReturnType.ToString().Split(['<', '>'], StringSplitOptions.RemoveEmptyEntries)
-                        .Last();
+
+                    var type = method.ReturnType.ToString();
+                    type = type.Substring(type.IndexOf('<') + 1);
+                    type = type.Substring(0, type.Length - 1);
                     sb.AppendLine(
                         $"\t\tvar response = await serialisationModule.GetFinalCommandExecution<{type}>(request.CallRequestId);");
                     sb.AppendLine($"\t\treturn ({type})response.Result;");

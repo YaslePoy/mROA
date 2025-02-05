@@ -3,7 +3,7 @@
   "profiles": {
     "DebugRoslynSourceGenerator": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "../Example.Backend/Example.Backend.csproj"
+      "targetProject": "../Example.Shared/Example.Shared.csproj"
     }
   }
 }
