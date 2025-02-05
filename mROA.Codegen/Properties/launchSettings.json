@@ -3,7 +3,7 @@
   "profiles": {
     "DebugRoslynSourceGenerator": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "../mROA.Example/mROA.Example.csproj"
+      "targetProject": "../Example.Shared/Example.Shared.csproj"
     }
   }
 }

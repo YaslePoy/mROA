@@ -6,7 +6,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA.Test", "mROA.Test\mROA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA.Codegen", "mROA.Codegen\mROA.Codegen.csproj", "{6CE0ED21-88FD-44B3-B9C6-9B8FA4E07E89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA.Example", "mROA.Example\mROA.Example.csproj", "{5F4EEF2B-A82C-44DA-8995-AF1668A238EC}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Example", "Example", "{EAE92F5A-664C-41AB-8811-5885524B5347}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Backend", "Example.Backend\Example.Backend.csproj", "{A9BB364E-0BA6-40B9-A293-757BC48EFC06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Shared", "Example.Shared\Example.Shared.csproj", "{E7703F5B-F2A6-4A88-AA57-EBB1E38D533E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,9 +30,17 @@ Global
 		{6CE0ED21-88FD-44B3-B9C6-9B8FA4E07E89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CE0ED21-88FD-44B3-B9C6-9B8FA4E07E89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CE0ED21-88FD-44B3-B9C6-9B8FA4E07E89}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5F4EEF2B-A82C-44DA-8995-AF1668A238EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5F4EEF2B-A82C-44DA-8995-AF1668A238EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5F4EEF2B-A82C-44DA-8995-AF1668A238EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5F4EEF2B-A82C-44DA-8995-AF1668A238EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9BB364E-0BA6-40B9-A293-757BC48EFC06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9BB364E-0BA6-40B9-A293-757BC48EFC06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9BB364E-0BA6-40B9-A293-757BC48EFC06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9BB364E-0BA6-40B9-A293-757BC48EFC06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7703F5B-F2A6-4A88-AA57-EBB1E38D533E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7703F5B-F2A6-4A88-AA57-EBB1E38D533E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7703F5B-F2A6-4A88-AA57-EBB1E38D533E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7703F5B-F2A6-4A88-AA57-EBB1E38D533E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A9BB364E-0BA6-40B9-A293-757BC48EFC06} = {EAE92F5A-664C-41AB-8811-5885524B5347}
+		{E7703F5B-F2A6-4A88-AA57-EBB1E38D533E} = {EAE92F5A-664C-41AB-8811-5885524B5347}
 	EndGlobalSection
 EndGlobal

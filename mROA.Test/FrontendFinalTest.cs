@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using mROA.Abstract;
 using mROA.Codegen;
-using mROA.Example;
+using Example.Shared;
 using mROA.Implementation;
 
 namespace mROA.Test;
@@ -32,7 +32,7 @@ public class FrontendFinalTest
 
         _serialisationModule = new JsonSerialisationModule();
 
-        _executeModule = new LaunchReadyExecutionModule();
+        _executeModule = new BasicExecutionModule();
         
         IInjectableModule[] backendModules = [_methodRepository, _contextRepository, _interactionModule, _serialisationModule, _executeModule];
         

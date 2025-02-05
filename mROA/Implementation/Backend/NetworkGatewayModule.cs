@@ -13,24 +13,24 @@ public class NetworkGatewayModule : IGatewayModule
         _tcpListener = new TcpListener(endpoint);
     }
 
-    public void Configure(IInteractionModule interactionModule)
-    {
-        _interactionModule = interactionModule;
-    }
-
     public void Run()
     {
         _tcpListener.Start();
         Console.WriteLine($"Listening on {_tcpListener.LocalEndpoint}");
-        Console.WriteLine("Enter Ctrl-C to stop");
+        Console.WriteLine("Enter Backspace to stop");
+        
+        Task.Run(HandleIncomingConnections);
+
         while (true)
         {
             var key = Console.ReadKey();
-            if (key.Key == ConsoleKey.C && key.Modifiers == ConsoleModifiers.Control)
+            if (key.Key == ConsoleKey.Backspace)
                 break;
         }
 
-        Task.Run(HandleIncomingConnections);
+        Console.WriteLine("Stopping");
+        
+        
     }
 
     public void Dispose()
@@ -48,5 +48,15 @@ public class NetworkGatewayModule : IGatewayModule
             _interactionModule.RegisterSourse(client.GetStream());
             Console.WriteLine("Client registered");
         }
+    }
+
+    public void Inject<T>(T dependency)
+    {
+        if (dependency is IInteractionModule interactionModule)
+            _interactionModule = interactionModule;
+    }
+
+    public void Bake()
+    {
     }
 }

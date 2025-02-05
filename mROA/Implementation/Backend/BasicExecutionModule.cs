@@ -2,7 +2,7 @@
 
 namespace mROA.Implementation;
 
-public class LaunchReadyExecutionModule : IExecuteModule
+public class BasicExecutionModule : IExecuteModule
 {
     private IMethodRepository _methodRepo;
     private ISerialisationModule _serialisationModule;

@@ -19,9 +19,9 @@ public class ContextRepository : IContextRepository
         _storage = new object[StartupSize];
     }
 
-    public void FillSingletons(Assembly assembly)
+    public void FillSingletons(params Assembly[] assembly)
     {
-        var types = assembly.GetTypes().Where(type =>
+        var types = assembly.SelectMany(x => x.GetTypes()).Where(type =>
             type is { IsClass: true, IsAbstract: false, IsGenericType: false } &&
             type.GetCustomAttributes(typeof(SharedObjectSingletonAttribute), true).Length > 0);
         _singletons =
