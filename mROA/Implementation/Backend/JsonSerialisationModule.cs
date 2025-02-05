@@ -28,7 +28,10 @@ public class JsonSerialisationModule : ISerialisationModule
     public void PostResponse(ICommandExecution call)
     {
         var texted = string.Empty;
-        if (call is FinalCommandExecution finalCommand)
+        if (call is TypedFinalCommandExecution nonVoidCall)
+        {
+            texted = JsonSerializer.Serialize(nonVoidCall);
+        }else if (call is FinalCommandExecution finalCommand)
         {
             texted = JsonSerializer.Serialize(finalCommand);
         }else if (call is AsyncCommandExecution asyncCommand)

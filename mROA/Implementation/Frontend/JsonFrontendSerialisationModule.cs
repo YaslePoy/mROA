@@ -24,6 +24,7 @@ public class JsonFrontendSerialisationModule
     public async Task<FinalCommandExecution<T>> GetFinalCommandExecution<T>(Guid requestId)
     {
         var receiveMessage = await _interactionModule.ReceiveMessage();
+        var str = Encoding.UTF8.GetString(receiveMessage);
         var parsed = JsonSerializer.Deserialize<FinalCommandExecution<T>>(receiveMessage);
         while (parsed.CallRequestId != requestId)
         {

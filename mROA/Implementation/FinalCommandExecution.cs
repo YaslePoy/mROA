@@ -18,6 +18,7 @@ public class FinalCommandExecution<T> : FinalCommandExecution
 
 public class TypedFinalCommandExecution : FinalCommandExecution<object>
 {
+    [JsonIgnore]
     public Type Type { get; set; }
 }
 

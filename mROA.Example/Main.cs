@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using mROA.Implementation;
 
 namespace mROA.Example;
 
@@ -6,6 +7,7 @@ public class MainX
 {
     public static void Main(string[] args)
     {
+        IRemoteObject x;
         // CoCodegenMethodRepository a = new CoCodegenMethodRepository();
         unsafe
         {
