@@ -6,17 +6,16 @@ namespace mROA.Implementation;
 
 public class JsonSerialisationModule : ISerialisationModule
 {
-    private readonly IInteractionModule _dataSource;
+    private IInteractionModule _dataSource;
     private IExecuteModule _executeModule;
     private IMethodRepository _methodRepository;
-    public JsonSerialisationModule(IInteractionModule dataSource, IMethodRepository methodRepository)
-    {
-        _dataSource = dataSource;
-        _methodRepository = methodRepository;
-        _dataSource.SetMessageHandler(HandleIncomingRequest);
-    } 
+    // public JsonSerialisationModule(IInteractionModule dataSource, IMethodRepository methodRepository)
+    // {
+    //     _dataSource = dataSource;
+    //     _methodRepository = methodRepository;
+    //     _dataSource.SetMessageHandler(HandleIncomingRequest);
+    // } 
 
-    public void SetExecuteModule(IExecuteModule executeModule) => _executeModule = executeModule;
     
     public void HandleIncomingRequest(int clientId, byte[] command)
     {
@@ -45,5 +44,15 @@ public class JsonSerialisationModule : ISerialisationModule
         }
         var binary = Encoding.UTF8.GetBytes(texted);
         _dataSource.SendTo(call.ClientId, binary);
+    }
+
+    public void Inject<T>(T dependency)
+    {
+        if (dependency is IInteractionModule interactionModule)
+            _dataSource = interactionModule;
+        if (dependency is IExecuteModule executeModule)
+            _executeModule = executeModule;
+        if (dependency is IMethodRepository methodRepository)
+            _methodRepository = methodRepository;
     }
 }

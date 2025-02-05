@@ -15,7 +15,7 @@ public class NetworkGatewayModule : IGatewayModule
 
     public void Configure(IInteractionModule interactionModule)
     {
-        interactionModule = interactionModule;
+        _interactionModule = interactionModule;
     }
 
     public void Run()

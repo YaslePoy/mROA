@@ -4,20 +4,20 @@ namespace mROA.Implementation;
 
 public class LaunchReadyExecutionModule : IExecuteModule
 {
-    private readonly IMethodRepository _methodRepo;
-    private readonly ISerialisationModule _serialisationModule;
-    private readonly IContextRepository _contextRepo;
+    private IMethodRepository _methodRepo;
+    private ISerialisationModule _serialisationModule;
+    private IContextRepository _contextRepo;
 
-    public LaunchReadyExecutionModule(IMethodRepository methodRepo,
-        ISerialisationModule serialisationModule,
-        IContextRepository contextRepo)
+    public void Inject<T>(T dependency)
     {
-        _methodRepo = methodRepo;
-        _serialisationModule = serialisationModule;
-        _contextRepo = contextRepo;
-        _serialisationModule.SetExecuteModule(this);
+        if (dependency is IMethodRepository methodRepo)
+            _methodRepo = methodRepo;
+        if (dependency is ISerialisationModule serialisationModule)
+            _serialisationModule = serialisationModule;
+        if (dependency is IContextRepository contextRepo)
+            _contextRepo = contextRepo;
     }
-
+    
     public ICommandExecution Execute(ICallRequest command)
     {
         var currentCommand = _methodRepo.GetMethod(command.CommandId);
@@ -43,10 +43,11 @@ public class LaunchReadyExecutionModule : IExecuteModule
         ICallRequest command)
     {
         var finalResult = currentCommand.Invoke(context, parameter is null ? [] : [parameter]);
-        return new FinalCommandExecution
+        return new TypedFinalCommandExecution
         {
             CommandId = command.CommandId, Result = finalResult,
-            CallRequestId = command.CallRequestId
+            CallRequestId = command.CallRequestId,
+            Type = currentCommand.ReturnType
         };
     }
 
@@ -87,12 +88,13 @@ public class LaunchReadyExecutionModule : IExecuteModule
 
     private void PostFinalizedCallback(AsyncCommandExecution request, object? result)
     {
-        _serialisationModule.PostResponse(new FinalCommandExecution
+        _serialisationModule.PostResponse(new TypedFinalCommandExecution
         {
             CallRequestId = request.CallRequestId,
             Result = result,
             CommandId = request.CommandId,
-            ClientId = request.ClientId
+            ClientId = request.ClientId,
+            Type = typeof(object)
         });
     }
 }

@@ -1,16 +1,16 @@
+using mROA.Abstract;
 using mROA.Implementation;
 
 namespace mROA;
 
-public interface ISerialisationModule
+public interface ISerialisationModule : IInjectableModule
 {
     void HandleIncomingRequest(int clientId, byte[] command);
     void PostResponse(ICommandExecution call);
-    void SetExecuteModule(IExecuteModule executeModule);
     public interface IFrontendSerialisationModule
     {
         Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution;
-        Task<FinalCommandExecution> GetFinalCommandExecution<T>(Guid requestId);
+        Task<FinalCommandExecution<T>> GetFinalCommandExecution<T>(Guid requestId);
         
         void PostCallRequest(ICallRequest callRequest);
     }

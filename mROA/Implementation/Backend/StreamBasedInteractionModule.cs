@@ -48,4 +48,9 @@ public class StreamBasedInteractionModule : IInteractionModule
             _streams.Remove(client.id);
         }
     }
+
+    public void Inject<T>(T dependency)
+    {
+        throw new NotImplementedException();
+    }
 }

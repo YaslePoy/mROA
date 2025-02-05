@@ -1,6 +1,8 @@
+using mROA.Abstract;
+
 namespace mROA;
 
-public interface IInteractionModule
+public interface IInteractionModule : IInjectableModule
 {
     void SetMessageHandler(Action<int, byte[]> handler);
     void SendTo(int clientId, byte[] message);
