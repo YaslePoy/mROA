@@ -23,4 +23,11 @@ public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontend
         ServerStream.Write(BitConverter.GetBytes((ushort)message.Length), 0, sizeof(ushort));
         ServerStream.Write(message, 0, message.Length);
     }
+    public void Inject<T>(T dependency)
+    {
+    }
+
+    public void Bake()
+    {
+    }
 }

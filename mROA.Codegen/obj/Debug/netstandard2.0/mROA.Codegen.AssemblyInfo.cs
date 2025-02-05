@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("mROA.Codegen")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ad2ef8e4b754b4cb2c5d3dbaa5c24f15201dd0f9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fd1eda26618b8cebe94eaa0e27ce5e97353d2d09")]
 [assembly: System.Reflection.AssemblyProductAttribute("mROA.Codegen")]
 [assembly: System.Reflection.AssemblyTitleAttribute("mROA.Codegen")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

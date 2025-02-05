@@ -4,10 +4,9 @@ namespace mROA;
 
 public interface IInteractionModule : IInjectableModule
 {
-    void SetMessageHandler(Action<int, byte[]> handler);
     void SendTo(int clientId, byte[] message);
     void RegisterSourse(Stream stream);
-    public interface IFrontendInteractionModule
+    public interface IFrontendInteractionModule : IInjectableModule
     {
         public Task<byte[]> ReceiveMessage();
         public void PostMessage(byte[] message);

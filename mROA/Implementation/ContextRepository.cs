@@ -85,4 +85,11 @@ public class ContextRepository : IContextRepository
         Array.Copy(_storage, nextStorage, _storage.Length);
         return _storage.Length;
     }
+    public void Inject<T>(T dependency)
+    {
+    }
+
+    public void Bake()
+    {
+    }
 }

@@ -12,11 +12,6 @@ public class StreamBasedInteractionModule : IInteractionModule
         ListenTo((id, stream), _handler);
     }
 
-    public void SetMessageHandler(Action<int, byte[]> handler)
-    {
-        _handler = handler;
-    }
-
     public void SendTo(int clientId, byte[] message)
     {
         if (!_streams.TryGetValue(clientId, out var stream))
@@ -51,6 +46,13 @@ public class StreamBasedInteractionModule : IInteractionModule
 
     public void Inject<T>(T dependency)
     {
-        throw new NotImplementedException();
+        if (dependency is ISerialisationModule serialisationModule)
+        {
+            _handler = serialisationModule.HandleIncomingRequest;
+        }
+    }
+
+    public void Bake()
+    {
     }
 }

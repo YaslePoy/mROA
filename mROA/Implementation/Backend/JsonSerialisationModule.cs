@@ -9,13 +9,6 @@ public class JsonSerialisationModule : ISerialisationModule
     private IInteractionModule _dataSource;
     private IExecuteModule _executeModule;
     private IMethodRepository _methodRepository;
-    // public JsonSerialisationModule(IInteractionModule dataSource, IMethodRepository methodRepository)
-    // {
-    //     _dataSource = dataSource;
-    //     _methodRepository = methodRepository;
-    //     _dataSource.SetMessageHandler(HandleIncomingRequest);
-    // } 
-
     
     public void HandleIncomingRequest(int clientId, byte[] command)
     {
@@ -54,5 +47,9 @@ public class JsonSerialisationModule : ISerialisationModule
             _executeModule = executeModule;
         if (dependency is IMethodRepository methodRepository)
             _methodRepository = methodRepository;
+    }
+
+    public void Bake()
+    {
     }
 }

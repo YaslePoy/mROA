@@ -1,7 +1,4 @@
-
 using System.Runtime.InteropServices;
-using mROA.Codegen;
-using mROA.Implementation.Test;
 
 namespace mROA.Example;
 
@@ -21,5 +18,6 @@ public class MainX
         var size = Marshal.SizeOf(typeof(T));
         var place = Marshal.AllocHGlobal(size);
         var pt = (T*)place;
+        return [];
     }
 }

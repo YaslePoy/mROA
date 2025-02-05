@@ -34,4 +34,11 @@ public class MethodRepository : IMethodRepository
                 RegisterMethod(method);
         }
     }
+    public void Inject<T>(T dependency)
+    {
+    }
+
+    public void Bake()
+    {
+    }
 }

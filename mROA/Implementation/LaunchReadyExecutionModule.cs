@@ -17,7 +17,11 @@ public class LaunchReadyExecutionModule : IExecuteModule
         if (dependency is IContextRepository contextRepo)
             _contextRepo = contextRepo;
     }
-    
+
+    public void Bake()
+    {
+    }
+
     public ICommandExecution Execute(ICallRequest command)
     {
         var currentCommand = _methodRepo.GetMethod(command.CommandId);

@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using mROA.Abstract;
+using mROA.Codegen;
 using mROA.Example;
 using mROA.Implementation;
 
@@ -21,21 +23,33 @@ public class FrontendFinalTest
     [SetUp]
     public void Setup()
     {
-        var repo = new MethodRepository();
-        repo.CollectForAssembly(Assembly.GetExecutingAssembly());
-        _methodRepository = repo;
+        _methodRepository = new CoCodegenMethodRepository();
         var repo2 = new ContextRepository();
-        repo2.FillSingletons(Assembly.GetExecutingAssembly());
+        repo2.FillSingletons(typeof(ITestController).Assembly);
         _contextRepository = repo2;
+        
         _interactionModule = new StreamBasedInteractionModule();
 
-        _serialisationModule = new JsonSerialisationModule(_interactionModule, _methodRepository);
+        _serialisationModule = new JsonSerialisationModule();
 
-        _executeModule = new LaunchReadyExecutionModule(_methodRepository, _serialisationModule, _contextRepository);
+        _executeModule = new LaunchReadyExecutionModule();
+        
+        IInjectableModule[] backendModules = [_methodRepository, _contextRepository, _interactionModule, _serialisationModule, _executeModule];
+        
+        foreach (var backendModule in backendModules)
+        foreach (var injection in backendModules)
+            backendModule.Inject(injection);
 
         _frontendInteractionModule = new StreamBasedFrontendInteractionModule();
-        _frontendSerialisationModule = new JsonFrontendSerialisationModule(_frontendInteractionModule);
+        _frontendSerialisationModule = new JsonFrontendSerialisationModule();
+        _frontendContextRepository = new FrontendContextRepository();
+        
+        IInjectableModule[] frontendModules = [_frontendInteractionModule, _frontendSerialisationModule, _frontendContextRepository];
 
+        foreach (var backendModule in frontendModules)
+        foreach (var injection in frontendModules)
+            backendModule.Inject(injection);
+        
         Task.Run(() =>
         {
             TcpListener listener = new TcpListener(IPAddress.Loopback, 4567);

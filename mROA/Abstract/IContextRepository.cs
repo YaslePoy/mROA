@@ -1,8 +1,9 @@
-﻿using mROA.Implementation;
+﻿using mROA.Abstract;
+using mROA.Implementation;
 
 namespace mROA;
 
-public interface IContextRepository
+public interface IContextRepository : IInjectableModule
 {
     int ResisterObject(object o);
     void ClearObject(int id);
