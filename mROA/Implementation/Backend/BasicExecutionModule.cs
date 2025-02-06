@@ -107,7 +107,7 @@ public class BasicExecutionModule : IExecuteModule
             return new TypedFinalCommandExecution
             {
                 CallRequestId = command.CallRequestId,
-                Result = result,
+                Result = finalResult,
                 CommandId = command.CommandId,
                 Type = finalResult.GetType()
             };
