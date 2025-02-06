@@ -308,7 +308,6 @@ public class FrontendContextRepository : IContextRepository
             _serialisationModule = serialisationModule;
         
         TransmissionConfig.DefaultContextRepository = this;
-        Console.WriteLine(""Added"");
     }}
 
     public void Bake()

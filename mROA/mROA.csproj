@@ -5,6 +5,13 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Title>mROA</Title>
+        <Version>1.1.0</Version>
+        <Authors>YaslePoy</Authors>
+        <Description>Fast and easy RPC with contex</Description>
+        <RepositoryUrl>https://github.com/YaslePoy/mROA</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/YaslePoy/mROA</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>RPC</PackageTags>
     </PropertyGroup>
 
 </Project>
