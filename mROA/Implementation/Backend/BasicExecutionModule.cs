@@ -83,8 +83,16 @@ public class BasicExecutionModule : IExecuteModule
 
         result.ContinueWith(task =>
         {
-            var finalResult = task.GetType().GetProperty("Result")?.GetValue(task);
-            PostFinalizedCallback(exec, finalResult);
+            try
+            {
+                var finalResult = task.GetType().GetProperty("Result")?.GetValue(task);
+                PostFinalizedCallback(exec, finalResult);
+            }
+            catch (Exception e)
+            {
+                _serialisationModule.PostResponse(new ExceptionCommandExecution {CallRequestId = exec.CallRequestId, CommandId = exec.CommandId, ClientId = exec.ClientId, Reason = e.InnerException.InnerException.ToString()});
+            }
+
         }, token);
 
         return exec;

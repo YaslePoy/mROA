@@ -22,7 +22,7 @@ public class TypedFinalCommandExecution : FinalCommandExecution<object>
     public Type Type { get; set; }
 }
 
-public class ExeptionCommandExecution : ICommandExecution
+public class ExceptionCommandExecution : ICommandExecution
 {
     public Guid CallRequestId { get; init; }
     public int ClientId { get; set; }

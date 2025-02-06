@@ -38,7 +38,11 @@ public class JsonSerialisationModule : ISerialisationModule
         }else if (call is AsyncCommandExecution asyncCommand)
         {
             texted = JsonSerializer.Serialize(asyncCommand);
+        }else if (call is ExceptionCommandExecution exeptionCommandExecution)
+        {
+            texted = JsonSerializer.Serialize(exeptionCommandExecution);
         }
+        
         var binary = Encoding.UTF8.GetBytes(texted);
         _dataSource.SendTo(call.ClientId, binary);
     }
