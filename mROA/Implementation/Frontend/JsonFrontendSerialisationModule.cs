@@ -24,8 +24,14 @@ public class JsonFrontendSerialisationModule
     public async Task<FinalCommandExecution<T>> GetFinalCommandExecution<T>(Guid requestId)
     {
         var receiveMessage = await _interactionModule.ReceiveMessage();
-        var str = Encoding.UTF8.GetString(receiveMessage);
-        var parsed = JsonSerializer.Deserialize<FinalCommandExecution<T>>(receiveMessage);
+        // var str = Encoding.UTF8.GetString(receiveMessage);
+        var document = JsonDocument.Parse(receiveMessage);
+        if (document.RootElement.TryGetProperty("Exeption", out var exeptionElement))
+        {
+            throw new RemoteException(exeptionElement.GetString()) { CallRequestId = requestId };
+        }
+
+        var parsed = document.Deserialize<FinalCommandExecution<T>>();
         while (parsed.CallRequestId != requestId)
         {
             receiveMessage = await _interactionModule.ReceiveMessage();
@@ -51,4 +57,10 @@ public class JsonFrontendSerialisationModule
     public void Bake()
     {
     }
+}
+
+public class RemoteException(string error) : Exception
+{
+    public Guid CallRequestId;
+    public override string Message => error;
 }

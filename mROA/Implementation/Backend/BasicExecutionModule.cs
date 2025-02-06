@@ -43,70 +43,82 @@ public class BasicExecutionModule : IExecuteModule
         return Execute(currentCommand, context, parameter, command);
     }
 
-    private static FinalCommandExecution Execute(MethodInfo currentCommand, object context, object? parameter,
+    private static ICommandExecution Execute(MethodInfo currentCommand, object context, object? parameter,
         ICallRequest command)
     {
-        var finalResult = currentCommand.Invoke(context, parameter is null ? [] : [parameter]);
-        return new TypedFinalCommandExecution
+        try
         {
-            CommandId = command.CommandId, Result = finalResult,
-            CallRequestId = command.CallRequestId,
-            Type = currentCommand.ReturnType
-        };
+            var finalResult = currentCommand.Invoke(context, parameter is null ? [] : [parameter]);
+            return new TypedFinalCommandExecution
+            {
+                CommandId = command.CommandId, Result = finalResult,
+                CallRequestId = command.CallRequestId,
+                Type = currentCommand.ReturnType
+            };
+        }
+        catch (Exception e)
+        {
+            return new ExceptionCommandExecution
+            {
+                CallRequestId = command.CallRequestId, CommandId = command.CommandId,
+                Exeption = e.ToString()
+            };
+        }
     }
 
-    private AsyncCommandExecution ExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
+    private ICommandExecution ExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
         ICallRequest command)
     {
         var tokenSource = new CancellationTokenSource();
         var token = tokenSource.Token;
+        try
+        {
+            var result = (Task)currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token])!;
 
-        var result = (Task)currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token])!;
-        var exec = new AsyncCommandExecution(tokenSource)
-            { CommandId = command.CommandId, CallRequestId = command.CallRequestId };
 
-        result.ContinueWith(_ => { PostFinalizedCallback(exec, null); }, token);
+            result.Wait(token);
 
-        return exec;
+
+            return new FinalCommandExecution { CommandId = command.CommandId, CallRequestId = command.CallRequestId };
+        }
+        catch (Exception e)
+        {
+            return new ExceptionCommandExecution
+            {
+                CallRequestId = command.CallRequestId, CommandId = command.CommandId,
+                Exeption = e.ToString()
+            };
+        }
     }
 
-    private AsyncCommandExecution TypedExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
+    private ICommandExecution TypedExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
         ICallRequest command)
     {
         var tokenSource = new CancellationTokenSource();
         var token = tokenSource.Token;
-
-        var result =
-            (Task)currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token])!;
-        var exec = new AsyncCommandExecution(tokenSource)
-            { CommandId = command.CommandId, CallRequestId = command.CallRequestId };
-
-        result.ContinueWith(task =>
+        try
         {
-            try
+            var result =
+                (Task)currentCommand.Invoke(context, parameter is null ? [token] : [parameter, token])!;
+
+            result.Wait(token);
+
+            var finalResult = result.GetType().GetProperty("Result")?.GetValue(result);
+            return new TypedFinalCommandExecution
             {
-                var finalResult = task.GetType().GetProperty("Result")?.GetValue(task);
-                PostFinalizedCallback(exec, finalResult);
-            }
-            catch (Exception e)
-            {
-                _serialisationModule.PostResponse(new ExceptionCommandExecution {CallRequestId = exec.CallRequestId, CommandId = exec.CommandId, ClientId = exec.ClientId, Reason = e.InnerException.InnerException.ToString()});
-            }
-
-        }, token);
-
-        return exec;
-    }
-
-    private void PostFinalizedCallback(AsyncCommandExecution request, object? result)
-    {
-        _serialisationModule.PostResponse(new TypedFinalCommandExecution
+                CallRequestId = command.CallRequestId,
+                Result = result,
+                CommandId = command.CommandId,
+                Type = finalResult.GetType()
+            };
+        }
+        catch (Exception e)
         {
-            CallRequestId = request.CallRequestId,
-            Result = result,
-            CommandId = request.CommandId,
-            ClientId = request.ClientId,
-            Type = typeof(object)
-        });
+            return new ExceptionCommandExecution
+            {
+                CallRequestId = command.CallRequestId, CommandId = command.CommandId,
+                Exeption = e.ToString()
+            };
+        }
     }
 }
