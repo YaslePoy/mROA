@@ -58,17 +58,17 @@ namespace {Namespace}
 
         // Go through all attributes of the class.
         foreach (AttributeListSyntax attributeListSyntax in classDeclarationSyntax.AttributeLists)
-        foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
-        {
-            if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
-                continue; // if we can't get the symbol, ignore it
+            foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
+            {
+                if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
+                    continue; // if we can't get the symbol, ignore it
 
-            string attributeName = attributeSymbol.ContainingType.ToDisplayString();
+                string attributeName = attributeSymbol.ContainingType.ToDisplayString();
 
-            // Check the full name of the [Report] attribute.
-            if (attributeName == "mROA.Implementation.SharedObjectInterfaceAttribute")
-                return (classDeclarationSyntax, true);
-        }
+                // Check the full name of the [Report] attribute.
+                if (attributeName == "mROA.Implementation.SharedObjectInterfaceAttribute")
+                    return (classDeclarationSyntax, true);
+            }
 
         return (classDeclarationSyntax, false);
     }
@@ -96,7 +96,7 @@ namespace {Namespace}
             if (semanticModel.GetDeclaredSymbol(classDeclarationSyntax) is not INamedTypeSymbol classSymbol)
                 continue;
 
-            
+
             var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
 
             // 'Identifier' means the token of the node. Get class name from the syntax node.
@@ -135,22 +135,22 @@ namespace {Namespace}
                     method.Parameters.Length == 2 && isAsync)
                 {
                     sb.AppendLine(
-                        $"\t\tvar request = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id, Parameter = {method.Parameters.First().Name} }};");
+                        $"\t\tvar defaultCallRequestCodegen = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id, Parameter = {method.Parameters.First().Name} }};");
                 }
                 else
                 {
                     sb.AppendLine(
-                        $"\t\tvar request = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id }};");
+                        $"\t\tvar defaultCallRequestCodegen = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id }};");
                 }
 
                 //Post created request
-                sb.AppendLine("\t\tserialisationModule.PostCallRequest(request);");
+                sb.AppendLine("\t\tserialisationModule.PostCallRequest(defaultCallRequestCodegen);");
 
 
                 if (method.ReturnType.ToString() == "System.Threading.Tasks.Task")
                 {
                     sb.AppendLine(
-                        "\t\tawait serialisationModule.GetNextCommandExecution<FinalCommandExecution>(request.CallRequestId);");
+                        "\t\tawait serialisationModule.GetNextCommandExecution<FinalCommandExecution>(defaultCallRequestCodegen.CallRequestId);");
                 }
                 else if (method.ReturnType.OriginalDefinition.ToString() == "System.Threading.Tasks.Task<TResult>")
                 {
@@ -159,14 +159,14 @@ namespace {Namespace}
                     type = type.Substring(type.IndexOf('<') + 1);
                     type = type.Substring(0, type.Length - 1);
                     sb.AppendLine(
-                        $"\t\tvar response = await serialisationModule.GetFinalCommandExecution<{type}>(request.CallRequestId);");
+                        $"\t\tvar response = await serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId);");
                     sb.AppendLine($"\t\treturn ({type})response.Result;");
                 }
                 else if (!isAsync && method.ReturnType.ToDisplayString() != "void")
                 {
                     var type = method.ReturnType.ToDisplayString();
                     sb.AppendLine(
-                        $"\t\tvar response = serialisationModule.GetFinalCommandExecution<{type}>(request.CallRequestId).GetAwaiter().GetResult();");
+                        $"\t\tvar response = serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId).GetAwaiter().GetResult();");
                     sb.AppendLine($"\t\treturn ({type})response.Result;");
                 }
 
@@ -195,16 +195,18 @@ partial class {className} (int id, ISerialisationModule.IFrontendSerialisationMo
 
             // Add the source code to the compilation.
             context.AddSource($"{className}.g.cs", SourceText.From(code, Encoding.UTF8));
-            
+
             frontendContextRepo.Add($"{{ typeof({classSymbol.ToDisplayString()}), typeof({namespaceName}.{className}) }}");
         }
 
+        if (methods.Count != 0)
+        {
 
-        var methodsStringed = methods.Select(i =>
-                $"typeof({i.Item1}).GetMethod(\"{i.Item2.Name}\", [{string.Join(", ", i.Item2.Parameters.Select(p => $"typeof({p.Type.ToDisplayString()})"))}])")
-            .ToList();
+            var methodsStringed = methods.Select(i =>
+                    $"typeof({i.Item1}).GetMethod(\"{i.Item2.Name}\", [{string.Join(", ", i.Item2.Parameters.Select(p => $"typeof({p.Type.ToDisplayString()})"))}])")
+                .ToList();
 
-        var coCodegenRepoCode = @$"// <auto-generated/>
+            var coCodegenRepoCode = @$"// <auto-generated/>
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -243,9 +245,13 @@ public class CoCodegenMethodRepository :IMethodRepository
     }}
 }}
 ";
-        context.AddSource($"CoCodegenMethodRepository.g.cs", SourceText.From(coCodegenRepoCode, Encoding.UTF8));
+            context.AddSource($"CoCodegenMethodRepository.g.cs", SourceText.From(coCodegenRepoCode, Encoding.UTF8));
+        }
 
-        var fronendRepoCode = @$"// <auto-generated/>
+        if (frontendContextRepo.Count != 0)
+        {
+
+            var fronendRepoCode = @$"// <auto-generated/>
 using System.Collections.Frozen;
 using mROA.Implementation;
 
@@ -310,6 +316,8 @@ public class FrontendContextRepository : IContextRepository
     }}
 }}
 ";
-        context.AddSource("FrontendContextRepository.g.cs", SourceText.From(fronendRepoCode, Encoding.UTF8));
+            context.AddSource("FrontendContextRepository.g.cs", SourceText.From(fronendRepoCode, Encoding.UTF8));
+        }
+
     }
 }

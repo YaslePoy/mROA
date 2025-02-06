@@ -9,6 +9,6 @@ public class PrinterFactory : IPrinterFactory
 {
     public TransmittedSharedObject<IPrinter> Create(string printerName)
     {
-        return new Printer(){Name = printerName};
+        return new Printer {Name = printerName};
     }
 }

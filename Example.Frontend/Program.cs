@@ -23,6 +23,6 @@ var factory = context.GetSingleObject(typeof(Example.Shared.IPrinterFactory)) as
 var printer = factory.Create("Test");
 var name = printer.Value.GetName();
 Console.WriteLine("Printer name : {0}", name);
-var page = printer.Value.Print("Test Page");
+var page = await printer.Value.Print("Test Page", new CancellationToken());
 var data = page.Value.GetData();
 Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
