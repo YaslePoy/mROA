@@ -40,6 +40,8 @@ implementations.
 
 To get that default implementation on client, call GetSingleObject.
 
+Full example is represented in Example projects
+
 ---
 
 ## Roadmap
