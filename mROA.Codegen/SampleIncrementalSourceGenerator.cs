@@ -66,7 +66,7 @@ namespace {Namespace}
                 string attributeName = attributeSymbol.ContainingType.ToDisplayString();
 
                 // Check the full name of the [Report] attribute.
-                if (attributeName == "mROA.Implementation.SharedObjectInterfaceAttribute")
+                if (attributeName == "mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
                     return (classDeclarationSyntax, true);
             }
 

@@ -1,7 +1,6 @@
-using mROA.Abstract;
 using mROA.Implementation;
 
-namespace mROA;
+namespace mROA.Abstract;
 
 public interface ISerialisationModule : IInjectableModule
 {

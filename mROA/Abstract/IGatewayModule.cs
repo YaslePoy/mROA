@@ -1,6 +1,4 @@
-using mROA.Abstract;
-
-namespace mROA.Implementation;
+namespace mROA.Abstract;
 
 public interface IGatewayModule : IDisposable, IInjectableModule
 { 

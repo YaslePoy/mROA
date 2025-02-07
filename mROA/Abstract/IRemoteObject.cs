@@ -1,4 +1,4 @@
-﻿namespace mROA.Implementation;
+﻿namespace mROA.Abstract;
 
 public interface IRemoteObject
 {

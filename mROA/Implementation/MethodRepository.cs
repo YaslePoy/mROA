@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using mROA.Abstract;
+using mROA.Implementation.Attributes;
 
 namespace mROA.Implementation;
 
@@ -9,7 +11,7 @@ public class MethodRepository : IMethodRepository
     public MethodInfo GetMethod(int id)
     {
         if (_methods.Count <= id)
-            return null;
+            throw new Exception("Method such registered method");
 
         return _methods[id];
     }

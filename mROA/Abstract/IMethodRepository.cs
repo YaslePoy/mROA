@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
-using mROA.Abstract;
 
-namespace mROA;
+namespace mROA.Abstract;
 
 public interface IMethodRepository : IInjectableModule
 {

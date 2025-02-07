@@ -2,14 +2,14 @@ using mROA.Abstract;
 
 namespace mROA.Implementation.Bootstrap;
 
-public interface ImRoaBuilder
+public interface IRoaBuilder
 {
     void Build();
 }
 
-public class FullMixBuilder : ImRoaBuilder
+public class FullMixBuilder : IRoaBuilder
 {
-    public List<IInjectableModule> Modules { get; private set; } = new();
+    public List<IInjectableModule> Modules { get; } = new();
     public void Build()
     {
         foreach (var module in Modules)
@@ -17,7 +17,7 @@ public class FullMixBuilder : ImRoaBuilder
             module.Inject(injection);
     }
 
-    public T GetModule<T>()
+    public T? GetModule<T>()
     {
         return Modules.OfType<T>().FirstOrDefault();
     }

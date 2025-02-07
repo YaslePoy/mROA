@@ -1,32 +1,34 @@
 ﻿using System.Text.Json.Serialization;
+using mROA.Abstract;
 
 namespace mROA.Implementation;
 
 public static class TransmissionConfig
 {
-    public static IContextRepository DefaultContextRepository { get; set; }
+    public static IContextRepository? DefaultContextRepository { get; set; }
 }
 
-public class TransmittedSharedObject<T>
+public class TransmittedSharedObject<T> where T : notnull
 {
-    public int ContextId { get; set; } = -1;
+    private static IContextRepository GetDefaultContextRepository() => TransmissionConfig.DefaultContextRepository ??
+                                                                       throw new NullReferenceException(
+                                                                           "DefaultContextRepository was not defined");
+
+    private int ContextId { get; init; } = -1;
 
     [JsonIgnore]
-    public T? Value => TransmissionConfig.DefaultContextRepository.GetObject<T>(ContextId);
+    public T? Value => GetDefaultContextRepository().GetObject<T>(ContextId);
 
-    [JsonIgnore]
-    public IContextRepository Context { get; set; }
-
-    public TransmittedSharedObject()
+    private TransmittedSharedObject()
     {
     }
-    public TransmittedSharedObject(T value)
+    public TransmittedSharedObject(T value) 
     {
-        ContextId = TransmissionConfig.DefaultContextRepository.GetObjectIndex(value);
+        ContextId = GetDefaultContextRepository().GetObjectIndex(value);
     }
 
     public static implicit operator T(TransmittedSharedObject<T> value) => value.Value!;
 
     public static implicit operator TransmittedSharedObject<T>(T value) =>
-        new() { ContextId = TransmissionConfig.DefaultContextRepository.GetObjectIndex(value) };
+        new() { ContextId = GetDefaultContextRepository().GetObjectIndex(value) };
 }

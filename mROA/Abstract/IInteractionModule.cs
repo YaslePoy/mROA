@@ -1,6 +1,4 @@
-using mROA.Abstract;
-
-namespace mROA;
+namespace mROA.Abstract;
 
 public interface IInteractionModule : IInjectableModule
 {

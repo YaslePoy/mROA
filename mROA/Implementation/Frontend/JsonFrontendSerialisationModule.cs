@@ -1,21 +1,25 @@
 using System.Text;
 using System.Text.Json;
+using mROA.Abstract;
 
-namespace mROA.Implementation;
+namespace mROA.Implementation.Frontend;
 
 public class JsonFrontendSerialisationModule
     : ISerialisationModule.IFrontendSerialisationModule
 {
-    private IInteractionModule.IFrontendInteractionModule _interactionModule;
+    private IInteractionModule.IFrontendInteractionModule? _interactionModule;
 
     public async Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution
     {
+        if (_interactionModule is null)
+            throw new Exception("Interaction module not initialized");
+        
         var receiveMessage = await _interactionModule.ReceiveMessage();
-        var parsed = JsonSerializer.Deserialize<T>(receiveMessage);
+        var parsed = JsonSerializer.Deserialize<T>(receiveMessage)!;
         while (parsed.CallRequestId != requestId)
         {
             receiveMessage = await _interactionModule.ReceiveMessage();
-            parsed = JsonSerializer.Deserialize<T>(receiveMessage);
+            parsed = JsonSerializer.Deserialize<T>(receiveMessage)!;
         }
 
         return parsed;
@@ -23,19 +27,22 @@ public class JsonFrontendSerialisationModule
 
     public async Task<FinalCommandExecution<T>> GetFinalCommandExecution<T>(Guid requestId)
     {
+        if (_interactionModule is null)
+            throw new Exception("Interaction module not initialized");
+        
         var receiveMessage = await _interactionModule.ReceiveMessage();
         // var str = Encoding.UTF8.GetString(receiveMessage);
         var document = JsonDocument.Parse(receiveMessage);
-        if (document.RootElement.TryGetProperty("Exeption", out var exeptionElement))
+        if (document.RootElement.TryGetProperty("Exception", out var exceptionElement))
         {
-            throw new RemoteException(exeptionElement.GetString()) { CallRequestId = requestId };
+            throw new RemoteException(exceptionElement.GetString()!) { CallRequestId = requestId };
         }
 
-        var parsed = document.Deserialize<FinalCommandExecution<T>>();
+        var parsed = document.Deserialize<FinalCommandExecution<T>>()!;
         while (parsed.CallRequestId != requestId)
         {
             receiveMessage = await _interactionModule.ReceiveMessage();
-            parsed = JsonSerializer.Deserialize<FinalCommandExecution<T>>(receiveMessage);
+            parsed = JsonSerializer.Deserialize<FinalCommandExecution<T>>(receiveMessage)!;
         }
 
         parsed.Result = parsed.Result! is JsonElement e ? e.Deserialize<T>() : (T)parsed.Result!;
@@ -44,6 +51,9 @@ public class JsonFrontendSerialisationModule
 
     public void PostCallRequest(ICallRequest callRequest)
     {
+        if (_interactionModule is null)
+            throw new Exception("Interaction module not initialized");
+        
         var post = JsonSerializer.Serialize(callRequest, callRequest.GetType());
         _interactionModule.PostMessage(Encoding.UTF8.GetBytes(post));
     }

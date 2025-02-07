@@ -1,11 +1,15 @@
-namespace mROA.Implementation;
+using mROA.Abstract;
+
+namespace mROA.Implementation.Frontend;
 
 public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontendInteractionModule
 {
-    public Stream ServerStream { get; set; }
+    public Stream? ServerStream { get; set; }
 
     public async Task<byte[]> ReceiveMessage()
     {
+        if (ServerStream is null)
+            throw new IOException("Server is not connected.");
         const int bufferSize = ushort.MaxValue;
 
         byte[] buffer = new byte[bufferSize];
@@ -20,6 +24,9 @@ public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontend
 
     public void PostMessage(byte[] message)
     {
+        if (ServerStream is null)
+            throw new IOException("Server is not connected.");
+        
         ServerStream.Write(BitConverter.GetBytes((ushort)message.Length), 0, sizeof(ushort));
         ServerStream.Write(message, 0, message.Length);
     }

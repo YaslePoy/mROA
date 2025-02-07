@@ -1,32 +1,31 @@
 ﻿using System.Reflection;
+using mROA.Abstract;
 
-namespace mROA.Implementation;
+namespace mROA.Implementation.Backend;
 
 public class BasicExecutionModule : IExecuteModule
 {
-    private IMethodRepository _methodRepo;
-    private ISerialisationModule _serialisationModule;
-    private IContextRepository _contextRepo;
+    private IMethodRepository? _methodRepo;
+    private IContextRepository? _contextRepo;
 
     public void Inject<T>(T dependency)
     {
         if (dependency is IMethodRepository methodRepo)
             _methodRepo = methodRepo;
-        if (dependency is ISerialisationModule serialisationModule)
-            _serialisationModule = serialisationModule;
+
         if (dependency is IContextRepository contextRepo)
             _contextRepo = contextRepo;
     }
 
     public ICommandExecution Execute(ICallRequest command)
     {
-        var currentCommand = _methodRepo.GetMethod(command.CommandId);
+        var currentCommand = _methodRepo!.GetMethod(command.CommandId);
         if (currentCommand == null)
             throw new Exception($"Command {command.CommandId} not found");
 
         var context = command.ObjectId != -1
-            ? _contextRepo.GetObject(command.ObjectId)
-            : _contextRepo.GetSingleObject(currentCommand.DeclaringType!);
+            ? _contextRepo!.GetObject(command.ObjectId)
+            : _contextRepo!.GetSingleObject(currentCommand.DeclaringType!);
         var parameter = command.Parameter;
 
         if (currentCommand.ReturnType.BaseType == typeof(Task) &&
@@ -57,7 +56,7 @@ public class BasicExecutionModule : IExecuteModule
             return new ExceptionCommandExecution
             {
                 CallRequestId = command.CallRequestId, CommandId = command.CommandId,
-                Exeption = e.ToString()
+                Exception = e.ToString()
             };
         }
     }
@@ -82,7 +81,7 @@ public class BasicExecutionModule : IExecuteModule
             return new ExceptionCommandExecution
             {
                 CallRequestId = command.CallRequestId, CommandId = command.CommandId,
-                Exeption = e.ToString()
+                Exception = e.ToString()
             };
         }
     }
@@ -105,7 +104,7 @@ public class BasicExecutionModule : IExecuteModule
                 CallRequestId = command.CallRequestId,
                 Result = finalResult,
                 CommandId = command.CommandId,
-                Type = finalResult.GetType()
+                Type = finalResult?.GetType()
             };
         }
         catch (Exception e)
@@ -113,7 +112,7 @@ public class BasicExecutionModule : IExecuteModule
             return new ExceptionCommandExecution
             {
                 CallRequestId = command.CallRequestId, CommandId = command.CommandId,
-                Exeption = e.ToString()
+                Exception = e.ToString()
             };
         }
     }

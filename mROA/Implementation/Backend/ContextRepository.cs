@@ -1,23 +1,20 @@
 ﻿using System.Collections.Frozen;
 using System.Reflection;
+using mROA.Abstract;
+using mROA.Implementation.Attributes;
 
-namespace mROA.Implementation;
+namespace mROA.Implementation.Backend;
 
 public class ContextRepository : IContextRepository
 {
-    private FrozenDictionary<int, object?> _singletons;
-    private object[] _storage;
+    private FrozenDictionary<int, object?>? _singletons;
+    private object?[] _storage = new object[StartupSize];
 
     private Task<int> _lastIndexFinder = Task.FromResult(0);
 
     const int StartupSize = 1024;
     const int GrowSize = 128;
 
-
-    public ContextRepository()
-    {
-        _storage = new object[StartupSize];
-    }
 
     public void FillSingletons(params Assembly[] assembly)
     {
@@ -39,7 +36,7 @@ public class ContextRepository : IContextRepository
         _storage[_lastIndexFinder.Result] = o;
 
         var last = _lastIndexFinder.Result;
-        _lastIndexFinder = FindLastIndex();
+        _lastIndexFinder = Task.Run(FindLastIndex);
 
         return last;
     }
@@ -50,30 +47,28 @@ public class ContextRepository : IContextRepository
         _lastIndexFinder = Task.FromResult(id);
     }
 
-    public object? GetObject(int id)
+    public object GetObject(int id)
     {
-        return id == -1 || _storage.Length <= id ? null : _storage[id];
+        return (id == -1 || _storage.Length <= id ? null : _storage[id]) ?? throw new NullReferenceException();
     }
 
     public T GetObject<T>(int id)
     {
-        return id == -1 || _storage.Length <= id ? throw new NullReferenceException("Cannot find that object. It is null"): (T)_storage[id];
+        return id == -1 || _storage.Length <= id ? throw new NullReferenceException("Cannot find that object. It is null"): (T)_storage[id]!;
     }
 
     public object GetSingleObject(Type type)
     {
-        return _singletons.GetValueOrDefault(type.GetHashCode()) ?? throw new ArgumentException("Unregistered singleton type");
+        return _singletons!.GetValueOrDefault(type.GetHashCode()) ?? throw new ArgumentException("Unregistered singleton type");
     }
 
     public int GetObjectIndex(object o)
     {
         var index = Array.IndexOf(_storage, o);
-        if (index == -1)
-            return ResisterObject(o);
-        return index;
+        return index == -1 ? ResisterObject(o) : index;
     }
 
-    private async Task<int> FindLastIndex()
+    private int FindLastIndex()
     {
         for (int i = 0; i < _storage.Length; i++)
         {
@@ -83,6 +78,7 @@ public class ContextRepository : IContextRepository
 
         var nextStorage = new object[_storage.Length + GrowSize];
         Array.Copy(_storage, nextStorage, _storage.Length);
+        _storage = nextStorage;
         return _storage.Length;
     }
     public void Inject<T>(T dependency)

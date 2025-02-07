@@ -1,17 +1,14 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using mROA.Abstract;
 
-namespace mROA.Implementation;
+namespace mROA.Implementation.Backend;
 
-public class NetworkGatewayModule : IGatewayModule
+public class NetworkGatewayModule(IPEndPoint endpoint) : IGatewayModule
 {
-    private TcpListener _tcpListener;
-    private IInteractionModule _interactionModule;
+    private readonly TcpListener _tcpListener = new(endpoint);
+    private IInteractionModule? _interactionModule;
 
-    public NetworkGatewayModule(IPEndPoint endpoint)
-    {
-        _tcpListener = new TcpListener(endpoint);
-    }
 
     public void Run()
     {
@@ -41,6 +38,8 @@ public class NetworkGatewayModule : IGatewayModule
 
     private void HandleIncomingConnections()
     {
+        if (_interactionModule is null)
+            throw new NullReferenceException("Interaction module is null");
         while (true)
         {
             var client = _tcpListener.AcceptTcpClient();

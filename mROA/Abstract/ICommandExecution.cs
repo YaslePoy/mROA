@@ -1,4 +1,4 @@
-namespace mROA;
+namespace mROA.Abstract;
 
 public interface ICommandExecution
 {

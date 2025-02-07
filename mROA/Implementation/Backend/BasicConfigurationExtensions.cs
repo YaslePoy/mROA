@@ -1,8 +1,9 @@
 using System.Net;
 using System.Reflection;
+using mROA.Abstract;
 using mROA.Implementation.Bootstrap;
 
-namespace mROA.Implementation;
+namespace mROA.Implementation.Backend;
 
 public static class BasicConfigurationExtensions
 {

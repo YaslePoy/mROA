@@ -1,15 +1,17 @@
-namespace mROA.Implementation;
+using mROA.Abstract;
+
+namespace mROA.Implementation.Backend;
 
 public class StreamBasedInteractionModule : IInteractionModule
 {
-    private Dictionary<int, Stream> _streams = new();
-    private Action<int, byte[]> _handler;
+    private readonly Dictionary<int, Stream> _streams = new();
+    private Action<int, byte[]>? _handler;
 
     public void RegisterSourse(Stream stream)
     {
         var id = Random.Shared.Next();
         _streams.Add(id, stream);
-        ListenTo((id, stream), _handler);
+        _ = ListenTo((id, stream), _handler!);
     }
 
     public void SendTo(int clientId, byte[] message)
@@ -34,7 +36,7 @@ public class StreamBasedInteractionModule : IInteractionModule
                 await client.stream.ReadExactlyAsync(buffer, 0, 2);
                 var len = BitConverter.ToUInt16(buffer, 0);
                 await client.stream.ReadExactlyAsync(buffer, 0, len);
-                Task.Run(() => action(client.id, buffer[..len]));
+                _ = Task.Run(() => action(client.id, buffer[..len]));
             }
         }
         catch (Exception)

@@ -4,8 +4,9 @@
 using System.Net;
 using System.Text;
 using mROA.Codegen;
-using mROA.Implementation;
 using mROA.Implementation.Bootstrap;
+using mROA.Implementation.Frontend;
+
 
 var mixer = new FullMixBuilder();
 
@@ -15,6 +16,8 @@ mixer.Modules.Add(new StreamBasedFrontendInteractionModule());
 mixer.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
 
 mixer.Build();
+
+mixer.GetModule<NetworkFrontendBridge>().Connect();
 var context = mixer.GetModule<FrontendContextRepository>();
 
 var factory = context.GetSingleObject(typeof(Example.Shared.IPrinterFactory)) as Example.Shared.IPrinterFactory;
