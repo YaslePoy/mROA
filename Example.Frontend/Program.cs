@@ -1,8 +1,10 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 
+using System.Diagnostics;
 using System.Net;
 using System.Text;
+using Example.Shared;
 using mROA.Codegen;
 using mROA.Implementation.Bootstrap;
 using mROA.Implementation.Frontend;
@@ -20,7 +22,7 @@ mixer.Build();
 mixer.GetModule<NetworkFrontendBridge>().Connect();
 var context = mixer.GetModule<FrontendContextRepository>();
 
-var factory = context.GetSingleObject(typeof(Example.Shared.IPrinterFactory)) as Example.Shared.IPrinterFactory;
+var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactory;
 
 
 var printer = factory.Create("Test");
@@ -29,3 +31,16 @@ Console.WriteLine("Printer name : {0}", name);
 var page = await printer.Value.Print("Test Page", new CancellationToken());
 var data = page.Value.GetData();
 Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
+
+var loadSingleton = context.GetSingleObject(typeof(ILoadTest)) as ILoadTest;
+
+const int iterations = 10000;
+var timer = Stopwatch.StartNew();
+for (int i = 0; i < iterations; i++)
+{
+    var x = loadSingleton.Next(1);
+    Console.WriteLine(x);
+}
+timer.Stop();
+
+Console.WriteLine("Time : {0}", timer.Elapsed);

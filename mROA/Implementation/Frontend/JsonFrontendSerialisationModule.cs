@@ -45,7 +45,6 @@ public class JsonFrontendSerialisationModule
             parsed = JsonSerializer.Deserialize<FinalCommandExecution<T>>(receiveMessage)!;
         }
 
-        parsed.Result = parsed.Result! is JsonElement e ? e.Deserialize<T>() : (T)parsed.Result!;
         return parsed;
     }
 

@@ -14,12 +14,13 @@ public class TransmittedSharedObject<T> where T : notnull
                                                                        throw new NullReferenceException(
                                                                            "DefaultContextRepository was not defined");
 
-    private int ContextId { get; init; } = -1;
+    // ReSharper disable once MemberCanBePrivate.Global
+    public int ContextId { get; init; } = -1;
 
     [JsonIgnore]
     public T? Value => GetDefaultContextRepository().GetObject<T>(ContextId);
 
-    private TransmittedSharedObject()
+    public TransmittedSharedObject()
     {
     }
     public TransmittedSharedObject(T value) 
