@@ -36,11 +36,11 @@ var loadSingleton = context.GetSingleObject(typeof(ILoadTest)) as ILoadTest;
 
 const int iterations = 10000;
 var timer = Stopwatch.StartNew();
+var x = 0;
 for (int i = 0; i < iterations; i++)
 {
-    var x = loadSingleton.Next(1);
-    Console.WriteLine(x);
+    x = loadSingleton.Next(x);
 }
 timer.Stop();
-
+Console.WriteLine("X is {0}", x);
 Console.WriteLine("Time : {0}", timer.Elapsed);
