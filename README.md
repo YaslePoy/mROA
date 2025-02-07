@@ -10,7 +10,7 @@ own layers and redefine modules to get the desired result.
 
 ## Speed
 
-mROA is a very lightweight and fast library in its basic implementation using TCP protocol. mROA can be up to 1.7 times 
+mROA is a very lightweight and fast library in its basic implementation using TCP protocol. mROA can be up to 2.8 times 
 faster than gRPC when mROA is using JSON serialization (it can be changed).
 
 ---

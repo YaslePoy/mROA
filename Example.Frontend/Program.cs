@@ -43,4 +43,4 @@ for (int i = 0; i < iterations; i++)
 }
 timer.Stop();
 Console.WriteLine("X is {0}", x);
-Console.WriteLine("Time : {0}", timer.Elapsed);
+Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
