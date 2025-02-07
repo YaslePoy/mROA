@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Title>mROA</Title>
-        <Version>1.1.1</Version>
+        <Version>1.1.2</Version>
         <Authors>YaslePoy</Authors>
         <Description>Fast and easy RPC with contex</Description>
         <RepositoryUrl>https://github.com/YaslePoy/mROA</RepositoryUrl>
