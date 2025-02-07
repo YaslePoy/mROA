@@ -19,11 +19,10 @@ public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
 
     public void Connect()
     {
-        _tcpClient.Connect(ipEndPoint);
         if (_interactionModule is null)
-        {
             throw new Exception("Interaction module was not injected");
-        }
+        
+        _tcpClient.Connect(ipEndPoint);
         _interactionModule.ServerStream = _tcpClient.GetStream();
     }
 }

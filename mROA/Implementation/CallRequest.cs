@@ -2,7 +2,7 @@
 
 public interface ICallRequest
 {
-    Guid CallRequestId { get; internal set; }
+    Guid CallRequestId { get; }
     int CommandId { get; }
     int ObjectId { get; }
     object? Parameter { get; }

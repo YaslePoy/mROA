@@ -28,23 +28,6 @@ public class JsonSerialisationModule : ISerialisationModule
     public void PostResponse(ICommandExecution call)
     {
         var texted = JsonSerializer.Serialize(call, call.GetType());
-        // if (call is TypedFinalCommandExecution nonVoidCall)
-        // {
-        //     texted = JsonSerializer.Serialize(nonVoidCall);
-        // }
-        // else if (call is FinalCommandExecution finalCommand)
-        // {
-        //     texted = JsonSerializer.Serialize(finalCommand);
-        // }
-        // else if (call is AsyncCommandExecution asyncCommand)
-        // {
-        //     texted = JsonSerializer.Serialize(asyncCommand);
-        // }
-        // else if (call is ExceptionCommandExecution exceptionCommandExecution)
-        // {
-        //     texted = JsonSerializer.Serialize(exceptionCommandExecution);
-        // }
-
         var binary = Encoding.UTF8.GetBytes(texted);
         _dataSource!.SendTo(call.ClientId, binary);
     }

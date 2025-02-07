@@ -6,7 +6,7 @@ namespace mROA.Implementation;
 
 public class MethodRepository : IMethodRepository
 {
-    private List<MethodInfo> _methods = [];
+    private readonly List<MethodInfo> _methods = [];
 
     public MethodInfo GetMethod(int id)
     {

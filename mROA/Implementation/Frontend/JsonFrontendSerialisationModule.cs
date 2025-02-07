@@ -68,5 +68,5 @@ public class JsonFrontendSerialisationModule
 public class RemoteException(string error) : Exception
 {
     public Guid CallRequestId;
-    public override string Message => error;
+    public override string Message => $"Error in request {CallRequestId} : {error}";
 }

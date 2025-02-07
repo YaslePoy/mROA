@@ -10,9 +10,10 @@ public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontend
     {
         if (ServerStream is null)
             throw new IOException("Server is not connected.");
+        
         const int bufferSize = ushort.MaxValue;
 
-        byte[] buffer = new byte[bufferSize];
+        var buffer = new byte[bufferSize];
         if (!ServerStream.CanRead) throw new IOException("Server is not connected.");
 
         await ServerStream.ReadExactlyAsync(buffer, 0, 2);

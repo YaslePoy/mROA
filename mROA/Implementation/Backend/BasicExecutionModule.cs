@@ -10,22 +10,32 @@ public class BasicExecutionModule : IExecuteModule
 
     public void Inject<T>(T dependency)
     {
-        if (dependency is IMethodRepository methodRepo)
-            _methodRepo = methodRepo;
-
-        if (dependency is IContextRepository contextRepo)
-            _contextRepo = contextRepo;
+        switch (dependency)
+        {
+            case IMethodRepository methodRepo:
+                _methodRepo = methodRepo;
+                break;
+            case IContextRepository contextRepo:
+                _contextRepo = contextRepo;
+                break;
+        }
     }
 
     public ICommandExecution Execute(ICallRequest command)
     {
-        var currentCommand = _methodRepo!.GetMethod(command.CommandId);
+        if (_methodRepo is null)
+            throw new NullReferenceException("Method repository was not defined");
+        
+        if (_contextRepo is null)
+            throw new NullReferenceException("Context repository was not defined");
+        
+        var currentCommand = _methodRepo.GetMethod(command.CommandId);
         if (currentCommand == null)
             throw new Exception($"Command {command.CommandId} not found");
 
         var context = command.ObjectId != -1
-            ? _contextRepo!.GetObject(command.ObjectId)
-            : _contextRepo!.GetSingleObject(currentCommand.DeclaringType!);
+            ? _contextRepo.GetObject(command.ObjectId)
+            : _contextRepo.GetSingleObject(currentCommand.DeclaringType!);
         var parameter = command.Parameter;
 
         if (currentCommand.ReturnType.BaseType == typeof(Task) &&
@@ -61,7 +71,7 @@ public class BasicExecutionModule : IExecuteModule
         }
     }
 
-    private ICommandExecution ExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
+    private static ICommandExecution ExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
         ICallRequest command)
     {
         var tokenSource = new CancellationTokenSource();
@@ -86,7 +96,7 @@ public class BasicExecutionModule : IExecuteModule
         }
     }
 
-    private ICommandExecution TypedExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
+    private static ICommandExecution TypedExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
         ICallRequest command)
     {
         var tokenSource = new CancellationTokenSource();

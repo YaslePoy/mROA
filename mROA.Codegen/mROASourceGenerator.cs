@@ -14,7 +14,7 @@ namespace mROA.Codegen;
 /// When using the source code as a baseline, an incremental source generator is preferable because it reduces the performance overhead.
 /// </summary>
 [Generator]
-public class SampleIncrementalSourceGenerator : IIncrementalGenerator
+public class mROASourceGenerator : IIncrementalGenerator
 {
     private const string Namespace = "mROA.Implementation";
     private const string AttributeName = "SharedObjectInterafceAttribute";

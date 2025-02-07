@@ -40,6 +40,7 @@ public class NetworkGatewayModule(IPEndPoint endpoint) : IGatewayModule
     {
         if (_interactionModule is null)
             throw new NullReferenceException("Interaction module is null");
+        
         while (true)
         {
             var client = _tcpListener.AcceptTcpClient();

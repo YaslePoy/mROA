@@ -12,8 +12,8 @@ public class ContextRepository : IContextRepository
 
     private Task<int> _lastIndexFinder = Task.FromResult(0);
 
-    const int StartupSize = 1024;
-    const int GrowSize = 128;
+    private const int StartupSize = 1024;
+    private const int GrowSize = 128;
 
 
     public void FillSingletons(params Assembly[] assembly)
@@ -70,7 +70,7 @@ public class ContextRepository : IContextRepository
 
     private int FindLastIndex()
     {
-        for (int i = 0; i < _storage.Length; i++)
+        for (var i = 0; i < _storage.Length; i++)
         {
             if (_storage[i] is null)
                 return i;
