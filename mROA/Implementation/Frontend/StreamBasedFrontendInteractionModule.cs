@@ -27,7 +27,4 @@ public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontend
     {
     }
 
-    public void Bake()
-    {
-    }
 }

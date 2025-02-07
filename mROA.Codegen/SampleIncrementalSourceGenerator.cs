@@ -239,10 +239,6 @@ public class CoCodegenMethodRepository :IMethodRepository
     public void Inject<T>(T dependency)
     {{
     }}
-
-    public void Bake()
-    {{
-    }}
 }}
 ";
             context.AddSource($"CoCodegenMethodRepository.g.cs", SourceText.From(coCodegenRepoCode, Encoding.UTF8));
@@ -308,10 +304,6 @@ public class FrontendContextRepository : IContextRepository
             _serialisationModule = serialisationModule;
         
         TransmissionConfig.DefaultContextRepository = this;
-    }}
-
-    public void Bake()
-    {{
     }}
 }}
 ";

@@ -56,7 +56,4 @@ public class NetworkGatewayModule : IGatewayModule
             _interactionModule = interactionModule;
     }
 
-    public void Bake()
-    {
-    }
 }

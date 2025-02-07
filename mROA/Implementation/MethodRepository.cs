@@ -38,7 +38,5 @@ public class MethodRepository : IMethodRepository
     {
     }
 
-    public void Bake()
-    {
-    }
+
 }

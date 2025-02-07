@@ -19,9 +19,4 @@ public class NetworkFrontendBridge : IFrontendBridge
             interactionModule.ServerStream = _tcpClient.GetStream();
         }
     }
-
-    public void Bake()
-    {
-        
-    }
 }

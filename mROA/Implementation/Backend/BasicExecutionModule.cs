@@ -18,10 +18,6 @@ public class BasicExecutionModule : IExecuteModule
             _contextRepo = contextRepo;
     }
 
-    public void Bake()
-    {
-    }
-
     public ICommandExecution Execute(ICallRequest command)
     {
         var currentCommand = _methodRepo.GetMethod(command.CommandId);

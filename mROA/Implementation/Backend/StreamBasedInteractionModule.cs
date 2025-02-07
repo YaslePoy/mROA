@@ -52,7 +52,4 @@ public class StreamBasedInteractionModule : IInteractionModule
         }
     }
 
-    public void Bake()
-    {
-    }
 }

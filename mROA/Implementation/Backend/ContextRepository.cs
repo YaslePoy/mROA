@@ -89,7 +89,4 @@ public class ContextRepository : IContextRepository
     {
     }
 
-    public void Bake()
-    {
-    }
 }

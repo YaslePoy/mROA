@@ -60,7 +60,4 @@ public class JsonSerialisationModule : ISerialisationModule
             _methodRepository = methodRepository;
     }
 
-    public void Bake()
-    {
-    }
 }

@@ -54,9 +54,6 @@ public class JsonFrontendSerialisationModule
             _interactionModule = interactionModule;
     }
 
-    public void Bake()
-    {
-    }
 }
 
 public class RemoteException(string error) : Exception

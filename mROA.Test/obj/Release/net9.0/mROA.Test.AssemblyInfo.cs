@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("mROA.Test")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+44eab91463260805ce467bdfd8f3fc67a9bcecf2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+75fb2776acb77d1f1d937a32e6a7c642c70b3b35")]
 [assembly: System.Reflection.AssemblyProductAttribute("mROA.Test")]
 [assembly: System.Reflection.AssemblyTitleAttribute("mROA.Test")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
