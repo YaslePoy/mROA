@@ -1,28 +1,36 @@
 using System.Net;
 using System.Net.Sockets;
+using global::System;
 using mROA.Abstract;
 
-namespace mROA.Implementation.Frontend;
-
-public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
+namespace mROA.Implementation.Frontend
 {
-    private readonly TcpClient _tcpClient = new();
-    private StreamBasedFrontendInteractionModule? _interactionModule;
-
-    public void Inject<T>(T dependency)
+    public class NetworkFrontendBridge : IFrontendBridge
     {
-        if (dependency is StreamBasedFrontendInteractionModule interactionModule)
+        private readonly TcpClient _tcpClient = new();
+        private StreamBasedFrontendInteractionModule? _interactionModule;
+        private readonly IPEndPoint _ipEndPoint;
+
+        public NetworkFrontendBridge(IPEndPoint ipEndPoint)
         {
-            _interactionModule = interactionModule;
+            _ipEndPoint = ipEndPoint;
         }
-    }
 
-    public void Connect()
-    {
-        if (_interactionModule is null)
-            throw new Exception("Interaction module was not injected");
+        public void Inject<T>(T dependency)
+        {
+            if (dependency is StreamBasedFrontendInteractionModule interactionModule)
+            {
+                _interactionModule = interactionModule;
+            }
+        }
+
+        public void Connect()
+        {
+            if (_interactionModule is null)
+                throw new Exception("Interaction module was not injected");
         
-        _tcpClient.Connect(ipEndPoint);
-        _interactionModule.ServerStream = _tcpClient.GetStream();
+            _tcpClient.Connect(_ipEndPoint);
+            _interactionModule.ServerStream = _tcpClient.GetStream();
+        }
     }
 }

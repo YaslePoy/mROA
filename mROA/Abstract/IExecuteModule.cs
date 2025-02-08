@@ -1,8 +1,10 @@
 using mROA.Implementation;
 
-namespace mROA.Abstract;
-
-public interface IExecuteModule : IInjectableModule
+namespace mROA.Abstract
 {
-    ICommandExecution Execute(ICallRequest command);
+    public interface IExecuteModule : IInjectableModule
+    {
+        ICommandExecution Execute(ICallRequest command);
+    }
 }
+

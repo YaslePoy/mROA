@@ -1,6 +1,7 @@
-namespace mROA.Abstract;
-
-public interface IInjectableModule
+namespace mROA.Abstract
 {
-    void Inject<T>(T dependency);
+    public interface IInjectableModule
+    {
+        void Inject<T>(T dependency);
+    }
 }

@@ -10,14 +10,15 @@
         <IsRoslynComponent>true</IsRoslynComponent>
 
         <RootNamespace>mROA.Codegen</RootNamespace>
-        <PackageId>mROA.Codegen</PackageId>
-        <Title>mROA.Codegen</Title>
+        <PackageId>mROA.Codegen.Legacy</PackageId>
+        <Title>mROA.Codegen Legacy</Title>
         <Authors>YaslePoy</Authors>
         <PackageProjectUrl>https://github.com/YaslePoy/mROA</PackageProjectUrl>
         <RepositoryUrl>https://github.com/YaslePoy/mROA</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Version>1.0.7</Version>
+        <Description>Codegen library cor mROA</Description>
     </PropertyGroup>
 
     <ItemGroup>

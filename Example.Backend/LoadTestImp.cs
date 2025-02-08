@@ -2,13 +2,14 @@
 using mROA.Implementation;
 using mROA.Implementation.Attributes;
 
-namespace Example.Backend;
-
-[SharedObjectSingleton]
-public class LoadTestImp : ILoadTest
+namespace Example.Backend
 {
-    public int Next(int last)
+    [SharedObjectSingleton]
+    public class LoadTestImp : ILoadTest
     {
-        return last + 1;
+        public int Next(int last)
+        {
+            return last + 1;
+        }
     }
 }

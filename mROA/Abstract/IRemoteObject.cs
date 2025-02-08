@@ -1,6 +1,7 @@
-﻿namespace mROA.Abstract;
-
-public interface IRemoteObject
+﻿namespace mROA.Abstract
 {
-    public int Id { get; }
+    public interface IRemoteObject
+    {
+        public int Id { get; }
+    }
 }

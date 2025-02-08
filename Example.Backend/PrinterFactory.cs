@@ -3,13 +3,14 @@ using Example.Shared;
 using mROA.Implementation;
 using mROA.Implementation.Attributes;
 
-namespace Example.Backend;
-
-[SharedObjectSingleton]
-public class PrinterFactory : IPrinterFactory
+namespace Example.Backend
 {
-    public TransmittedSharedObject<IPrinter> Create(string printerName)
+    [SharedObjectSingleton]
+    public class PrinterFactory : IPrinterFactory
     {
-        return new Printer {Name = printerName};
+        public TransmittedSharedObject<IPrinter> Create(string printerName)
+        {
+            return new Printer {Name = printerName};
+        }
     }
 }

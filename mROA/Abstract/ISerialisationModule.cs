@@ -1,16 +1,19 @@
+using global::System;
+using global::System.Threading.Tasks;
 using mROA.Implementation;
 
-namespace mROA.Abstract;
-
-public interface ISerialisationModule : IInjectableModule
+namespace mROA.Abstract
 {
-    void HandleIncomingRequest(int clientId, byte[] command);
-    void PostResponse(ICommandExecution call);
-    public interface IFrontendSerialisationModule : IInjectableModule
+    public interface ISerialisationModule : IInjectableModule
     {
-        Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution;
-        Task<FinalCommandExecution<T>> GetFinalCommandExecution<T>(Guid requestId);
+        void HandleIncomingRequest(int clientId, byte[] command);
+        void PostResponse(ICommandExecution call);
+        public interface IFrontendSerialisationModule : IInjectableModule
+        {
+            Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution;
+            Task<FinalCommandExecution<T>> GetFinalCommandExecution<T>(Guid requestId);
         
-        void PostCallRequest(ICallRequest callRequest);
+            void PostCallRequest(ICallRequest callRequest);
+        }
     }
 }

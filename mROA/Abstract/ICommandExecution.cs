@@ -1,8 +1,12 @@
-namespace mROA.Abstract;
+using global::System;
 
-public interface ICommandExecution
+namespace mROA.Abstract
 {
-    Guid CallRequestId { get; init; }
-    int ClientId { get; set; }
-    int CommandId { get; }
+    public interface ICommandExecution
+    {
+        Guid CallRequestId { get; set; }
+        int ClientId { get; set; }
+        int CommandId { get; }
+    }
 }
+

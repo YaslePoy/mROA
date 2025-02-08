@@ -1,57 +1,63 @@
+using global::System;
+using global::System.Collections.Generic;
+using global::System.IO;
+using global::System.Threading.Tasks;
 using mROA.Abstract;
 
-namespace mROA.Implementation.Backend;
-
-public class StreamBasedInteractionModule : IInteractionModule
+namespace mROA.Implementation.Backend
 {
-    private readonly Dictionary<int, Stream> _streams = new();
-    private Action<int, byte[]>? _handler;
-
-    public void RegisterSourse(Stream stream)
+    public class StreamBasedInteractionModule : IInteractionModule
     {
-        var id = Random.Shared.Next();
-        _streams.Add(id, stream);
-        _ = ListenTo((id, stream), _handler!);
-    }
-
-    public void SendTo(int clientId, byte[] message)
-    {
-        if (!_streams.TryGetValue(clientId, out var stream))
+        private readonly Dictionary<int, Stream> _streams = new();
+        private Action<int, byte[]>? _handler;
+        private Random _random = new();
+        
+        public void RegisterSourse(Stream stream)
         {
-            throw new KeyNotFoundException($"Client {clientId} not found");
+            var id = _random.Next();
+            _streams.Add(id, stream);
+            _ = ListenTo((id, stream), _handler!);
         }
 
-        stream.Write(BitConverter.GetBytes((ushort)message.Length), 0, sizeof(ushort));
-        stream.Write(message, 0, message.Length);
-    }
-
-    private async Task ListenTo((int id, Stream stream) client, Action<int, byte[]> action)
-    {
-        const int bufferSize = ushort.MaxValue;
-        try
+        public void SendTo(int clientId, byte[] message)
         {
-            byte[] buffer = new byte[bufferSize];
-            while (client.stream.CanRead)
+            if (!_streams.TryGetValue(clientId, out var stream))
             {
-                await client.stream.ReadExactlyAsync(buffer, 0, 2);
-                var len = BitConverter.ToUInt16(buffer, 0);
-                await client.stream.ReadExactlyAsync(buffer, 0, len);
-                _ = Task.Run(() => action(client.id, buffer[..len]));
+                throw new KeyNotFoundException($"Client {clientId} not found");
+            }
+
+            stream.Write(BitConverter.GetBytes((ushort)message.Length), 0, sizeof(ushort));
+            stream.Write(message, 0, message.Length);
+        }
+
+        private async Task ListenTo((int id, Stream stream) client, Action<int, byte[]> action)
+        {
+            const int bufferSize = ushort.MaxValue;
+            try
+            {
+                byte[] buffer = new byte[bufferSize];
+                while (client.stream.CanRead)
+                {
+                    await client.stream.ReadExactlyAsync(buffer, 0, 2);
+                    var len = BitConverter.ToUInt16(buffer, 0);
+                    await client.stream.ReadExactlyAsync(buffer, 0, len);
+                    _ = Task.Run(() => action(client.id, buffer[..len]));
+                }
+            }
+            catch (Exception)
+            {
+                Console.WriteLine($"Client handling finished:{client.id}");
+                _streams.Remove(client.id);
             }
         }
-        catch (Exception)
-        {
-            Console.WriteLine($"Client handling finished:{client.id}");
-            _streams.Remove(client.id);
-        }
-    }
 
-    public void Inject<T>(T dependency)
-    {
-        if (dependency is ISerialisationModule serialisationModule)
+        public void Inject<T>(T dependency)
         {
-            _handler = serialisationModule.HandleIncomingRequest;
+            if (dependency is ISerialisationModule serialisationModule)
+            {
+                _handler = serialisationModule.HandleIncomingRequest;
+            }
         }
-    }
 
+    }
 }

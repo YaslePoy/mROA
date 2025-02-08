@@ -1,12 +1,16 @@
-namespace mROA.Abstract;
+using global::System.IO;
+using global::System.Threading.Tasks;
 
-public interface IInteractionModule : IInjectableModule
+namespace mROA.Abstract
 {
-    void SendTo(int clientId, byte[] message);
-    void RegisterSourse(Stream stream);
-    public interface IFrontendInteractionModule : IInjectableModule
+    public interface IInteractionModule : IInjectableModule
     {
-        public Task<byte[]> ReceiveMessage();
-        public void PostMessage(byte[] message);
+        void SendTo(int clientId, byte[] message);
+        void RegisterSourse(Stream stream);
+        public interface IFrontendInteractionModule : IInjectableModule
+        {
+            public Task<byte[]> ReceiveMessage();
+            public void PostMessage(byte[] message);
+        }
     }
 }

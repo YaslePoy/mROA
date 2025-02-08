@@ -1,17 +1,20 @@
-﻿namespace mROA.Implementation;
+﻿using global::System;
 
-public interface ICallRequest
+namespace mROA.Implementation
 {
-    Guid CallRequestId { get; }
-    int CommandId { get; }
-    int ObjectId { get; }
-    object? Parameter { get; }
-}
+    public interface ICallRequest
+    {
+        Guid CallRequestId { get; }
+        int CommandId { get; }
+        int ObjectId { get; }
+        object? Parameter { get; }
+    }
 
-public class DefaultCallRequest : ICallRequest
-{
-    public Guid CallRequestId { get; set; } = Guid.NewGuid();
-    public int CommandId { get; init; }
-    public int ObjectId { get; init; } = -1;
-    public object? Parameter { get; set; }
+    public class DefaultCallRequest : ICallRequest
+    {
+        public Guid CallRequestId { get; set; } = Guid.NewGuid();
+        public int CommandId { get; set; }
+        public int ObjectId { get; set; } = -1;
+        public object? Parameter { get; set; }
+    }
 }
