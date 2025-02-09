@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -14,50 +15,52 @@ namespace mROA.Codegen
     /// When using the source code as a baseline, an incremental source generator is preferable because it reduces the performance overhead.
     /// </summary>
     [Generator]
-    public class mROASourceGenerator : IIncrementalGenerator
+    public class mROASourceGenerator : ISourceGenerator
     {
-        public void Initialize(IncrementalGeneratorInitializationContext context)
-        {
-            // Filter classes annotated with the [Report] attribute. Only filtered Syntax Nodes can trigger code generation.
-            var provider = context.SyntaxProvider
-                .CreateSyntaxProvider(
-                    (s, _) => s is InterfaceDeclarationSyntax,
-                    (ctx, _) => GetClassDeclarationForSourceGen(ctx))
-                .Where(t => t.reportAttributeFound)
-                .Select((t, _) => t.Item1);
-
-            // Generate the source code.
-            context.RegisterSourceOutput(context.CompilationProvider.Combine(provider.Collect()),
-                ((ctx, t) => GenerateCode(ctx, t.Left, t.Right)));
-        }
-
         /// <summary>
         /// Checks whether the Node is annotated with the [Report] attribute and maps syntax context to the specific node type (ClassDeclarationSyntax).
         /// </summary>
         /// <param name="context">Syntax context, based on CreateSyntaxProvider predicate</param>
         /// <returns>The specific cast and whether the attribute was found.</returns>
-        private static (InterfaceDeclarationSyntax, bool reportAttributeFound) GetClassDeclarationForSourceGen(
-            GeneratorSyntaxContext context)
-        {
-            var classDeclarationSyntax = (InterfaceDeclarationSyntax)context.Node;
-
-            // Go through all attributes of the class.
-            foreach (AttributeListSyntax attributeListSyntax in classDeclarationSyntax.AttributeLists)
-            foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
-            {
-                if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
-                    continue; // if we can't get the symbol, ignore it
-
-                string attributeName = attributeSymbol.ContainingType.ToDisplayString();
-
-                // Check the full name of the [Report] attribute.
-                if (attributeName == "mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
-                    return (classDeclarationSyntax, true);
-            }
-
-            return (classDeclarationSyntax, false);
-        }
-
+        ///
+        ///
+        ///
+        ///         public void Initialize(IncrementalGeneratorInitializationContext context)
+        // {
+        //     // Filter classes annotated with the [Report] attribute. Only filtered Syntax Nodes can trigger code generation.
+        //     var provider = context.SyntaxProvider
+        //         .CreateSyntaxProvider(
+        //             (s, _) => s is InterfaceDeclarationSyntax,
+        //             (ctx, _) => GetClassDeclarationForSourceGen(ctx))
+        //         .Where(t => t.reportAttributeFound)
+        //         .Select((t, _) => t.Item1);
+        //
+        //     // Generate the source code.
+        //     context.RegisterSourceOutput(context.CompilationProvider.Combine(provider.Collect()),
+        //         ((ctx, t) => GenerateCode(ctx, t.Left, t.Right)));
+        // }
+        /// 
+        // private static (InterfaceDeclarationSyntax, bool reportAttributeFound) GetClassDeclarationForSourceGen(
+        //     GeneratorSyntaxContext context)
+        // {
+        //     var classDeclarationSyntax = (InterfaceDeclarationSyntax)context.Node;
+        //
+        //     // Go through all attributes of the class.
+        //     foreach (AttributeListSyntax attributeListSyntax in classDeclarationSyntax.AttributeLists)
+        //     foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
+        //     {
+        //         if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
+        //             continue; // if we can't get the symbol, ignore it
+        //
+        //         string attributeName = attributeSymbol.ContainingType.ToDisplayString();
+        //
+        //         // Check the full name of the [Report] attribute.
+        //         if (attributeName == "mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
+        //             return (classDeclarationSyntax, true);
+        //     }
+        //
+        //     return (classDeclarationSyntax, false);
+        // }
         /// <summary>
         /// Generate code action.
         /// It will be executed on specific nodes (ClassDeclarationSyntax annotated with the [Report] attribute) changed by the user.
@@ -65,7 +68,7 @@ namespace mROA.Codegen
         /// <param name="context">Source generation context used to add source files.</param>
         /// <param name="compilation">Compilation used to provide access to the Semantic Model.</param>
         /// <param name="classDeclarations">Nodes annotated with the [Report] attribute that trigger the generate action.</param>
-        private void GenerateCode(SourceProductionContext context, Compilation compilation,
+        private void GenerateCode(GeneratorExecutionContext context, Compilation compilation,
             ImmutableArray<InterfaceDeclarationSyntax> classDeclarations)
         {
             var methods = new List<(string, IMethodSymbol)>();
@@ -113,49 +116,48 @@ namespace mROA.Codegen
                     sb.AppendLine("public" + (isAsync
                                       ? " async "
                                       : " ") +
-                                  $"{method.ReturnType.ToDisplayString()} {method.Name}({string.Join(", ", method.Parameters.Select(p => p.ToDisplayString()))}){{");
+                                  $"{method.ReturnType.ToDisplayString()} {method.Name}({string.Join(", ", method.Parameters.Select(ToFullString))}){{");
 
                     //Creating request
                     if (method.Parameters.Length == 1 && !isAsync ||
                         method.Parameters.Length == 2 && isAsync)
                     {
                         sb.AppendLine(
-                            $"\t\tvar defaultCallRequestCodegen = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id, Parameter = {method.Parameters.First().Name} }};");
+                            $"\t\t\tvar defaultCallRequestCodegen = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id, Parameter = {method.Parameters.First().Name} }};");
                     }
                     else
                     {
                         sb.AppendLine(
-                            $"\t\tvar defaultCallRequestCodegen = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id }};");
+                            $"\t\t\tvar defaultCallRequestCodegen = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id }};");
                     }
 
                     //Post created request
-                    sb.AppendLine("\t\tserialisationModule.PostCallRequest(defaultCallRequestCodegen);");
+                    sb.AppendLine("\t\t\tserialisationModule.PostCallRequest(defaultCallRequestCodegen);");
 
 
                     if (method.ReturnType.ToString() == "System.Threading.Tasks.Task")
                     {
                         sb.AppendLine(
-                            "\t\tawait serialisationModule.GetNextCommandExecution<FinalCommandExecution>(defaultCallRequestCodegen.CallRequestId);");
+                            "\t\t\tawait serialisationModule.GetNextCommandExecution<FinalCommandExecution>(defaultCallRequestCodegen.CallRequestId);");
                     }
                     else if (method.ReturnType.OriginalDefinition.ToString() == "System.Threading.Tasks.Task<TResult>")
                     {
-
                         var type = method.ReturnType.ToString();
                         type = type.Substring(type.IndexOf('<') + 1);
                         type = type.Substring(0, type.Length - 1);
                         sb.AppendLine(
-                            $"\t\tvar response = await serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId);");
+                            $"\t\t\tvar response = await serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId);");
                         sb.AppendLine($"\t\treturn ({type})response.Result;");
                     }
                     else if (!isAsync && method.ReturnType.ToDisplayString() != "void")
                     {
                         var type = method.ReturnType.ToDisplayString();
                         sb.AppendLine(
-                            $"\t\tvar response = serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId).GetAwaiter().GetResult();");
-                        sb.AppendLine($"\t\treturn ({type})response.Result;");
+                            $"\t\t\tvar response = serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId).GetAwaiter().GetResult();");
+                        sb.AppendLine($"\t\t\treturn ({type})response.Result;");
                     }
 
-                    sb.AppendLine("\t}");
+                    sb.AppendLine("\t\t}");
 
                     methodsText.Add(sb.ToString());
                 }
@@ -193,12 +195,12 @@ namespace {namespaceName} {{
                 // Add the source code to the compilation.
                 context.AddSource($"{className}.g.cs", SourceText.From(code, Encoding.UTF8));
 
-                frontendContextRepo.Add($"{{ typeof({classSymbol.ToDisplayString()}), typeof({namespaceName}.{className}) }}");
+                frontendContextRepo.Add(
+                    $"{{ typeof({classSymbol.ToDisplayString()}), typeof({namespaceName}.{className}) }}");
             }
 
             if (methods.Count != 0)
             {
-
                 var methodsStringed = methods.Select(i =>
                         $"typeof({i.Item1}).GetMethod(\"{i.Item2.Name}\", new Type[]{{{string.Join(", ", i.Item2.Parameters.Select(p => $"typeof({p.Type.ToDisplayString()})"))}}})")
                     .ToList();
@@ -214,7 +216,7 @@ namespace mROA.Codegen {{
     public class CoCodegenMethodRepository : IMethodRepository
     {{
             private readonly List<MethodInfo> _methods = new() {{  
-                {string.Join(", \r\n\t\t", methodsStringed)}
+                {string.Join(", \r\n\t\t\t\t", methodsStringed)}
             }};
             public MethodInfo GetMethod(int id)
             {{
@@ -247,7 +249,6 @@ namespace mROA.Codegen {{
 
             if (frontendContextRepo.Count != 0)
             {
-
                 var fronendRepoCode = @$"// <auto-generated/>
 
 using System.Collections.Generic;
@@ -314,7 +315,41 @@ namespace mROA.Codegen {{
 ";
                 context.AddSource("FrontendContextRepository.g.cs", SourceText.From(fronendRepoCode, Encoding.UTF8));
             }
+        }
 
+        private static string ToFullString(IParameterSymbol parameter)
+            => $"{parameter.Type.ContainingNamespace.ToDisplayString()}.{parameter.Type.MetadataName} {parameter.Name}";
+
+        public void Initialize(GeneratorInitializationContext context)
+        {
+        }
+
+        public void Execute(GeneratorExecutionContext context)
+        {
+            var trees = context.Compilation.SyntaxTrees;
+
+            var interfaces = new List<InterfaceDeclarationSyntax>();
+            foreach (var tree in trees)
+            {
+                var node = tree.GetRoot() as CompilationUnitSyntax;
+
+                foreach (var member in node.Members)
+                {
+                    if (member is InterfaceDeclarationSyntax ids)
+                    {
+                        interfaces.Add(ids);
+                    }
+                    else if (member is NamespaceDeclarationSyntax nds)
+                    {
+                        foreach (var inside in nds.Members)
+
+                            if (inside is InterfaceDeclarationSyntax ids2)
+                                interfaces.Add(ids2);
+                    }
+                }
+            }
+
+            GenerateCode(context, context.Compilation, interfaces.ToImmutableArray());
         }
     }
 }
