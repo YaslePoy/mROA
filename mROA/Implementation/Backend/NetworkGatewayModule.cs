@@ -20,8 +20,6 @@ namespace mROA.Implementation.Backend
         public void Run()
         {
             _tcpListener.Start();
-            Console.WriteLine($"Listening on {_tcpListener.LocalEndpoint}");
-            Console.WriteLine("Enter Backspace to stop");
         
             Task.Run(HandleIncomingConnections);
 
@@ -32,7 +30,6 @@ namespace mROA.Implementation.Backend
                     break;
             }
 
-            Console.WriteLine("Stopping");
         
         
         }
@@ -50,9 +47,7 @@ namespace mROA.Implementation.Backend
             while (true)
             {
                 var client = _tcpListener.AcceptTcpClient();
-                Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
                 _interactionModule.RegisterSourse(client.GetStream());
-                Console.WriteLine("Client registered");
             }
         }
 

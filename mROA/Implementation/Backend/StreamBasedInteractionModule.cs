@@ -46,7 +46,6 @@ namespace mROA.Implementation.Backend
             }
             catch (Exception)
             {
-                Console.WriteLine($"Client handling finished:{client.id}");
                 _streams.Remove(client.id);
             }
         }

@@ -344,12 +344,35 @@ namespace mROA.Codegen {{
                         foreach (var inside in nds.Members)
 
                             if (inside is InterfaceDeclarationSyntax ids2)
-                                interfaces.Add(ids2);
+                                if (ContainsSOIAttribute(ids2.AttributeLists, context, ids2))
+                                    interfaces.Add(ids2);
+
+                                
                     }
                 }
             }
 
             GenerateCode(context, context.Compilation, interfaces.ToImmutableArray());
+        }
+
+        private bool ContainsSOIAttribute(SyntaxList<AttributeListSyntax> attributes, GeneratorExecutionContext context,
+            InterfaceDeclarationSyntax interfaceDeclarationSyntax)
+        {
+            foreach (AttributeListSyntax attributeListSyntax in attributes)
+            foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
+            {
+                if (context.Compilation.GetSemanticModel(interfaceDeclarationSyntax.SyntaxTree)
+                        .GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
+                    continue; // if we can't get the symbol, ignore it
+
+                string attributeName = attributeSymbol.ContainingType.ToDisplayString();
+
+                // Check the full name of the [Report] attribute.
+                if (attributeName == "mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
+                    return true;
+            }
+
+            return false;
         }
     }
 }
