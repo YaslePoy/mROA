@@ -255,61 +255,15 @@ using mROA.Abstract;
 
 namespace mROA.Codegen;
 
-public class FrontendContextRepository : IContextRepository
+public sealed class RemoteTypeBinder
 {{
-    private ISerialisationModule.IFrontendSerialisationModule _serialisationModule;
-    private static readonly FrozenDictionary<Type, Type> _remoteTypes = new Dictionary<Type, Type> {{
+    static RemoteTypeBinder(){{
+        RemoteContextRepository.RemoteTypes = new Dictionary<Type, Type> {{
         {string.Join(", \r\n\t\t", frontendContextRepo)}}}.ToFrozenDictionary();
-    
-    public int ResisterObject(object o)
-    {{
-        throw new NotSupportedException();
-    }}
-
-    public void ClearObject(int id)
-    {{
-        throw new NotSupportedException();
-    }}
-
-    public object GetObject(int id)
-    {{
-        throw new NotSupportedException();
-    }}
-
-    public T GetObject<T>(int id)
-    {{
-        if (_remoteTypes.TryGetValue(typeof(T), out var remoteType))
-        {{
-            var remote = (T)Activator.CreateInstance(remoteType, id, _serialisationModule)!;
-            return remote;
-        }}
-        throw new NotSupportedException();
-    }}
-
-    public object GetSingleObject(Type type)
-    {{
-        return Activator.CreateInstance(_remoteTypes[type], -1, _serialisationModule)!;
-    }}
-
-    public int GetObjectIndex(object o)
-    {{
-        if (o is IRemoteObject remote)
-        {{
-            return remote.Id;
-        }}
-        throw new NotSupportedException();
-    }}
-
-    public void Inject<T>(T dependency)
-    {{
-        if (dependency is ISerialisationModule.IFrontendSerialisationModule serialisationModule)
-            _serialisationModule = serialisationModule;
-        
-        TransmissionConfig.DefaultContextRepository = this;
     }}
 }}
 ";
-            context.AddSource("FrontendContextRepository.g.cs", SourceText.From(fronendRepoCode, Encoding.UTF8));
+            context.AddSource("RemoteTypeBinder.g.cs", SourceText.From(fronendRepoCode, Encoding.UTF8));
         }
     }
 }

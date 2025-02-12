@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using mROA.Implementation;
 using mROA.Implementation.Attributes;
 
@@ -8,3 +9,4 @@ public interface IPrinterFactory
 {
     TransmittedSharedObject<IPrinter> Create(string printerName);
 }
+

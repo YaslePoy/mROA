@@ -5,17 +5,19 @@ namespace mROA.Implementation;
 
 public static class TransmissionConfig
 {
-    public static IContextRepository? DefaultContextRepository { get; set; }
+    public static IContextRepository? RealContextRepository { get; set; }
+    public static IContextRepository? RemoteEndpointContextRepository { get; set; }
+    public static int ProcessOwnerId { get; set; }
 }
 
 public class TransmittedSharedObject<T> where T : notnull
 {
-    private static IContextRepository GetDefaultContextRepository() => TransmissionConfig.DefaultContextRepository ??
+    private IContextRepository GetDefaultContextRepository() => (OwnerId == TransmissionConfig.ProcessOwnerId ? TransmissionConfig.RealContextRepository : TransmissionConfig.RemoteEndpointContextRepository) ??
                                                                        throw new NullReferenceException(
                                                                            "DefaultContextRepository was not defined");
 
     private int _contextId = -1;
-
+    public int OwnerId { get; init; }
     // ReSharper disable once MemberCanBePrivate.Global
     public int ContextId
     {
@@ -43,5 +45,5 @@ public class TransmittedSharedObject<T> where T : notnull
     public static implicit operator T(TransmittedSharedObject<T> value) => value.Value;
 
     public static implicit operator TransmittedSharedObject<T>(T value) =>
-        new() { ContextId = GetDefaultContextRepository().GetObjectIndex(value) };
+        new() { ContextId = value is IRemoteObject ro ? TransmissionConfig.RemoteEndpointContextRepository!.GetObjectIndex(ro) : TransmissionConfig.RealContextRepository!.GetObjectIndex(value) };
 }

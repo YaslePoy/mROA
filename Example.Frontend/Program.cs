@@ -6,20 +6,23 @@ using System.Net;
 using System.Text;
 using Example.Shared;
 using mROA.Codegen;
+using mROA.Implementation;
 using mROA.Implementation.Bootstrap;
 using mROA.Implementation.Frontend;
 
 
 var mixer = new FullMixBuilder();
-
-mixer.Modules.Add(new FrontendContextRepository());
+new RemoteTypeBinder();
+mixer.Modules.Add(new RemoteContextRepository());
 mixer.Modules.Add(new JsonFrontendSerialisationModule());
 mixer.Modules.Add(new StreamBasedFrontendInteractionModule());
 mixer.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
 mixer.Build();
 
+TransmissionConfig.RealContextRepository = mixer.GetModule<RemoteContextRepository>();
+
 mixer.GetModule<NetworkFrontendBridge>().Connect();
-var context = mixer.GetModule<FrontendContextRepository>();
+var context = mixer.GetModule<RemoteContextRepository>();
 
 var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactory;
 

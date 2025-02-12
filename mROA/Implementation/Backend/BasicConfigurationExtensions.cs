@@ -31,7 +31,7 @@ public static class BasicConfigurationExtensions
     {
         var repo = new ContextRepository();
         repo.FillSingletons(assemblies);
-        TransmissionConfig.DefaultContextRepository = repo;
+        TransmissionConfig.RealContextRepository = repo;
         builder.Modules.Add(repo);
     }
 

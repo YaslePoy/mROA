@@ -11,3 +11,4 @@ public interface ILoadTest
     void C();
     void A();
 }
+
