@@ -13,7 +13,7 @@ public class JsonFrontendSerialisationModule
     {
         if (_interactionModule is null)
             throw new Exception("Interaction module not initialized");
-        
+
         var receiveMessage = await _interactionModule.ReceiveMessage();
         var parsed = JsonSerializer.Deserialize<T>(receiveMessage)!;
         while (parsed.CallRequestId != requestId)
@@ -29,32 +29,37 @@ public class JsonFrontendSerialisationModule
     {
         if (_interactionModule is null)
             throw new Exception("Interaction module not initialized");
-        
-        var receiveMessage = await _interactionModule.ReceiveMessage();
-        // var str = Encoding.UTF8.GetString(receiveMessage);
-        var document = JsonDocument.Parse(receiveMessage);
-        if (document.RootElement.TryGetProperty("Exception", out var exceptionElement))
-        {
-            throw new RemoteException(exceptionElement.GetString()!) { CallRequestId = requestId };
-        }
 
-        var parsed = document.Deserialize<FinalCommandExecution<T>>()!;
-        while (parsed.CallRequestId != requestId)
+        var receiveMessage = await _interactionModule.ReceiveMessage();
+
+        var message = JsonSerializer.Deserialize<NetworkMessage>(receiveMessage)!;
+        while (message.Id != requestId)
         {
             receiveMessage = await _interactionModule.ReceiveMessage();
-            parsed = JsonSerializer.Deserialize<FinalCommandExecution<T>>(receiveMessage)!;
+            message = JsonSerializer.Deserialize<NetworkMessage>(receiveMessage)!;
         }
 
-        return parsed;
+        if (message.SchemaId == MessageType.ErrorCommandExecution)
+        {
+            throw new RemoteException(JsonSerializer.Deserialize<ExceptionCommandExecution>(message.Data)!.Exception)
+                { CallRequestId = requestId };
+        }
+
+        return JsonSerializer.Deserialize<FinalCommandExecution<T>>(message.Data)!;
     }
 
     public void PostCallRequest(ICallRequest callRequest)
     {
         if (_interactionModule is null)
             throw new Exception("Interaction module not initialized");
-        
-        var post = JsonSerializer.Serialize(callRequest, callRequest.GetType());
-        _interactionModule.PostMessage(Encoding.UTF8.GetBytes(post));
+
+        var post = JsonSerializer.SerializeToUtf8Bytes(callRequest, callRequest.GetType());
+        _interactionModule.PostMessage(JsonSerializer.SerializeToUtf8Bytes(new NetworkMessage
+        {
+            Id = callRequest.CallRequestId,
+            Data = post,
+            SchemaId = MessageType.CallRequest
+        }));
     }
 
     public void Inject<T>(T dependency)
@@ -62,7 +67,6 @@ public class JsonFrontendSerialisationModule
         if (dependency is IInteractionModule.IFrontendInteractionModule interactionModule)
             _interactionModule = interactionModule;
     }
-
 }
 
 public class RemoteException(string error) : Exception

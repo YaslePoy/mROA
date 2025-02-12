@@ -45,7 +45,7 @@ public class NetworkGatewayModule(IPEndPoint endpoint) : IGatewayModule
         {
             var client = _tcpListener.AcceptTcpClient();
             Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
-            _interactionModule.RegisterSourse(client.GetStream());
+            _interactionModule.RegisterSource(client.GetStream());
             Console.WriteLine("Client registered");
         }
     }

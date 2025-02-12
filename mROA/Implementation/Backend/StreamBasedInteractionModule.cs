@@ -7,7 +7,7 @@ public class StreamBasedInteractionModule : IInteractionModule
     private readonly Dictionary<int, Stream> _streams = new();
     private Action<int, byte[]>? _handler;
 
-    public void RegisterSourse(Stream stream)
+    public void RegisterSource(Stream stream)
     {
         var id = Random.Shared.Next();
         _streams.Add(id, stream);

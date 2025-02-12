@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
 using mROA.Abstract;
 
@@ -10,26 +11,39 @@ public class JsonSerialisationModule : ISerialisationModule
     private IExecuteModule? _executeModule;
     private IMethodRepository? _methodRepository;
 
-    public void HandleIncomingRequest(int clientId, byte[] command)
+    public void HandleIncomingRequest(int clientId, byte[] message)
     {
-        DefaultCallRequest request = JsonSerializer.Deserialize<DefaultCallRequest>(command)!;
+        NetworkMessage input = JsonSerializer.Deserialize<NetworkMessage>(message)!;
 
-        if (request.Parameter is not null)
+        if (input.SchemaId == MessageType.CallRequest)
         {
-            var parameter = _methodRepository!.GetMethod(request.CommandId).GetParameters().First().ParameterType;
-            request.Parameter = ((JsonElement)request.Parameter).Deserialize(parameter);
-        }
+            var command = JsonSerializer.Deserialize<DefaultCallRequest>(input.Data);
+            if (command.Parameter is not null)
+            {
+                var parameter = _methodRepository!.GetMethod(command.CommandId).GetParameters().First().ParameterType;
+                command.Parameter = ((JsonElement)command.Parameter).Deserialize(parameter);
+            }
 
-        var response = _executeModule!.Execute(request);
-        response.ClientId = clientId;
-        PostResponse(response);
+            var response = _executeModule!.Execute(command);
+            response.ClientId = clientId;
+            var resultType = response is FinalCommandExecution
+                ? MessageType.FinishedCommandExecution
+                : MessageType.ErrorCommandExecution;
+            PostResponse(
+                new NetworkMessage
+                {
+                    SchemaId = resultType,
+                    Id = command.CallRequestId,
+                    Data = JsonSerializer.SerializeToUtf8Bytes(response, response.GetType())
+                }, clientId);
+        }
     }
 
-    public void PostResponse(ICommandExecution call)
+    public void PostResponse(NetworkMessage message, int clientId)
     {
-        var texted = JsonSerializer.Serialize(call, call.GetType());
+        var texted = JsonSerializer.Serialize(message);
         var binary = Encoding.UTF8.GetBytes(texted);
-        _dataSource!.SendTo(call.ClientId, binary);
+        _dataSource!.SendTo(clientId, binary);
     }
 
     public void Inject<T>(T dependency)
@@ -41,5 +55,4 @@ public class JsonSerialisationModule : ISerialisationModule
         if (dependency is IMethodRepository methodRepository)
             _methodRepository = methodRepository;
     }
-
 }

@@ -16,13 +16,13 @@ mixer.Modules.Add(new FrontendContextRepository());
 mixer.Modules.Add(new JsonFrontendSerialisationModule());
 mixer.Modules.Add(new StreamBasedFrontendInteractionModule());
 mixer.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
-
 mixer.Build();
 
 mixer.GetModule<NetworkFrontendBridge>().Connect();
 var context = mixer.GetModule<FrontendContextRepository>();
 
 var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactory;
+
 
 
 var printer = factory.Create("Test");

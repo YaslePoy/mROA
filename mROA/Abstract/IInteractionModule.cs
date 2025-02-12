@@ -3,7 +3,7 @@ namespace mROA.Abstract;
 public interface IInteractionModule : IInjectableModule
 {
     void SendTo(int clientId, byte[] message);
-    void RegisterSourse(Stream stream);
+    void RegisterSource(Stream stream);
     public interface IFrontendInteractionModule : IInjectableModule
     {
         public Task<byte[]> ReceiveMessage();

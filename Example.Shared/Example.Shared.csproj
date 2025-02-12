@@ -7,8 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\mROA.Codegen\mROA.Codegen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
         <ProjectReference Include="..\mROA\mROA.csproj"/>
+        <ProjectReference Include="..\mROA.Codegen\mROA.Codegen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        
     </ItemGroup>
 
 </Project>

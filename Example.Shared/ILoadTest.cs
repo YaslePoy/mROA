@@ -7,4 +7,7 @@ namespace Example.Shared;
 public interface ILoadTest
 {
     int Next(int last);
+    int Last(int next);
+    void C();
+    void A();
 }
