@@ -41,9 +41,7 @@ public class JsonSerialisationModule : ISerialisationModule
 
     public void PostResponse(NetworkMessage message, int clientId)
     {
-        var texted = JsonSerializer.Serialize(message);
-        var binary = Encoding.UTF8.GetBytes(texted);
-        _dataSource!.SendTo(clientId, binary);
+        _dataSource!.SendTo(clientId, JsonSerializer.SerializeToUtf8Bytes(message));
     }
 
     public void Inject<T>(T dependency)
