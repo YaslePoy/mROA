@@ -9,6 +9,8 @@ public class JsonFrontendSerialisationModule
 {
     private IInteractionModule.IFrontendInteractionModule? _interactionModule;
 
+    public int ClientId => _interactionModule!.ClientId;
+
     public async Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution
     {
         if (_interactionModule is null)

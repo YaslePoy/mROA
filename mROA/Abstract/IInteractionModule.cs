@@ -6,6 +6,7 @@ public interface IInteractionModule : IInjectableModule
     void RegisterSource(Stream stream);
     public interface IFrontendInteractionModule : IInjectableModule
     {
+        int ClientId { get; }
         public Task<byte[]> ReceiveMessage();
         public void PostMessage(byte[] message);
     }

@@ -7,16 +7,18 @@ using mROA.Implementation.Backend;
 using mROA.Implementation.Bootstrap;
 
 
-var bootstrap = new FullMixBuilder();
-bootstrap.UseJsonSerialisation();
-bootstrap.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567));
-bootstrap.UseStreamInteraction();
-bootstrap.UseBasicExecution();
-bootstrap.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
-bootstrap.SetupMethodsRepository(new CoCodegenMethodRepository());
-bootstrap.Build();
+var builder = new FullMixBuilder();
+builder.UseJsonSerialisation();
+builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567));
+builder.UseStreamInteraction();
+builder.UseBasicExecution();
+builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
+builder.SetupMethodsRepository(new CoCodegenMethodRepository());
+builder.Modules.Add(new StaticSerialisationModuleProducer());
+
+builder.Build();
 
 
-var gateway = bootstrap.GetModule<IGatewayModule>() ;
+var gateway = builder.GetModule<IGatewayModule>() ;
 
 gateway.Run();

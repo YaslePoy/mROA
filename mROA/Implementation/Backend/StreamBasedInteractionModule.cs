@@ -29,6 +29,7 @@ public class StreamBasedInteractionModule : IInteractionModule
 
     private async Task ListenTo((int id, Stream stream) client, Action<int, byte[]> action)
     {
+        TransmissionConfig.OwnershipRepository = new MultiClientOwnershipRepository();
         const int bufferSize = ushort.MaxValue;
         try
         {

@@ -6,7 +6,8 @@ namespace mROA.Implementation;
 
 public class RemoteContextRepository : IContextRepository
 {
-    private ISerialisationModule.IFrontendSerialisationModule _serialisationModule;
+    private ISerialisationModuleProducer _serialisationModule;
+    private ISerialisationModuleProducer _producer;
     public static FrozenDictionary<Type, Type> RemoteTypes;
     public int ResisterObject(object o)
     {
@@ -27,7 +28,7 @@ public class RemoteContextRepository : IContextRepository
     {
         if (RemoteTypes.TryGetValue(typeof(T), out var remoteType))
         {
-            var remote = (T)Activator.CreateInstance(remoteType, id, _serialisationModule)!;
+            var remote = (T)Activator.CreateInstance(remoteType, id, _serialisationModule.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
             return remote;
         }
         throw new NotSupportedException();
@@ -35,7 +36,7 @@ public class RemoteContextRepository : IContextRepository
 
     public object GetSingleObject(Type type)
     {
-        return Activator.CreateInstance(RemoteTypes[type], -1, _serialisationModule)!;
+        return Activator.CreateInstance(RemoteTypes[type], -1, _serialisationModule.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
     }
 
     public int GetObjectIndex(object o)
@@ -49,7 +50,7 @@ public class RemoteContextRepository : IContextRepository
 
     public void Inject<T>(T dependency)
     {
-        if (dependency is ISerialisationModule.IFrontendSerialisationModule serialisationModule)
+        if (dependency is ISerialisationModuleProducer serialisationModule)
             _serialisationModule = serialisationModule;
     }
 }

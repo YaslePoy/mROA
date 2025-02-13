@@ -9,6 +9,7 @@ public interface ISerialisationModule : IInjectableModule
     void SendWelcomeMessage(int clientId);
     public interface IFrontendSerialisationModule : IInjectableModule
     {
+        int ClientId { get; }
         Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution;
         Task<FinalCommandExecution<T>> GetFinalCommandExecution<T>(Guid requestId);
         

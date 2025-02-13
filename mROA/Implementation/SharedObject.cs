@@ -8,7 +8,6 @@ public static class TransmissionConfig
     public static IContextRepository? RealContextRepository { get; set; }
     public static IContextRepository? RemoteEndpointContextRepository { get; set; }
     public static IOwnershipRepository? OwnershipRepository { get; set; }
-    public static Dictionary<int, int> ThreadsOwners { get; } = new();
 }
 
 public class SharedObject<T> where T : notnull
@@ -41,7 +40,8 @@ public class SharedObject<T> where T : notnull
         }
     }
 
-    [JsonIgnore] public T Value { get; private set; }
+    [JsonIgnore]
+    public T Value { get; private set; }
 
     // ReSharper disable once MemberCanBePrivate.Global
     public SharedObject()
@@ -52,16 +52,23 @@ public class SharedObject<T> where T : notnull
     public SharedObject(T value)
     {
         Value = value;
-        _contextId = GetDefaultContextRepository().GetObjectIndex(value);
+
+        if (value is IRemoteObject ro)
+        {
+            _ownerId = ro.OwnerId;
+            _contextId = ro.Id;
+        }
+        else
+        {
+            _contextId = TransmissionConfig.RealContextRepository!.GetObjectIndex(value);
+            _ownerId = TransmissionConfig.OwnershipRepository!.GetOwnershipId();
+        }
+
+        
     }
 
     public static implicit operator T(SharedObject<T> value) => value.Value;
 
     public static implicit operator SharedObject<T>(T value) =>
-        new()
-        {
-            ContextId = value is IRemoteObject ro
-                ? TransmissionConfig.RemoteEndpointContextRepository!.GetObjectIndex(ro)
-                : TransmissionConfig.RealContextRepository!.GetObjectIndex(value)
-        };
+        new(value);
 }

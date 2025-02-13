@@ -6,11 +6,13 @@ public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontend
 {
     public Stream? ServerStream { get; set; }
 
+    public int ClientId { get; set; }
+
     public async Task<byte[]> ReceiveMessage()
     {
         if (ServerStream is null)
             throw new IOException("Server is not connected.");
-        
+
         const int bufferSize = ushort.MaxValue;
 
         var buffer = new byte[bufferSize];
@@ -27,12 +29,12 @@ public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontend
     {
         if (ServerStream is null)
             throw new IOException("Server is not connected.");
-        
+
         ServerStream.Write(BitConverter.GetBytes((ushort)message.Length), 0, sizeof(ushort));
         ServerStream.Write(message, 0, message.Length);
     }
+
     public void Inject<T>(T dependency)
     {
     }
-
 }

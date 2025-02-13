@@ -187,6 +187,7 @@ namespace {namespaceName};
 partial class {className} (int id, ISerialisationModule.IFrontendSerialisationModule serialisationModule) : {originalName}, IRemoteObject
 {{
     public int Id => id;
+    public int OwnerId => serialisationModule.ClientId;
 
     {string.Join("\r\n\t", methodsText)}
 }}

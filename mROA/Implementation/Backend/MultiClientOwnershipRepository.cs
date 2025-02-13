@@ -8,7 +8,7 @@ public class MultiClientOwnershipRepository : IOwnershipRepository
 
     public int GetOwnershipId()
     {
-        return _ownerships.GetValueOrDefault(Environment.CurrentManagedThreadId, -1);
+        return _ownerships.GetValueOrDefault(Environment.CurrentManagedThreadId, 0);
     }
 
     public void RegisterOwnership(int ownershipId, int threadId)
