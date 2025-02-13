@@ -33,6 +33,6 @@ public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
             throw new Exception($"Incorrect message type. Must be IdAssigning, current : {message.SchemaId.ToString()}");
         }
 
-        TransmissionConfig.ProcessOwnerId = JsonSerializer.Deserialize<IdAssingnment>(message.Data)!.Id;
+        TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(JsonSerializer.Deserialize<IdAssingnment>(message.Data)!.Id);
     }
 }

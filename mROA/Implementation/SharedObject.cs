@@ -7,25 +7,26 @@ public static class TransmissionConfig
 {
     public static IContextRepository? RealContextRepository { get; set; }
     public static IContextRepository? RemoteEndpointContextRepository { get; set; }
-    public static int ProcessOwnerId { get; set; }
+    public static IOwnershipRepository? OwnershipRepository { get; set; }
     public static Dictionary<int, int> ThreadsOwners { get; } = new();
 }
 
 public class SharedObject<T> where T : notnull
 {
     private IContextRepository GetDefaultContextRepository() =>
-        (OwnerId == TransmissionConfig.ProcessOwnerId
+        (OwnerId == TransmissionConfig.OwnershipRepository!.GetOwnershipId()
             ? TransmissionConfig.RealContextRepository
             : TransmissionConfig.RemoteEndpointContextRepository) ??
         throw new NullReferenceException(
             "DefaultContextRepository was not defined");
 
     private int _contextId = -1;
-    public int OwnerId { get; }
+    public int OwnerId => TransmissionConfig.OwnershipRepository!.GetOwnershipId();
 
     // ReSharper disable once MemberCanBePrivate.Global
     public int ContextId
     {
+        // ReSharper disable once UnusedMember.Global
         get => _contextId;
         init
         {
@@ -36,6 +37,7 @@ public class SharedObject<T> where T : notnull
 
     [JsonIgnore] public T Value { get; private set; }
 
+    // ReSharper disable once MemberCanBePrivate.Global
     public SharedObject()
     {
     }
@@ -45,9 +47,6 @@ public class SharedObject<T> where T : notnull
     {
         Value = value;
         _contextId = GetDefaultContextRepository().GetObjectIndex(value);
-        OwnerId = TransmissionConfig.ThreadsOwners.TryGetValue(Environment.CurrentManagedThreadId, out var ownerId)
-            ? ownerId
-            : TransmissionConfig.ProcessOwnerId;
     }
 
     public static implicit operator T(SharedObject<T> value) => value.Value;

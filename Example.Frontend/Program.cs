@@ -18,8 +18,7 @@ mixer.Modules.Add(new JsonFrontendSerialisationModule());
 mixer.Modules.Add(new StreamBasedFrontendInteractionModule());
 mixer.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
 mixer.Build();
-
-
+Thread.CurrentThread.ManagedThreadId
 TransmissionConfig.RealContextRepository = mixer.GetModule<RemoteContextRepository>();
 TransmissionConfig.RemoteEndpointContextRepository = mixer.GetModule<RemoteContextRepository>();
 mixer.GetModule<NetworkFrontendBridge>().Connect();
