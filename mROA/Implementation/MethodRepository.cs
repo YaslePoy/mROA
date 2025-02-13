@@ -38,7 +38,6 @@ public class MethodRepository : IMethodRepository
     }
     public void Inject<T>(T dependency)
     {
+        
     }
-
-
 }

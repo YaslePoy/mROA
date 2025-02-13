@@ -8,7 +8,7 @@ namespace Example.Backend;
 [SharedObjectSingleton]
 public class PrinterFactory : IPrinterFactory
 {
-    public TransmittedSharedObject<IPrinter> Create(string printerName)
+    public SharedObject<IPrinter> Create(string printerName)
     {
         return new Printer {Name = printerName};
     }

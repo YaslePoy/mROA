@@ -19,9 +19,12 @@ mixer.Modules.Add(new StreamBasedFrontendInteractionModule());
 mixer.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
 mixer.Build();
 
-TransmissionConfig.RealContextRepository = mixer.GetModule<RemoteContextRepository>();
 
+TransmissionConfig.RealContextRepository = mixer.GetModule<RemoteContextRepository>();
+TransmissionConfig.RemoteEndpointContextRepository = mixer.GetModule<RemoteContextRepository>();
 mixer.GetModule<NetworkFrontendBridge>().Connect();
+
+Console.WriteLine(TransmissionConfig.ProcessOwnerId);
 var context = mixer.GetModule<RemoteContextRepository>();
 
 var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactory;

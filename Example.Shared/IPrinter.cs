@@ -7,6 +7,6 @@ namespace Example.Shared;
 public interface IPrinter
 {
     string GetName();
-    Task<TransmittedSharedObject<IPage>> Print(string text, CancellationToken cancellationToken);
+    Task<SharedObject<IPage>> Print(string text, CancellationToken cancellationToken);
     
 }

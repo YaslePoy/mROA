@@ -44,6 +44,11 @@ public class JsonSerialisationModule : ISerialisationModule
         _dataSource!.SendTo(clientId, JsonSerializer.SerializeToUtf8Bytes(message));
     }
 
+    public void SendWelcomeMessage(int clientId)
+    {
+        _dataSource.SendTo(clientId, JsonSerializer.SerializeToUtf8Bytes(new NetworkMessage { Data = JsonSerializer.SerializeToUtf8Bytes(new IdAssingnment { Id = clientId }), SchemaId = MessageType.IdAssigning}));
+    }
+
     public void Inject<T>(T dependency)
     {
         if (dependency is IInteractionModule interactionModule)

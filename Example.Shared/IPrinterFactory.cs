@@ -7,6 +7,6 @@ namespace Example.Shared;
 [SharedObjectInterface]
 public interface IPrinterFactory
 {
-    TransmittedSharedObject<IPrinter> Create(string printerName);
+    SharedObject<IPrinter> Create(string printerName);
 }
 

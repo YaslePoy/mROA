@@ -4,6 +4,7 @@ namespace mROA.Implementation.Backend;
 
 public class StreamBasedInteractionModule : IInteractionModule
 {
+    private ISerialisationModule _serialisationModule;
     private readonly Dictionary<int, Stream> _streams = new();
     private Action<int, byte[]>? _handler;
 
@@ -12,6 +13,7 @@ public class StreamBasedInteractionModule : IInteractionModule
         var id = Random.Shared.Next();
         _streams.Add(id, stream);
         _ = ListenTo((id, stream), _handler!);
+        _serialisationModule.SendWelcomeMessage(id);
     }
 
     public void SendTo(int clientId, byte[] message)
@@ -51,6 +53,7 @@ public class StreamBasedInteractionModule : IInteractionModule
         if (dependency is ISerialisationModule serialisationModule)
         {
             _handler = serialisationModule.HandleIncomingRequest;
+            _serialisationModule = serialisationModule;
         }
     }
 

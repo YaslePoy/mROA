@@ -21,4 +21,9 @@ public class JsonFrontendCallbackSerializationModule : ISerialisationModule
     {
         throw new NotImplementedException();
     }
+
+    public void SendWelcomeMessage(int clientId)
+    {
+        throw new NotImplementedException();
+    }
 }

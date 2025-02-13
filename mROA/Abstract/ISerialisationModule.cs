@@ -6,6 +6,7 @@ public interface ISerialisationModule : IInjectableModule
 {
     void HandleIncomingRequest(int clientId, byte[] message);
     void PostResponse(NetworkMessage message, int clientId);
+    void SendWelcomeMessage(int clientId);
     public interface IFrontendSerialisationModule : IInjectableModule
     {
         Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution;

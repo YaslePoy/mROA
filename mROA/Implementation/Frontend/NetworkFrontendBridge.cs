@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using System.Text.Json;
 using mROA.Abstract;
 
 namespace mROA.Implementation.Frontend;
@@ -24,5 +26,13 @@ public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
         
         _tcpClient.Connect(ipEndPoint);
         _interactionModule.ServerStream = _tcpClient.GetStream();
+        var welcomeMessage = _interactionModule.ReceiveMessage().GetAwaiter().GetResult();
+        var message = JsonSerializer.Deserialize<NetworkMessage>(welcomeMessage);
+        if (message.SchemaId != MessageType.IdAssigning)
+        {
+            throw new Exception($"Incorrect message type. Must be IdAssigning, current : {message.SchemaId.ToString()}");
+        }
+
+        TransmissionConfig.ProcessOwnerId = JsonSerializer.Deserialize<IdAssingnment>(message.Data)!.Id;
     }
 }
