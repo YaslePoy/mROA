@@ -68,11 +68,6 @@ public class SharedObject<T> where T : notnull
             _ownerId = ro.OwnerId;
             _contextId = ro.Id;
         }
-        else
-        {
-            _contextId = TransmissionConfig.RealContextRepository!.GetObjectIndex(value);
-            _ownerId = TransmissionConfig.OwnershipRepository!.GetOwnershipId();
-        }
     }
 
     public static implicit operator T(SharedObject<T> value) => value.Value;
