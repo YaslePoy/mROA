@@ -21,7 +21,13 @@ public class SharedObject<T> where T : notnull
             "DefaultContextRepository was not defined");
 
     private int _contextId = -1;
-    public int OwnerId => TransmissionConfig.OwnershipRepository!.GetOwnershipId();
+    private int _ownerId = -1;
+
+    public int OwnerId
+    {
+        get => _ownerId == -1 ? TransmissionConfig.OwnershipRepository!.GetOwnershipId() : _ownerId;
+        set => _ownerId = value;
+    }
 
     // ReSharper disable once MemberCanBePrivate.Global
     public int ContextId
