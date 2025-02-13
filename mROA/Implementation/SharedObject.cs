@@ -19,12 +19,16 @@ public class SharedObject<T> where T : notnull
         throw new NullReferenceException(
             "DefaultContextRepository was not defined");
 
-    private int _contextId = -1;
+    private int _contextId = -2;
     private int _ownerId = -1;
 
     public int OwnerId
     {
-        get => _ownerId == -1 ? TransmissionConfig.OwnershipRepository!.GetOwnershipId() : _ownerId;
+        get
+        {
+            _ownerId = _ownerId == -1 ? TransmissionConfig.OwnershipRepository!.GetOwnershipId() : _ownerId;
+            return _ownerId;
+        }
         set => _ownerId = value;
     }
 
@@ -32,7 +36,14 @@ public class SharedObject<T> where T : notnull
     public int ContextId
     {
         // ReSharper disable once UnusedMember.Global
-        get => _contextId;
+        get
+        {
+            if (_contextId != -2)
+                return _contextId;
+            
+            _contextId = TransmissionConfig.RealContextRepository!.GetObjectIndex(Value);
+            return _contextId;
+        }
         init
         {
             _contextId = value;
@@ -40,8 +51,7 @@ public class SharedObject<T> where T : notnull
         }
     }
 
-    [JsonIgnore]
-    public T Value { get; private set; }
+    [JsonIgnore] public T Value { get; private set; }
 
     // ReSharper disable once MemberCanBePrivate.Global
     public SharedObject()
@@ -63,8 +73,6 @@ public class SharedObject<T> where T : notnull
             _contextId = TransmissionConfig.RealContextRepository!.GetObjectIndex(value);
             _ownerId = TransmissionConfig.OwnershipRepository!.GetOwnershipId();
         }
-
-        
     }
 
     public static implicit operator T(SharedObject<T> value) => value.Value;
