@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using mROA.Abstract;
 
 namespace mROA.Implementation.Backend;
@@ -15,7 +16,7 @@ public class JsonSerialisationModule : ISerialisationModule
         var ownership = TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository ?? throw new Exception("Set ownership repository type is incorrect");
         ownership.RegisterOwnership(clientId);
         NetworkMessage input = JsonSerializer.Deserialize<NetworkMessage>(message)!;
-        
+        Console.WriteLine(Encoding.Default.GetString(input.Data));
         if (input.SchemaId == MessageType.CallRequest)
         {
             var command = JsonSerializer.Deserialize<DefaultCallRequest>(input.Data)!;

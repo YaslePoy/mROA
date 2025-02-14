@@ -141,7 +141,8 @@ namespace {Namespace}
                     sb.AppendLine(
                         $"\t\tvar defaultCallRequestCodegen = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id }};");
                 }
-
+                
+                sb.AppendLine("\t\tSystem.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(defaultCallRequestCodegen));");
                 //Post created request
                 sb.AppendLine("\t\tserialisationModule.PostCallRequest(defaultCallRequestCodegen);");
 

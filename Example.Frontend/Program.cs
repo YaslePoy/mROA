@@ -28,13 +28,15 @@ var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactor
 
 
 var printer = factory.Create("Test");
-// var name = printer.Value.GetName();
-// Console.WriteLine("Printer name : {0}", name);
+var name = printer.Value.GetName();
+Console.WriteLine("Printer name : {0}", name);
 
+Console.WriteLine("Registered printer");
 factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
-
-// var names = factory.CollectAllNames();
+Console.WriteLine("Collecting all printers");
+var names = factory.CollectAllNames();
 Console.ReadLine();
+
 // var page = await printer.Value.Print("Test Page", new CancellationToken());
 // var data = page.Value.GetData();
 // Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
