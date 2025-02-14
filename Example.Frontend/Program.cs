@@ -37,7 +37,7 @@ var printer = factory.Create("Test");
 var name = printer.Value.GetName();
 Console.WriteLine("Printer name : {0}", name);
 
-factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
+// factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
 
 var page = await printer.Value.Print("Test Page", new CancellationToken());
 var data = page.Value.GetData();

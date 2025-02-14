@@ -3,4 +3,5 @@
 public interface IOwnershipRepository
 {
     int GetOwnershipId();
+    int GetHostOwnershipId();
 }

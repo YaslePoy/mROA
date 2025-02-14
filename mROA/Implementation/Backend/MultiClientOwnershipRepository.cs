@@ -11,13 +11,18 @@ public class MultiClientOwnershipRepository : IOwnershipRepository
         return _ownerships.GetValueOrDefault(Environment.CurrentManagedThreadId, 0);
     }
 
-    public void RegisterOwnership(int ownershipId, int threadId)
+    public int GetHostOwnershipId()
     {
-        _ownerships.TryAdd(ownershipId, threadId);
+        return 0;
     }
 
-    public void FreeOwnership(int ownershipId)
+    public void RegisterOwnership(int ownershipId)
     {
-        _ownerships.Remove(ownershipId);
+        _ownerships.TryAdd(Environment.CurrentManagedThreadId, ownershipId);
+    }
+
+    public void FreeOwnership()
+    {
+        _ownerships.Remove(Environment.CurrentManagedThreadId);
     }
 }

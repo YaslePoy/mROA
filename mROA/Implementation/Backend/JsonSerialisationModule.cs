@@ -1,6 +1,4 @@
-﻿using System.Net.Sockets;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using mROA.Abstract;
 
 namespace mROA.Implementation.Backend;
@@ -13,11 +11,13 @@ public class JsonSerialisationModule : ISerialisationModule
 
     public void HandleIncomingRequest(int clientId, byte[] message)
     {
+        var ownership = TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository ?? throw new Exception("Set ownership repository type is incorrect");
+        ownership.RegisterOwnership(clientId);
         NetworkMessage input = JsonSerializer.Deserialize<NetworkMessage>(message)!;
-
+        
         if (input.SchemaId == MessageType.CallRequest)
         {
-            var command = JsonSerializer.Deserialize<DefaultCallRequest>(input.Data);
+            var command = JsonSerializer.Deserialize<DefaultCallRequest>(input.Data)!;
             if (command.Parameter is not null)
             {
                 var parameter = _methodRepository!.GetMethod(command.CommandId).GetParameters().First().ParameterType;
@@ -37,6 +37,7 @@ public class JsonSerialisationModule : ISerialisationModule
                     Data = JsonSerializer.SerializeToUtf8Bytes(response, response.GetType())
                 }, clientId);
         }
+        ownership.FreeOwnership();
     }
 
     public void PostResponse(NetworkMessage message, int clientId)
@@ -46,7 +47,7 @@ public class JsonSerialisationModule : ISerialisationModule
 
     public void SendWelcomeMessage(int clientId)
     {
-        _dataSource.SendTo(clientId, JsonSerializer.SerializeToUtf8Bytes(new NetworkMessage { Data = JsonSerializer.SerializeToUtf8Bytes(new IdAssingnment { Id = clientId }), SchemaId = MessageType.IdAssigning}));
+        _dataSource!.SendTo(clientId, JsonSerializer.SerializeToUtf8Bytes(new NetworkMessage { Data = JsonSerializer.SerializeToUtf8Bytes(new IdAssingnment { Id = clientId }), SchemaId = MessageType.IdAssigning}));
     }
 
     public void Inject<T>(T dependency)

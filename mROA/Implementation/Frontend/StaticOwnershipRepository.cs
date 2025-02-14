@@ -8,4 +8,9 @@ public class StaticOwnershipRepository(int id) : IOwnershipRepository
     {
         return id;
     }
+
+    public int GetHostOwnershipId()
+    {
+        return id;
+    }
 }
