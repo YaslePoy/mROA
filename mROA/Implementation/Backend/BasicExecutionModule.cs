@@ -6,22 +6,13 @@ namespace mROA.Implementation.Backend;
 public class BasicExecutionModule : IExecuteModule
 {
     private IMethodRepository? _methodRepo;
-    private IContextRepository? _contextRepo;
 
     public void Inject<T>(T dependency)
     {
-        switch (dependency)
-        {
-            case IMethodRepository methodRepo:
-                _methodRepo = methodRepo;
-                break;
-            case IContextRepository contextRepo:
-                _contextRepo = contextRepo;
-                break;
-        }
+        if (dependency is IMethodRepository methodRepo) _methodRepo = methodRepo;
     }
 
-    public ICommandExecution Execute(ICallRequest command)
+    public ICommandExecution Execute(ICallRequest command, IContextRepository _contextRepo)
     {
         if (_methodRepo is null)
             throw new NullReferenceException("Method repository was not defined");

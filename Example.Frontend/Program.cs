@@ -1,9 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-
-using System.Diagnostics;
-using System.Net;
-using System.Text;
+﻿using System.Net;
 using Example.Frontend;
 using Example.Shared;
 using mROA.Codegen;
@@ -12,47 +7,48 @@ using mROA.Implementation.Backend;
 using mROA.Implementation.Bootstrap;
 using mROA.Implementation.Frontend;
 
-
-var mixer = new FullMixBuilder();
+var builder = new FullMixBuilder();
 new RemoteTypeBinder();
-mixer.Modules.Add(new RemoteContextRepository());
-mixer.Modules.Add(new JsonFrontendSerialisationModule());
-mixer.Modules.Add(new StreamBasedFrontendInteractionModule());
-mixer.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
-mixer.Modules.Add(new StaticSerialisationModuleProducer());
-mixer.UseCollectableContextRepository();
-mixer.Build();
+builder.Modules.Add(new RemoteContextRepository());
+builder.Modules.Add(new JsonFrontendSerialisationModule());
+builder.Modules.Add(new StreamBasedFrontendInteractionModule());
+builder.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
+builder.Modules.Add(new StaticSerialisationModuleProducer());
+builder.UseCollectableContextRepository();
+builder.Build();
 
-TransmissionConfig.RealContextRepository = mixer.GetModule<ContextRepository>();
-TransmissionConfig.RemoteEndpointContextRepository = mixer.GetModule<RemoteContextRepository>();
-mixer.GetModule<NetworkFrontendBridge>().Connect();
+TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>();
+TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
+builder.GetModule<NetworkFrontendBridge>().Connect();
 
 Console.WriteLine(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-var context = mixer.GetModule<RemoteContextRepository>();
+var context = builder.GetModule<RemoteContextRepository>();
 
 var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactory;
 
 
 var printer = factory.Create("Test");
-var name = printer.Value.GetName();
-Console.WriteLine("Printer name : {0}", name);
+// var name = printer.Value.GetName();
+// Console.WriteLine("Printer name : {0}", name);
 
-// factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
+factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
 
-var page = await printer.Value.Print("Test Page", new CancellationToken());
-var data = page.Value.GetData();
-Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
-
-var loadSingleton = context.GetSingleObject(typeof(ILoadTest)) as ILoadTest;
-
-const int iterations = 10000;
-var timer = Stopwatch.StartNew();
-var x = 0;
-for (int i = 0; i < iterations; i++)
-{
-    x = loadSingleton.Next(x);
-}
-
-timer.Stop();
-Console.WriteLine("X is {0}", x);
-Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
+// var names = factory.CollectAllNames();
+Console.ReadLine();
+// var page = await printer.Value.Print("Test Page", new CancellationToken());
+// var data = page.Value.GetData();
+// Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
+//
+// var loadSingleton = context.GetSingleObject(typeof(ILoadTest)) as ILoadTest;
+//
+// const int iterations = 10000;
+// var timer = Stopwatch.StartNew();
+// var x = 0;
+// for (int i = 0; i < iterations; i++)
+// {
+//     x = loadSingleton.Next(x);
+// }
+//
+// timer.Stop();
+// Console.WriteLine("X is {0}", x);
+// Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);

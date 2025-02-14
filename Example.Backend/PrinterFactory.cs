@@ -24,4 +24,9 @@ public class PrinterFactory : IPrinterFactory
     {
         return new SharedObject<IPrinter>(_printers.Find(i => i.GetName() == printerName)!);
     }
+
+    public string[] CollectAllNames()
+    {
+        return _printers.Select(i => i.GetName()).ToArray();
+    }
 }

@@ -13,7 +13,7 @@ public static class TransmissionConfig
 public class SharedObject<T> where T : notnull
 {
     private IContextRepository GetDefaultContextRepository() =>
-        (OwnerId == TransmissionConfig.OwnershipRepository!.GetOwnershipId()
+        (OwnerId == TransmissionConfig.OwnershipRepository!.GetHostOwnershipId()
             ? TransmissionConfig.RealContextRepository
             : TransmissionConfig.RemoteEndpointContextRepository) ??
         throw new NullReferenceException(

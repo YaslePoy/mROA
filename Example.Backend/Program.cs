@@ -13,12 +13,14 @@ builder.UseJsonSerialisation();
 builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567));
 builder.UseStreamInteraction();
 builder.UseBasicExecution();
+builder.Modules.Add(new RemoteContextRepository());
 builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
 builder.SetupMethodsRepository(new CoCodegenMethodRepository());
 builder.Modules.Add(new CreativeSerializationModuleProducer([], typeof(JsonFrontendSerialisationModule)));
 
 builder.Build();
-
+new RemoteTypeBinder();
+TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
 
 var gateway = builder.GetModule<IGatewayModule>() ;
 

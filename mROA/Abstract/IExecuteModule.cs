@@ -4,5 +4,5 @@ namespace mROA.Abstract;
 
 public interface IExecuteModule : IInjectableModule
 {
-    ICommandExecution Execute(ICallRequest command);
+    ICommandExecution Execute(ICallRequest command, IContextRepository executionContextRepository);
 }

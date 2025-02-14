@@ -8,6 +8,7 @@ public class JsonSerialisationModule : ISerialisationModule
     private IInteractionModule? _dataSource;
     private IExecuteModule? _executeModule;
     private IMethodRepository? _methodRepository;
+    private IContextRepository? _contextRepo;
 
     public void HandleIncomingRequest(int clientId, byte[] message)
     {
@@ -21,10 +22,11 @@ public class JsonSerialisationModule : ISerialisationModule
             if (command.Parameter is not null)
             {
                 var parameter = _methodRepository!.GetMethod(command.CommandId).GetParameters().First().ParameterType;
-                command.Parameter = ((JsonElement)command.Parameter).Deserialize(parameter);
+                var jsElement = (JsonElement)command.Parameter;
+                command.Parameter = jsElement.Deserialize(parameter);
             }
 
-            var response = _executeModule!.Execute(command);
+            var response = _executeModule!.Execute(command, _contextRepo);
             response.ClientId = clientId;
             var resultType = response is FinalCommandExecution
                 ? MessageType.FinishedCommandExecution
@@ -52,11 +54,20 @@ public class JsonSerialisationModule : ISerialisationModule
 
     public void Inject<T>(T dependency)
     {
-        if (dependency is IInteractionModule interactionModule)
-            _dataSource = interactionModule;
-        if (dependency is IExecuteModule executeModule)
-            _executeModule = executeModule;
-        if (dependency is IMethodRepository methodRepository)
-            _methodRepository = methodRepository;
+        switch (dependency)
+        {
+            case IInteractionModule interactionModule:
+                _dataSource = interactionModule;
+                break;
+            case IExecuteModule executeModule:
+                _executeModule = executeModule;
+                break;
+            case IMethodRepository methodRepository:
+                _methodRepository = methodRepository;
+                break;
+            case IContextRepository contextRepository:
+                _contextRepo = contextRepository;
+                break;
+        }
     }
 }

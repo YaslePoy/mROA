@@ -7,6 +7,7 @@ public class ClientBasedPrinter : IPrinter
 {
     public string GetName()
     {
+        Console.WriteLine("ClientBasedPrinter called from server!!!!!!!!!!! Vova likes that:)");
         return "ClientBasedPrinter";
     }
 
