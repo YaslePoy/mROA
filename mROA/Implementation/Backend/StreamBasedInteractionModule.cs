@@ -16,6 +16,11 @@ public class StreamBasedInteractionModule : IInteractionModule
         _serialisationModule.SendWelcomeMessage(id);
     }
 
+    public Stream GetSource(int clientId)
+    {
+        return _streams.GetValueOrDefault(clientId, Stream.Null);
+    }
+
     public void SendTo(int clientId, byte[] message)
     {
         if (!_streams.TryGetValue(clientId, out var stream))

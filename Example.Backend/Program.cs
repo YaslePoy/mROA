@@ -5,6 +5,7 @@ using mROA.Codegen;
 using mROA.Implementation;
 using mROA.Implementation.Backend;
 using mROA.Implementation.Bootstrap;
+using mROA.Implementation.Frontend;
 
 
 var builder = new FullMixBuilder();
@@ -14,7 +15,7 @@ builder.UseStreamInteraction();
 builder.UseBasicExecution();
 builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
 builder.SetupMethodsRepository(new CoCodegenMethodRepository());
-builder.Modules.Add(new StaticSerialisationModuleProducer());
+builder.Modules.Add(new CreativeSerializationModuleProducer([], typeof(JsonFrontendSerialisationModule)));
 
 builder.Build();
 

@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using mROA.Abstract;
 
@@ -8,7 +7,6 @@ public class JsonFrontendSerialisationModule
     : ISerialisationModule.IFrontendSerialisationModule
 {
     private IInteractionModule.IFrontendInteractionModule? _interactionModule;
-
     public int ClientId => _interactionModule!.ClientId;
 
     public async Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution
@@ -62,8 +60,9 @@ public class JsonFrontendSerialisationModule
             Data = post,
             SchemaId = MessageType.CallRequest
         }));
+        
+        
     }
-
     public void Inject<T>(T dependency)
     {
         if (dependency is IInteractionModule.IFrontendInteractionModule interactionModule)

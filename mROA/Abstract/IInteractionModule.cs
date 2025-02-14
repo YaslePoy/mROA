@@ -4,6 +4,7 @@ public interface IInteractionModule : IInjectableModule
 {
     void SendTo(int clientId, byte[] message);
     void RegisterSource(Stream stream);
+    Stream GetSource(int clientId);
     public interface IFrontendInteractionModule : IInjectableModule
     {
         int ClientId { get; }
