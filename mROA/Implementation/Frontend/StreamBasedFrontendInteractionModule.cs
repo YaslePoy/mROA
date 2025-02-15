@@ -5,9 +5,20 @@ namespace mROA.Implementation.Frontend;
 public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontendInteractionModule
 {
     public Stream? ServerStream { get; set; }
-
     public int ClientId { get; set; }
 
+    public NetworkMessage[] UnhandledMessages()
+    {
+        return Array.Empty<NetworkMessage>();
+    }
+
+    public NetworkMessage LastMessage()
+    {
+        return null;
+    }
+    
+    
+    
     public async Task<byte[]> ReceiveMessage()
     {
         if (ServerStream is null)
