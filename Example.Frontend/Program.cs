@@ -28,14 +28,12 @@ var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactor
 
 //правильный порядок команд 8-5-10-7
 var printer = factory.Create("Test");
-Thread.Sleep(100);
 var name = printer.Value.GetName();
-Thread.Sleep(100);
 Console.WriteLine("Printer name : {0}", name);
 
 Console.WriteLine("Registered printer");
+
 factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
-Thread.Sleep(100);
 Console.WriteLine("Collecting all printers");
 var names = factory.CollectAllNames();
 Console.ReadLine();

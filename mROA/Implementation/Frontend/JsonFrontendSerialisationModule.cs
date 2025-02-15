@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using mROA.Abstract;
 
@@ -15,11 +16,20 @@ public class JsonFrontendSerialisationModule
             throw new Exception("Interaction module not initialized");
 
         var receiveMessage = await _interactionModule.ReceiveMessage();
-        var parsed = JsonSerializer.Deserialize<T>(receiveMessage)!;
-        while (parsed.CallRequestId != requestId)
+        var message = JsonSerializer.Deserialize<NetworkMessage>(receiveMessage)!;
+
+        while (message.Id != requestId)
         {
             receiveMessage = await _interactionModule.ReceiveMessage();
-            parsed = JsonSerializer.Deserialize<T>(receiveMessage)!;
+            message = JsonSerializer.Deserialize<NetworkMessage>(receiveMessage)!;
+        }
+
+        var parsed = JsonSerializer.Deserialize<T>(message.Data)!;
+
+        if (message.SchemaId == MessageType.ErrorCommandExecution)
+        {
+            throw new RemoteException(JsonSerializer.Deserialize<ExceptionCommandExecution>(message.Data)!.Exception)
+                { CallRequestId = requestId };
         }
 
         return parsed;
@@ -31,11 +41,14 @@ public class JsonFrontendSerialisationModule
             throw new Exception("Interaction module not initialized");
 
         var receiveMessage = await _interactionModule.ReceiveMessage();
+        Console.WriteLine($"Received message: {Encoding.UTF8.GetString(receiveMessage)}");
 
         var message = JsonSerializer.Deserialize<NetworkMessage>(receiveMessage)!;
         while (message.Id != requestId)
         {
             receiveMessage = await _interactionModule.ReceiveMessage();
+            Console.WriteLine($"Received message again: {Encoding.UTF8.GetString(receiveMessage)}");
+
             message = JsonSerializer.Deserialize<NetworkMessage>(receiveMessage)!;
         }
 
@@ -53,6 +66,8 @@ public class JsonFrontendSerialisationModule
         if (_interactionModule is null)
             throw new Exception("Interaction module not initialized");
 
+        Console.WriteLine($"PostCallRequest: {JsonSerializer.Serialize(callRequest)}");
+
         var post = JsonSerializer.SerializeToUtf8Bytes(callRequest, callRequest.GetType());
         _interactionModule.PostMessage(JsonSerializer.SerializeToUtf8Bytes(new NetworkMessage
         {
@@ -60,9 +75,8 @@ public class JsonFrontendSerialisationModule
             Data = post,
             SchemaId = MessageType.CallRequest
         }));
-        
-        
     }
+
     public void Inject<T>(T dependency)
     {
         if (dependency is IInteractionModule.IFrontendInteractionModule interactionModule)
