@@ -14,9 +14,6 @@ public class BasicExecutionModule : IExecuteModule
 
     public ICommandExecution Execute(ICallRequest command, IContextRepository _contextRepo)
     {
-        Console.WriteLine($"Executing command: {command.CommandId}");
-        Thread.Sleep(100);
-
         if (_methodRepo is null)
             throw new NullReferenceException("Method repository was not defined");
         

@@ -27,7 +27,6 @@ public class JsonSerialisationModule : ISerialisationModule
                 command.Parameter = jsElement.Deserialize(parameter);
             }
 
-            Console.WriteLine($"Calling command execution {command.CommandId}");
             var response = _executeModule!.Execute(command, _contextRepo);
             response.ClientId = clientId;
             var resultType = response is FinalCommandExecution
