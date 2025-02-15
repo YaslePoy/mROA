@@ -17,6 +17,7 @@ builder.Modules.Add(new StaticSerialisationModuleProducer());
 builder.Modules.Add(new BasicExecutionModule());
 builder.Modules.Add(new CoCodegenMethodRepository());
 builder.Modules.Add(new StreamBasedVirtualBackendInteractionModule());
+builder.Modules.Add(new JsonSerialisationModule());
 builder.UseCollectableContextRepository();
 builder.Build();
 
