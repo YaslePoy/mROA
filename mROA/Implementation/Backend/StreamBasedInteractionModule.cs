@@ -4,9 +4,9 @@ namespace mROA.Implementation.Backend;
 
 public class StreamBasedInteractionModule : IInteractionModule
 {
-    private ISerialisationModule _serialisationModule;
+    internal ISerialisationModule _serialisationModule;
     private readonly Dictionary<int, Stream> _streams = new();
-    private Action<int, byte[]>? _handler;
+    internal Action<int, byte[]>? _handler;
 
     public void RegisterSource(Stream stream)
     {

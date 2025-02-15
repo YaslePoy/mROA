@@ -13,8 +13,13 @@ public class JsonSerialisationModule : ISerialisationModule
 
     public void HandleIncomingRequest(int clientId, byte[] message)
     {
-        var ownership = TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository ?? throw new Exception("Set ownership repository type is incorrect");
-        ownership.RegisterOwnership(clientId);
+        MultiClientOwnershipRepository? ownership = null;
+        if (TransmissionConfig.OwnershipRepository is MultiClientOwnershipRepository)
+        {
+            ownership = TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
+            ownership.RegisterOwnership(clientId);
+        }
+
         NetworkMessage input = JsonSerializer.Deserialize<NetworkMessage>(message)!;
         Console.WriteLine(Encoding.Default.GetString(input.Data));
         if (input.SchemaId == MessageType.CallRequest)
@@ -40,7 +45,8 @@ public class JsonSerialisationModule : ISerialisationModule
                     Data = JsonSerializer.SerializeToUtf8Bytes(response, response.GetType())
                 }, clientId);
         }
-        ownership.FreeOwnership();
+
+        ownership?.FreeOwnership();
     }
 
     public void PostResponse(NetworkMessage message, int clientId)

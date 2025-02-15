@@ -1,25 +1,26 @@
-﻿using mROA.Implementation.Backend;
+﻿using mROA.Abstract;
+using mROA.Implementation.Backend;
 
 namespace mROA.Implementation.Frontend;
 
-public class StreamBasedVirtualBackendInteractionModule : StreamBasedInteractionModule
+public class StreamBasedVirtualBackendInteractionModule : StreamBasedInteractionModule, IInteractionModule
 {
-    public Stream ServerStream { get; set; }
-
+    private Stream? _serverStream { get; set; }
+    private StreamBasedFrontendInteractionModule? _interactionModule;
     public void RegisterSource(Stream stream)
     {
-        ServerStream = stream;
+
     }
     
     public Stream GetSource(int clientId)
     {
-        return ServerStream;
+        return _serverStream;
     }
     
     public void SendTo(int clientId, byte[] message)
     {
-        ServerStream.Write(BitConverter.GetBytes((ushort)message.Length), 0, sizeof(ushort));
-        ServerStream.Write(message, 0, message.Length);
+        _serverStream.Write(BitConverter.GetBytes((ushort)message.Length), 0, sizeof(ushort));
+        _serverStream.Write(message, 0, message.Length);
     }
 
     private async Task ListenTo((int id, Stream stream) client, Action<int, byte[]> action)
@@ -40,5 +41,20 @@ public class StreamBasedVirtualBackendInteractionModule : StreamBasedInteraction
         {
         }
     }
-    
+
+    public void Inject<T>(T dependency)
+    {
+        base.Inject(dependency);
+        if (dependency is StreamBasedFrontendInteractionModule interactionModule)
+        {
+            _interactionModule = interactionModule;
+        }
+    }
+
+
+    public void StartVirtualInteraction()
+    {
+        _serverStream = _interactionModule.ServerStream;
+        _ = ListenTo((0, _serverStream), _handler!);
+    }
 }
