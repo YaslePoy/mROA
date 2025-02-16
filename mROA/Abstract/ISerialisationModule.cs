@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using mROA.Implementation;
 
 namespace mROA.Abstract;
@@ -12,7 +13,14 @@ public interface ISerialisationModule : IInjectableModule
         int ClientId { get; }
         Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution;
         Task<FinalCommandExecution<T>> GetFinalCommandExecution<T>(Guid requestId);
-        
         void PostCallRequest(ICallRequest callRequest);
     }
+}
+
+public interface IRepresentationModule : IInjectableModule
+{
+    int Id { get; }
+    Task<T> GetMessage<T>(Guid? requestId, MessageType? messageType);
+    Task PostCallMessage<T>(Guid id, MessageType messageType, T payload);
+    Task PostCallMessage(Guid id, MessageType messageType, object payload, Type payloadType);
 }

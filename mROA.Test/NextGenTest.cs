@@ -46,6 +46,7 @@ public class NextGenTest
 
         Task.WaitAll(tasks.ToArray());
         Assert.Pass();
+        
     }
 
     private async Task ReadStream(Guid current)
