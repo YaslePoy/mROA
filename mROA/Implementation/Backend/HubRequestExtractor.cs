@@ -1,39 +1,42 @@
 using mROA.Abstract;
+using mROA.Implementation.Frontend;
 
 namespace mROA.Implementation.Backend;
 
 public class HubRequestExtractor : IInjectableModule
 {
-    private IExecuteModule _executeModule;
     private IConnectionHub _hub;
+    
+    private IContextRepository? _contextRepository;
+    private IMethodRepository? _methodRepository;
+    private ISerializationToolkit? _serializationToolkit;
     public void Inject<T>(T dependency)
     {
         switch (dependency)
         {
-            case IExecuteModule executeModule:
-                _executeModule = executeModule;
-                break;
             case IConnectionHub connectionHub:
                 _hub = connectionHub;
                 _hub.OnConnected += HubOnOnConnected;
                 break;
+            case IContextRepository contextRepository:
+                _contextRepository = contextRepository;
+                break;
+            case IMethodRepository methodRepository:
+                _methodRepository = methodRepository;
+                break;
+            case ISerializationToolkit serializationToolkit:
+                _serializationToolkit = serializationToolkit;
+                break;
         }
     }
 
-    private async void HubOnOnConnected(IRepresentationModule interaction)
+    private void HubOnOnConnected(IRepresentationModule interaction)
     {
-        try
-        {
-            while (true)
-            {
-                var messageReceiving = await interaction.GetMessage<DefaultCallRequest>(messageType: MessageType.CallRequest);
-                
-                
-            }
-        }
-        catch (Exception e)
-        {
-            
-        }
+        var extractor = new RequestExtractor();
+        extractor.Inject(interaction);
+        extractor.Inject(_contextRepository);
+        extractor.Inject(_methodRepository);
+        extractor.Inject(_serializationToolkit);
+        _ = extractor.StartExtraction();
     }
 }
