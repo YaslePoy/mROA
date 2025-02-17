@@ -4,18 +4,29 @@ using mROA.Abstract;
 
 namespace mROA.Implementation.Backend;
 
-public class NetworkGatewayModule(IPEndPoint endpoint) : IGatewayModule
+public class NetworkGatewayModule() : IGatewayModule
 {
-    private readonly TcpListener _tcpListener = new(endpoint);
-    private IInteractionModule? _interactionModule;
+    private readonly IPEndPoint? _endpoint;
+    private readonly Type? _interactionModuleType;
+    private readonly IInjectableModule[]? _injectableModules;
+    private readonly TcpListener? _tcpListener;
+    private IConnectionHub? _hub;
 
+    public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType, IInjectableModule[] injectableModules)
+    {
+        _endpoint = endpoint;
+        _tcpListener = new(_endpoint);
+
+        _interactionModuleType = interactionModuleType;
+        _injectableModules = injectableModules;
+    }
 
     public void Run()
     {
         _tcpListener.Start();
         Console.WriteLine($"Listening on {_tcpListener.LocalEndpoint}");
         Console.WriteLine("Enter Backspace to stop");
-        
+
         Task.Run(HandleIncomingConnections);
 
         while (true)
@@ -26,8 +37,6 @@ public class NetworkGatewayModule(IPEndPoint endpoint) : IGatewayModule
         }
 
         Console.WriteLine("Stopping");
-        
-        
     }
 
     public void Dispose()
@@ -38,22 +47,33 @@ public class NetworkGatewayModule(IPEndPoint endpoint) : IGatewayModule
 
     private void HandleIncomingConnections()
     {
-        if (_interactionModule is null)
-            throw new NullReferenceException("Interaction module is null");
+        if (_hub is null)
+            throw new NullReferenceException("Hub module is null");
+        
+        if (_tcpListener == null)
+            throw new NullReferenceException("TcpListener is null");
+        
+        if (_injectableModules is null)
+            throw new NullReferenceException("InjectableModules is null");
+
+        if (_interactionModuleType is null)
+            throw new NullReferenceException("InteractionModuleType is null");
         
         while (true)
         {
             var client = _tcpListener.AcceptTcpClient();
             Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
-            _interactionModule.RegisterSource(client.GetStream());
+            var interacton = Activator.CreateInstance(_interactionModuleType) as INextGenerationInteractionModule;
+            foreach (var injectableModule in _injectableModules)
+                interacton.Inject(injectableModule);
+            _hub.RegisterInteracion(new NextGenerationInteractionModule());
             Console.WriteLine("Client registered");
         }
     }
 
     public void Inject<T>(T dependency)
     {
-        if (dependency is IInteractionModule interactionModule)
-            _interactionModule = interactionModule;
+        if (dependency is IConnectionHub interactionModule)
+            _hub = interactionModule;
     }
-
 }

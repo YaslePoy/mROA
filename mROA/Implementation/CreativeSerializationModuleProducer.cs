@@ -10,7 +10,7 @@ public class CreativeSerializationModuleProducer : ISerialisationModuleProducer
     private IInjectableModule[] _creationModules;
     private StreamBasedInteractionModule? _interactionModule;
 
-    public CreativeSerializationModuleProducer(IInjectableModule[] creationModules, Type serializationModuleType)
+    public CreativeSerializationModuleProducer(IInjectableModule[] creationModules, Type serializationModuleType)а
     {
         _creationModules = creationModules;
         _serializationModuleType = serializationModuleType;

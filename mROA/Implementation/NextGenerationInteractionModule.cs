@@ -1,11 +1,12 @@
-﻿using mROA.Abstract;
+﻿using System.Security.Cryptography;
+using mROA.Abstract;
 
 namespace mROA.Implementation;
 
 public class NextGenerationInteractionModule : INextGenerationInteractionModule
 {
     private ISerializationToolkit? _serialization;
-    public int ConntectionId { get; set; }
+    public int ConntectionId { get; private set; }
     public Stream? BaseStream { get; set; }
     private Task<NetworkMessage>? _currentReceiving;
     private const int BufferSize = ushort.MaxValue;
@@ -13,8 +14,15 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
 
     public void Inject<T>(T dependency)
     {
-        if (dependency is ISerializationToolkit toolkit)
-            _serialization = toolkit;
+        switch (dependency)
+        {
+            case ISerializationToolkit toolkit:
+                _serialization = toolkit;
+                break;
+            case IIdentityGenerator identityGenerator:
+                ConntectionId = identityGenerator.GetNextIdentity();
+                break;
+        }
     }
 
 

@@ -9,13 +9,19 @@ namespace mROA.Implementation.Frontend;
 public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
 {
     private readonly TcpClient _tcpClient = new();
-    private StreamBasedFrontendInteractionModule? _interactionModule;
+    private NextGenerationInteractionModule? _interactionModule;
+    private ISerializationToolkit? _serialization;
 
     public void Inject<T>(T dependency)
     {
-        if (dependency is StreamBasedFrontendInteractionModule interactionModule)
+        switch (dependency)
         {
-            _interactionModule = interactionModule;
+            case NextGenerationInteractionModule interactionModule:
+                _interactionModule = interactionModule;
+                break;
+            case ISerializationToolkit toolkit:
+                _serialization = toolkit;
+                break;
         }
     }
 
@@ -25,14 +31,13 @@ public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
             throw new Exception("Interaction module was not injected");
         
         _tcpClient.Connect(ipEndPoint);
-        _interactionModule.ServerStream = _tcpClient.GetStream();
-        var welcomeMessage = _interactionModule.ReceiveMessage().GetAwaiter().GetResult();
-        var message = JsonSerializer.Deserialize<NetworkMessage>(welcomeMessage);
-        if (message.SchemaId != MessageType.IdAssigning)
+        _interactionModule.BaseStream = _tcpClient.GetStream();
+        var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
+        if (welcomeMessage.SchemaId != MessageType.IdAssigning)
         {
-            throw new Exception($"Incorrect message type. Must be IdAssigning, current : {message.SchemaId.ToString()}");
+            throw new Exception($"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.SchemaId.ToString()}");
         }
 
-        TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(JsonSerializer.Deserialize<IdAssingnment>(message.Data)!.Id);
+        TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(_serialization.Deserialize<IdAssingnment>(welcomeMessage.Data)!.Id);
     }
 }
