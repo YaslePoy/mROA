@@ -118,61 +118,56 @@ namespace {Namespace}
                 methods.Add((namespaceName + "." + originalName, method));
                 var sb = new StringBuilder();
 
-                //Creating signature
-                // if (method.Parameters.Length == 0)
-                //     sb.AppendLine($"public {method.ReturnType.ToDisplayString()} {method.Name}(){{");
-                // else
 
                 bool isAsync = method.ReturnType.Name == "Task";
+                bool isVoid = method.ReturnType.Name == "Void" || method.ReturnType.ToString() == "Task";
+                bool isParametrized = method.Parameters.Length == 1 && !isAsync ||
+                                      method.Parameters.Length == 2 && isAsync;
+
+
+                //Creating signature
                 sb.AppendLine("public" + (isAsync
                                   ? " async "
                                   : " ") +
-                              $"{method.ReturnType.ToDisplayString()} {method.Name}({string.Join(", ", method.Parameters.Select(p => p.ToDisplayString()))}){{");
-
-                //Creating request
-                if (method.Parameters.Length == 1 && !isAsync ||
-                    method.Parameters.Length == 2 && isAsync)
-                {
-                    sb.AppendLine(
-                        $"\t\tvar defaultCallRequestCodegen = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id, Parameter = {method.Parameters.First().Name} }};");
-                }
-                else
-                {
-                    sb.AppendLine(
-                        $"\t\tvar defaultCallRequestCodegen = new DefaultCallRequest {{ CommandId = {index}, ObjectId = id }};");
-                }
-
-                //Post created request
-                sb.AppendLine("\t\tserialisationModule.PostCallRequest(defaultCallRequestCodegen);");
+                              $"{method.ReturnType.ToDisplayString()} {method.Name}({string.Join(", ", method.Parameters.Select(ToFullString))}){{");
 
 
-                if (method.ReturnType.ToString() == "System.Threading.Tasks.Task")
-                {
-                    sb.AppendLine(
-                        "\t\tawait serialisationModule.GetNextCommandExecution<FinalCommandExecution>(defaultCallRequestCodegen.CallRequestId);");
-                }
-                else if (method.ReturnType.OriginalDefinition.ToString() == "System.Threading.Tasks.Task<TResult>")
-                {
-                    var type = method.ReturnType.ToString();
-                    type = type.Substring(type.IndexOf('<') + 1);
-                    type = type.Substring(0, type.Length - 1);
-                    sb.AppendLine(
-                        $"\t\tvar response = await serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId);");
-                    sb.AppendLine($"\t\treturn ({type})response.Result;");
-                }
-                else if (!isAsync && method.ReturnType.ToDisplayString() != "void")
-                {
-                    var type = method.ReturnType.ToDisplayString();
-                    sb.AppendLine(
-                        $"\t\tvar response = serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId).GetAwaiter().GetResult();");
-                    sb.AppendLine($"\t\treturn ({type})response.Result;");
-                }
-                else
-                {
-                    sb.AppendLine(
-                        "\t\tserialisationModule.GetNextCommandExecution<FinalCommandExecution>(defaultCallRequestCodegen.CallRequestId).Wait();");
-                }
+                var prefix = isAsync ? "await " : "";
+                var postfix = !isAsync ? (isVoid? ".Wait()" : ".GetAwaiter().GetResult()") : "";
+                var parameterLink = isParametrized ? ", " + method.Parameters.First().Name : string.Empty;
+                var caller = isVoid ? $"CallAsync({index}{parameterLink})" :
+                    isAsync ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>({index}{parameterLink})" :
+                    $"GetResultAsync<{ToFullString(method.ReturnType)}>({index}{parameterLink})";
 
+                if (!isVoid)
+                    prefix = "return " + prefix;
+                
+                // if (method.ReturnType.OriginalDefinition.ToString() == "System.Threading.Tasks.Task<TResult>")
+                // {
+                //     var type = method.ReturnType.ToString();
+                //     type = type.Substring(type.IndexOf('<') + 1);
+                //     type = type.Substring(0, type.Length - 1);
+                //     sb.AppendLine(
+                //         $"\t\tvar response = await serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId);");
+                //     sb.AppendLine($"\t\treturn ({type})response.Result;");
+                // }
+                // else if (!isAsync && method.ReturnType.ToDisplayString() != "void")
+                // {
+                //     var type = method.ReturnType.ToDisplayString();
+                //     sb.AppendLine(
+                //         $"\t\tvar response = serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId).GetAwaiter().GetResult();");
+                //     sb.AppendLine($"\t\treturn ({type})response.Result;");
+                // }
+                // else
+                // {
+                //     sb.AppendLine(
+                //         "\t\tserialisationModule.GetNextCommandExecution<FinalCommandExecution>(defaultCallRequestCodegen.CallRequestId).Wait();");
+                // }
+                //
+                // sb.AppendLine("\t}");
+
+                sb.AppendLine("\t\t" + prefix + caller + postfix+ ";");
+                
                 sb.AppendLine("\t}");
 
                 methodsText.Add(sb.ToString());
@@ -188,10 +183,11 @@ using mROA.Abstract;
 
 namespace {namespaceName};
 
-partial class {className} (int id, ISerialisationModule.IFrontendSerialisationModule serialisationModule) : {originalName}, IRemoteObject
+partial class {className} : RemoteObjectBase, {originalName}
 {{
-    public int Id => id;
-    public int OwnerId => serialisationModule.ClientId;
+    public {className}(int id, IRepresentationModule representationModule) : base(id, representationModule)
+    {{
+    }}
 
     {string.Join("\r\n\t", methodsText)}
 }}
@@ -269,5 +265,22 @@ public sealed class RemoteTypeBinder
 ";
             context.AddSource("RemoteTypeBinder.g.cs", SourceText.From(fronendRepoCode, Encoding.UTF8));
         }
+    }
+
+    private static string ToFullString(IParameterSymbol parameter)
+        => /*parameter.Type.ContainingNamespace is null*/
+            /*?*/ parameter.ToDisplayString();
+            /*: $"{parameter.Type.ContainingNamespace.ToDisplayString()}.{parameter.Type.MetadataName} {parameter.Name}";*/
+
+    private static string ToFullString(ITypeSymbol type) =>
+        // => type.ContainingNamespace is null || type.Name == "Void"
+             type.ToDisplayString();
+            // : $"{type.ContainingNamespace.ToDisplayString()}.{type.MetadataName}";
+
+    private string ExtractTaskType(ITypeSymbol taskType)
+    {
+        var type = taskType.ToString();
+        type = type.Substring(type.IndexOf('<') + 1);
+        return type.Substring(0, type.Length - 1);
     }
 }
