@@ -24,11 +24,17 @@ public class RepresentationModule : IRepresentationModule
 
     public async Task<T> GetMessage<T>(Guid? requestId, MessageType? messageType)
     {
+        return _serialization.Deserialize<T>(await GetRawMessage(requestId, messageType))!;
+    }
+
+    public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null)
+    {
         while (true)
         {
             var message = await _interaction.GetNextMessageReceiving();
-            if ((requestId is null || message.Id == requestId) && (messageType is null || message.SchemaId == messageType))
-                return _serialization.Deserialize<T>(message.Data)!;
+            if ((requestId is null || message.Id == requestId) &&
+                (messageType is null || message.SchemaId == messageType))
+                return message.Data;
         }
     }
 
@@ -39,6 +45,7 @@ public class RepresentationModule : IRepresentationModule
 
     public async Task PostCallMessage(Guid id, MessageType messageType, object payload, Type payloadType)
     {
-        await _interaction.PostMessage(new NetworkMessage {Id = id, SchemaId = messageType, Data = _serialization.Serialize(payload, payloadType)});
+        await _interaction.PostMessage(new NetworkMessage
+            { Id = id, SchemaId = messageType, Data = _serialization.Serialize(payload, payloadType) });
     }
 }

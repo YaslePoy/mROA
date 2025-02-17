@@ -1,12 +1,12 @@
 ﻿namespace mROA.Abstract;
 
-public delegate void ConnectionHandler(INextGenerationInteractionModule interactionModule);
-public delegate void DisconnectionHandler(INextGenerationInteractionModule interactionModule);
+public delegate void ConnectionHandler(IRepresentationModule representationModule);
+public delegate void DisconnectionHandler(IRepresentationModule representationModule);
 
 public interface IConnectionHub
 {
-    void RegisterInteracion(INextGenerationInteractionModule interaction);
+    void RegisterInteraction(INextGenerationInteractionModule interaction);
     INextGenerationInteractionModule GetInteracion(int id);
-    event ConnectionHandler? OnConnectied;
+    event ConnectionHandler? OnConnected;
     event DisconnectionHandler? OnDisconnected;
 }

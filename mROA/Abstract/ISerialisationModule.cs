@@ -20,7 +20,8 @@ public interface ISerialisationModule : IInjectableModule
 public interface IRepresentationModule : IInjectableModule
 {
     int Id { get; }
-    Task<T> GetMessage<T>(Guid? requestId, MessageType? messageType);
+    Task<T> GetMessage<T>(Guid? requestId = null, MessageType? messageType = null);
+    Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null);
     Task PostCallMessage<T>(Guid id, MessageType messageType, T payload);
     Task PostCallMessage(Guid id, MessageType messageType, object payload, Type payloadType);
 }

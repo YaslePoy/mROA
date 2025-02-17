@@ -4,18 +4,23 @@ namespace mROA.Implementation.Backend;
 
 public class ConntectionHub : IConnectionHub
 {
-    private Dictionary<int, INextGenerationInteractionModule> _connections = new();
-    public void RegisterInteracion(INextGenerationInteractionModule interaction)
+    private readonly Dictionary<int, INextGenerationInteractionModule> _connections = new();
+    private ISerializationToolkit _serializationToolkit;
+    
+    public void RegisterInteraction(INextGenerationInteractionModule interaction)
     {
-        
-        OnConnectied?.Invoke(interaction);
+
+        var module = new RepresentationModule();
+        module.Inject(_serializationToolkit);
+        module.Inject(interaction);
+        OnConnected?.Invoke(module);
     }
 
     public INextGenerationInteractionModule GetInteracion(int id)
     {
-        
+        return _connections!.GetValueOrDefault(id, null) ?? throw new Exception("No connection found");
     }
 
-    public event ConnectionHandler? OnConnectied;
+    public event ConnectionHandler? OnConnected;
     public event DisconnectionHandler? OnDisconnected;
 }

@@ -4,43 +4,39 @@ using mROA.Implementation.Frontend;
 
 namespace mROA.Implementation;
 
-public class CreativeSerializationModuleProducer : ISerialisationModuleProducer
+public class CreativeSerializationModuleProducer : IRepresentationModuleProducer
 {
-    private Type _serializationModuleType;
+    private Type _reprModuleType;
     private IInjectableModule[] _creationModules;
-    private StreamBasedInteractionModule? _interactionModule;
+    private IConnectionHub? _hub;
 
-    public CreativeSerializationModuleProducer(IInjectableModule[] creationModules, Type serializationModuleType)а
+    public CreativeSerializationModuleProducer(IInjectableModule[] creationModules, Type reprModuleType)
     {
         _creationModules = creationModules;
-        _serializationModuleType = serializationModuleType;
+        _reprModuleType = reprModuleType;
     }
 
 
     public void Inject<T>(T dependency)
     {
-        if (dependency is StreamBasedInteractionModule interactionModule)
-            _interactionModule = interactionModule;
+        if (dependency is IConnectionHub interactionModule)
+            _hub = interactionModule;
     }
 
-    public ISerialisationModule.IFrontendSerialisationModule Produce(int ownership)
+    public IRepresentationModule Produce(int id)
     {
-        if (_interactionModule == null)
+        if (_hub == null)
             throw new NullReferenceException("Interaction module is null");
 
         var produced =
-            Activator.CreateInstance(_serializationModuleType) as ISerialisationModule.IFrontendSerialisationModule ??
+            Activator.CreateInstance(_reprModuleType) as IRepresentationModule ??
             throw new Exception("Bad serialization module type");
 
         foreach (var creationModule in _creationModules)
             produced.Inject(creationModule);
-
-        var interactionModule = new StreamBasedFrontendInteractionModule
-        {
-            ClientId = ownership,
-            ServerStream = _interactionModule.GetSource(ownership)
-        };
-        produced.Inject(interactionModule);
+        
+        produced.Inject(_hub.GetInteracion(id));
+        
         return produced;
     }
 }

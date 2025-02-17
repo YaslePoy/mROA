@@ -4,7 +4,7 @@ using mROA.Abstract;
 
 namespace mROA.Implementation.Backend;
 
-public class NetworkGatewayModule() : IGatewayModule
+public class NetworkGatewayModule : IGatewayModule
 {
     private readonly IPEndPoint? _endpoint;
     private readonly Type? _interactionModuleType;
@@ -64,9 +64,10 @@ public class NetworkGatewayModule() : IGatewayModule
             var client = _tcpListener.AcceptTcpClient();
             Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
             var interacton = Activator.CreateInstance(_interactionModuleType) as INextGenerationInteractionModule;
+            
             foreach (var injectableModule in _injectableModules)
                 interacton.Inject(injectableModule);
-            _hub.RegisterInteracion(new NextGenerationInteractionModule());
+            _hub.RegisterInteraction(interacton);
             Console.WriteLine("Client registered");
         }
     }

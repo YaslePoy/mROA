@@ -1,9 +1,14 @@
-﻿namespace mROA.Implementation;
+﻿using mROA.Abstract;
 
-public interface ISerializationToolkit
+namespace mROA.Implementation;
+
+public interface ISerializationToolkit : IInjectableModule
 {
-    public byte[] Serialize<T>(T objectToSerialize);
-    public byte[] Serialize(object objectToSerialize, Type type);
-    public T? Deserialize<T>(byte[] rawData);
-    public object? Deserialize(byte[] rawData, Type type);
+    byte[] Serialize<T>(T objectToSerialize);
+    byte[] Serialize(object objectToSerialize, Type type);
+    T? Deserialize<T>(byte[] rawData);
+    object? Deserialize(byte[] rawData, Type type);
+    T Cast<T>(object nonCasted);
+    object Cast(object nonCasted, Type type);
+
 }

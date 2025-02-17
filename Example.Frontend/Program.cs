@@ -13,7 +13,7 @@ builder.Modules.Add(new RemoteContextRepository());
 builder.Modules.Add(new JsonFrontendSerialisationModule());
 builder.Modules.Add(new StreamBasedFrontendInteractionModule());
 builder.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
-builder.Modules.Add(new StaticSerialisationModuleProducer());
+builder.Modules.Add(new StaticRepresentationModuleProducer());
 // builder.Modules.Add(new BasicExecutionModule());
 // builder.Modules.Add(new CoCodegenMethodRepository());
 // builder.Modules.Add(new StreamBasedVirtualBackendInteractionModule());
