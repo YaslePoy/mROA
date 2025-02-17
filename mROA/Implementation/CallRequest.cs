@@ -1,4 +1,6 @@
-﻿namespace mROA.Implementation;
+﻿using System.Text.Json.Serialization;
+
+namespace mROA.Implementation;
 
 public interface ICallRequest
 {
@@ -14,6 +16,7 @@ public class DefaultCallRequest : ICallRequest
     public int CommandId { get; init; }
     public int ObjectId { get; init; } = -1;
     
-    public Type ParameterType { get; init; }
+    [JsonIgnore]
+    public Type? ParameterType { get; init; }
     public object? Parameter { get; set; }
 }

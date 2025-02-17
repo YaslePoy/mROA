@@ -48,7 +48,7 @@ public class BasicExecutionModule : IExecuteModule
             return new TypedFinalCommandExecution
             {
                 CommandId = command.CommandId, Result = finalResult,
-                CallRequestId = command.CallRequestId,
+                Id = command.CallRequestId,
                 Type = currentCommand.ReturnType
             };
         }
@@ -56,7 +56,7 @@ public class BasicExecutionModule : IExecuteModule
         {
             return new ExceptionCommandExecution
             {
-                CallRequestId = command.CallRequestId, CommandId = command.CommandId,
+                Id = command.CallRequestId, CommandId = command.CommandId,
                 Exception = e.ToString()
             };
         }
@@ -75,13 +75,13 @@ public class BasicExecutionModule : IExecuteModule
             result.Wait(token);
 
 
-            return new FinalCommandExecution { CommandId = command.CommandId, CallRequestId = command.CallRequestId };
+            return new FinalCommandExecution { CommandId = command.CommandId, Id = command.CallRequestId };
         }
         catch (Exception e)
         {
             return new ExceptionCommandExecution
             {
-                CallRequestId = command.CallRequestId, CommandId = command.CommandId,
+                Id = command.CallRequestId, CommandId = command.CommandId,
                 Exception = e.ToString()
             };
         }
@@ -102,7 +102,7 @@ public class BasicExecutionModule : IExecuteModule
             var finalResult = result.GetType().GetProperty("Result")?.GetValue(result);
             return new TypedFinalCommandExecution
             {
-                CallRequestId = command.CallRequestId,
+                Id = command.CallRequestId,
                 Result = finalResult,
                 CommandId = command.CommandId,
                 Type = finalResult?.GetType()
@@ -112,7 +112,7 @@ public class BasicExecutionModule : IExecuteModule
         {
             return new ExceptionCommandExecution
             {
-                CallRequestId = command.CallRequestId, CommandId = command.CommandId,
+                Id = command.CallRequestId, CommandId = command.CommandId,
                 Exception = e.ToString()
             };
         }

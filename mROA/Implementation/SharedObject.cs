@@ -63,7 +63,7 @@ public class SharedObject<T> where T : notnull
     {
         Value = value;
 
-        if (value is IRemoteObject ro)
+        if (value is RemoteObjectBase ro)
         {
             _ownerId = ro.OwnerId;
             _contextId = ro.Id;

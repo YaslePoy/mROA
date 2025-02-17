@@ -6,7 +6,6 @@ namespace mROA.Implementation.Backend;
 
 public class NetworkGatewayModule : IGatewayModule
 {
-    private readonly IPEndPoint? _endpoint;
     private readonly Type? _interactionModuleType;
     private readonly IInjectableModule[]? _injectableModules;
     private readonly TcpListener? _tcpListener;
@@ -14,16 +13,14 @@ public class NetworkGatewayModule : IGatewayModule
 
     public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType, IInjectableModule[] injectableModules)
     {
-        _endpoint = endpoint;
-        _tcpListener = new(_endpoint);
-
+        _tcpListener = new(endpoint);
         _interactionModuleType = interactionModuleType;
         _injectableModules = injectableModules;
     }
 
     public void Run()
     {
-        _tcpListener.Start();
+        _tcpListener!.Start();
         Console.WriteLine($"Listening on {_tcpListener.LocalEndpoint}");
         Console.WriteLine("Enter Backspace to stop");
 

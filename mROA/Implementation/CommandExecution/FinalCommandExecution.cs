@@ -7,7 +7,7 @@ namespace mROA.Implementation;
 
 public class FinalCommandExecution : ICommandExecution
 {
-    public Guid CallRequestId { get; init; }
+    public Guid Id { get; init; }
     [JsonIgnore]
     public int ClientId { get; set; }
     [JsonIgnore]

@@ -39,7 +39,7 @@ public class RemoteContextRepository : IContextRepository
 
     public int GetObjectIndex(object o)
     {
-        if (o is IRemoteObject remote)
+        if (o is RemoteObjectBase remote)
         {
             return remote.Id;
         }

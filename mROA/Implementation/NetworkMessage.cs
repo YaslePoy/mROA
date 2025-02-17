@@ -12,5 +12,5 @@ public class NetworkMessage
 
 public enum MessageType
 {
-    Unknown, FinishedCommandExecution, ErrorCommandExecution, AcyncCancelCommandExecution, CallRequest, IdAssigning 
+    Unknown, FinishedCommandExecution, ExceptionCommandExecution, AcyncCancelCommandExecution, CallRequest, IdAssigning 
 }

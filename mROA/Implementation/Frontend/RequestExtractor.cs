@@ -1,4 +1,5 @@
 using mROA.Abstract;
+using mROA.Implementation.Backend;
 
 namespace mROA.Implementation.Frontend;
 
@@ -9,6 +10,7 @@ public class RequestExtractor : IRequestExtractor
     private IMethodRepository? _methodRepository;
     private IExecuteModule? _executeModule;
     private ISerializationToolkit? _serializationToolkit;
+
     public void Inject<T>(T dependency)
     {
         switch (dependency)
@@ -43,25 +45,39 @@ public class RequestExtractor : IRequestExtractor
             throw new NullReferenceException("Representation module is null.");
         if (_methodRepository == null)
             throw new NullReferenceException("Method repository is null.");
-        
-        while (true)
+
+        var multiClientOwnershipRepository = TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
+
+
+        multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
+
+        try
         {
-            var request = await _representationModule!.GetMessage<DefaultCallRequest>(messageType: MessageType.CallRequest);
-            
-            if (request.Parameter is not null)
+            while (true)
             {
-                var parameterType = _methodRepository!.GetMethod(request.CommandId).GetParameters().First().ParameterType;
-                request.Parameter = _serializationToolkit.Cast(request.Parameter, parameterType);
+                var request =
+                    await _representationModule!.GetMessage<DefaultCallRequest>(messageType: MessageType.CallRequest);
+
+                if (request.Parameter is not null)
+                {
+                    var parameterType = _methodRepository!.GetMethod(request.CommandId).GetParameters().First()
+                        .ParameterType;
+
+                    request.Parameter = _serializationToolkit.Cast(request.Parameter, parameterType);
+                }
+
+                var result = _executeModule.Execute(request, _contextRepository);
+
+                var resultType = result is FinalCommandExecution
+                    ? MessageType.FinishedCommandExecution
+                    : MessageType.ExceptionCommandExecution;
+
+                await _representationModule.PostCallMessage(request.CallRequestId, resultType, result);
             }
-            
-            var result = _executeModule.Execute(request, _contextRepository);
-            
-            var resultType = result is FinalCommandExecution
-                 ? MessageType.FinishedCommandExecution
-                 : MessageType.ErrorCommandExecution;
-            
-            await _representationModule.PostCallMessage(request.CallRequestId, resultType, result);
-            
+        }
+        catch
+        {
+            multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
         }
     }
 }
