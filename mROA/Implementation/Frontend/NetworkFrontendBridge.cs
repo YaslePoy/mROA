@@ -27,6 +27,8 @@ public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
     {
         if (_interactionModule is null)
             throw new Exception("Interaction module was not injected");
+        if (_serialization == null)
+            throw new NullReferenceException("Serialization toolkit is not initialized");
         
         _tcpClient.Connect(ipEndPoint);
         _interactionModule.BaseStream = _tcpClient.GetStream();

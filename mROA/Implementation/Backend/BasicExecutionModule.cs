@@ -13,12 +13,12 @@ public class BasicExecutionModule : IExecuteModule
         if (dependency is IMethodRepository methodRepo) _methodRepo = methodRepo;
     }
 
-    public ICommandExecution Execute(ICallRequest command, IContextRepository _contextRepo)
+    public ICommandExecution Execute(ICallRequest command, IContextRepository contextRepository)
     {
         if (_methodRepo is null)
             throw new NullReferenceException("Method repository was not defined");
         
-        if (_contextRepo is null)
+        if (contextRepository is null)
             throw new NullReferenceException("Context repository was not defined");
         
         var currentCommand = _methodRepo.GetMethod(command.CommandId);
@@ -26,8 +26,8 @@ public class BasicExecutionModule : IExecuteModule
             throw new Exception($"Command {command.CommandId} not found");
 
         var context = command.ObjectId != -1
-            ? _contextRepo.GetObject(command.ObjectId)
-            : _contextRepo.GetSingleObject(currentCommand.DeclaringType!);
+            ? contextRepository.GetObject(command.ObjectId)
+            : contextRepository.GetSingleObject(currentCommand.DeclaringType!);
         var parameter = command.Parameter;
 
         if (currentCommand.ReturnType.BaseType == typeof(Task) &&

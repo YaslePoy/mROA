@@ -1,4 +1,4 @@
-namespace mROA.Implementation.Frontend;
+
 
 // public class StreamBasedFrontendInteractionModule : IInteractionModule.IFrontendInteractionModule
 // {

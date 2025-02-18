@@ -1,11 +1,10 @@
 using mROA.Abstract;
-using mROA.Implementation.Frontend;
 
 namespace mROA.Implementation.Backend;
 
 public class HubRequestExtractor(Type extractoType) : IInjectableModule
 {
-    private IConnectionHub _hub;
+    private IConnectionHub? _hub;
 
     private IContextRepository? _contextRepository;
     private IMethodRepository? _methodRepository;
