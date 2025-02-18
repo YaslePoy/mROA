@@ -5,8 +5,8 @@ namespace mROA.Implementation;
 
 public class RemoteContextRepository : IContextRepository
 {
-    private IRepresentationModuleProducer _representationProducer;
-    public static FrozenDictionary<Type, Type> RemoteTypes;
+    private IRepresentationModuleProducer? _representationProducer;
+    public static FrozenDictionary<Type, Type> RemoteTypes = FrozenDictionary<Type, Type>.Empty;
     public int ResisterObject(object o)
     {
         throw new NotSupportedException();
@@ -24,16 +24,19 @@ public class RemoteContextRepository : IContextRepository
 
     public T GetObject<T>(int id)
     {
-        if (RemoteTypes.TryGetValue(typeof(T), out var remoteType))
-        {
-            var remote = (T)Activator.CreateInstance(remoteType, id, _representationProducer.Produce(TransmissionConfig.OwnershipRepository!.GetOwnershipId()))!;
-            return remote;
-        }
-        throw new NotSupportedException();
+        if (_representationProducer == null)
+            throw new NullReferenceException("representation producer is not initialized");
+        
+        if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
+        var remote = (T)Activator.CreateInstance(remoteType, id, _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
+        return remote;
     }
 
     public object GetSingleObject(Type type)
     {
+        if (_representationProducer == null)
+            throw new NullReferenceException("representation producer is not initialized");
+        
         return Activator.CreateInstance(RemoteTypes[type], -1, _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
     }
 

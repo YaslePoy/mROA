@@ -4,16 +4,18 @@ namespace mROA.Implementation;
 
 public class StaticRepresentationModuleProducer : IRepresentationModuleProducer
 {
-    private IRepresentationModule _reprModule;
+    private IRepresentationModule? _representationModule;
  
     public IRepresentationModule Produce(int ownership)
     {
-        return _reprModule;
+        if (_representationModule == null)
+            throw new NullReferenceException("The representation module is not initialized.");
+        return _representationModule;
     }
     
     public void Inject<T>(T dependency)
     {
         if (dependency is IRepresentationModule serialisationModule)
-            _reprModule = serialisationModule;
+            _representationModule = serialisationModule;
     }
 }

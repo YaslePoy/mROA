@@ -1,12 +1,11 @@
-﻿using System.Text.Json;
-using mROA.Abstract;
+﻿using mROA.Abstract;
 
 namespace mROA.Implementation;
 
 public class RepresentationModule : IRepresentationModule
 {
-    private ISerializationToolkit _serialization;
-    private INextGenerationInteractionModule _interaction;
+    private ISerializationToolkit? _serialization;
+    private INextGenerationInteractionModule? _interaction;
 
     public void Inject<T>(T dependency)
     {
@@ -21,20 +20,29 @@ public class RepresentationModule : IRepresentationModule
         }
     }
 
-    public int Id => _interaction.ConnectionId;
+    public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized")).ConnectionId;
 
     public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType)
     {
+        if (_serialization == null)
+            throw new NullReferenceException("Serialization toolkit is not initialized");
+        
         return _serialization.Deserialize<T>(await GetRawMessage(requestId, messageType))!;
     }
 
     public T GetMessage<T>(Guid? requestId = null, MessageType? messageType = null)
     {
+        if (_serialization == null)
+            throw new NullReferenceException("Serialization toolkit is not initialized");
+        
         return _serialization.Deserialize<T>(GetRawMessage(requestId, messageType).GetAwaiter().GetResult())!;
     }
 
     public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null)
     {
+        if (_interaction == null)
+            throw new NullReferenceException("Interaction toolkit is not initialized");
+        
         var fromBuffer =
             _interaction.UnhandledMessages.FirstOrDefault(message =>
                 (requestId is null || message.Id == requestId) &&
@@ -44,12 +52,11 @@ public class RepresentationModule : IRepresentationModule
             while (true)
             {
                 var message = await _interaction.GetNextMessageReceiving();
-                if ((requestId is null || message.Id == requestId) &&
-                    (messageType is null || message.SchemaId == messageType))
-                {
-                    _interaction.HandleMessage(message);
-                    return message.Data;
-                }
+                if ((requestId is not null && message.Id != requestId) ||
+                    (messageType is not null && message.SchemaId != messageType)) continue;
+                
+                _interaction.HandleMessage(message);
+                return message.Data;
             }
         }
 
@@ -57,18 +64,23 @@ public class RepresentationModule : IRepresentationModule
         return fromBuffer.Data;
     }
 
-    public async Task PostCallMessageAsync<T>(Guid id, MessageType messageType, T payload)
+    public async Task PostCallMessageAsync<T>(Guid id, MessageType messageType, T payload) where T : notnull
     {
         await PostCallMessageAsync(id, messageType, payload, typeof(T));
     }
 
     public async Task PostCallMessageAsync(Guid id, MessageType messageType, object payload, Type payloadType)
     {
+        if (_interaction == null)
+            throw new NullReferenceException("Interaction toolkit is not initialized");
+        if (_serialization == null)
+            throw new NullReferenceException("Serialization toolkit is not initialized");
+        
         await _interaction.PostMessage(new NetworkMessage
             { Id = id, SchemaId = messageType, Data = _serialization.Serialize(payload, payloadType) });
     }
 
-    public void PostCallMessage<T>(Guid id, MessageType messageType, T payload)
+    public void PostCallMessage<T>(Guid id, MessageType messageType, T payload) where T : notnull
     {
         PostCallMessageAsync(id, messageType, payload).GetAwaiter().GetResult();
     }

@@ -1,5 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using mROA.Abstract;
+// ReSharper disable UnusedMember.Global
+#pragma warning disable CS8618, CS9264
 
 namespace mROA.Implementation;
 
@@ -32,7 +34,7 @@ public static class TransmissionConfig
 public class SharedObject<T> where T : notnull
 {
     private IContextRepository GetDefaultContextRepository() =>
-        (OwnerId == TransmissionConfig.OwnershipRepository!.GetHostOwnershipId()
+        (OwnerId == TransmissionConfig.OwnershipRepository.GetHostOwnershipId()
             ? TransmissionConfig.RealContextRepository
             : TransmissionConfig.RemoteEndpointContextRepository) ??
         throw new NullReferenceException(
@@ -45,10 +47,10 @@ public class SharedObject<T> where T : notnull
     {
         get
         {
-            _ownerId = _ownerId == -1 ? TransmissionConfig.OwnershipRepository!.GetOwnershipId() : _ownerId;
+            _ownerId = _ownerId == -1 ? TransmissionConfig.OwnershipRepository.GetOwnershipId() : _ownerId;
             return _ownerId;
         }
-        set => _ownerId = value;
+        init => _ownerId = value;
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -60,7 +62,7 @@ public class SharedObject<T> where T : notnull
             if (_contextId != -2)
                 return _contextId;
 
-            _contextId = TransmissionConfig.RealContextRepository!.GetObjectIndex(Value);
+            _contextId = TransmissionConfig.RealContextRepository.GetObjectIndex(Value);
             return _contextId;
         }
         init
@@ -70,9 +72,10 @@ public class SharedObject<T> where T : notnull
         }
     }
 
-    [JsonIgnore] public T Value { get; private set; }
+    [JsonIgnore] public T Value { get; private init; }
 
     // ReSharper disable once MemberCanBePrivate.Global
+    // ReSharper disable once UnusedMember.Global
     public SharedObject()
     {
     }
@@ -88,7 +91,7 @@ public class SharedObject<T> where T : notnull
             _contextId = ro.Id;
         }
         else
-            _ownerId = TransmissionConfig.OwnershipRepository!.GetHostOwnershipId();
+            _ownerId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId();
     }
 
     public static implicit operator T(SharedObject<T> value) => value.Value;

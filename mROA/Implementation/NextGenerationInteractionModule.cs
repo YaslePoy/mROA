@@ -1,5 +1,4 @@
-﻿using System.Text;
-using mROA.Abstract;
+﻿using mROA.Abstract;
 
 namespace mROA.Implementation;
 
@@ -11,7 +10,7 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
     private Task<NetworkMessage>? _currentReceiving;
     private const int BufferSize = ushort.MaxValue;
     private readonly byte[] _buffer = new byte[BufferSize];
-    private List<NetworkMessage> _messageBuffer = [];
+    private readonly List<NetworkMessage> _messageBuffer = [];
 
 
     public void Inject<T>(T dependency)
@@ -32,13 +31,10 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
     {
         // Console.WriteLine(_currentReceiving?.Status);
 
-        if (_currentReceiving == null)
-        {
-            _currentReceiving = Task.Run(GetNextMessage);
-            return _currentReceiving;
-        }
-
+        if (_currentReceiving != null) return _currentReceiving;
+        _currentReceiving = Task.Run(GetNextMessage);
         return _currentReceiving;
+
     }
 
     public async Task PostMessage(NetworkMessage message)
@@ -46,6 +42,9 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
         if (BaseStream == null)
             throw new NullReferenceException("BaseStream is null");
 
+        if (_serialization == null)
+            throw new NullReferenceException("Serialization toolkit is not initialized");
+        
         // Console.WriteLine("Sending {0}", JsonSerializer.Serialize(message));
 
 

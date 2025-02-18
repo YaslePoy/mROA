@@ -1,18 +1,17 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using mROA.Abstract;
+﻿using System.Text.Json.Serialization;
 
 namespace mROA.Implementation;
 
 public class NetworkMessage
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public MessageType SchemaId { get; set; }
-    public byte[] Data { get; set; }
+    public MessageType SchemaId { get; init; }
+
+    public required byte[] Data { get; init; }
 }
 
 public enum MessageType
 {
-    Unknown, FinishedCommandExecution, ExceptionCommandExecution, AcyncCancelCommandExecution, CallRequest, IdAssigning 
+    Unknown, FinishedCommandExecution, ExceptionCommandExecution, AsyncCancelCommandExecution, CallRequest, IdAssigning 
 }

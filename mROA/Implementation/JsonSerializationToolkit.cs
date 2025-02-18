@@ -26,12 +26,12 @@ public class JsonSerializationToolkit : ISerializationToolkit
 
     public T Cast<T>(object nonCasted)
     {
-        if (nonCasted is JsonElement jsonElement)
-            return jsonElement.Deserialize<T>()!;
-        if (nonCasted is T casted)
-            return casted;
-
-        throw new JsonException("Cannot cast object to type " + typeof(T).FullName);
+        return nonCasted switch
+        {
+            JsonElement jsonElement => jsonElement.Deserialize<T>()!,
+            T casted => casted,
+            _ => throw new JsonException("Cannot cast object to type " + typeof(T).FullName)
+        };
     }
 
     public object Cast(object nonCasted, Type type)

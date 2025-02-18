@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
+using System.Text;
 using Example.Frontend;
 using Example.Shared;
 using mROA.Codegen;
@@ -56,22 +58,21 @@ var names = factory.CollectAllNames();
 Thread.Sleep(100);
 
 Console.WriteLine(string.Join(", ", names));
-Console.ReadLine();
 
-// var page = await printer.Value.Print("Test Page", new CancellationToken());
-// var data = page.Value.GetData();
-// Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
-//
-// var loadSingleton = context.GetSingleObject(typeof(ILoadTest)) as ILoadTest;
-//
-// const int iterations = 10000;
-// var timer = Stopwatch.StartNew();
-// var x = 0;
-// for (int i = 0; i < iterations; i++)
-// {
-//     x = loadSingleton.Next(x);
-// }
-//
-// timer.Stop();
-// Console.WriteLine("X is {0}", x);
-// Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
+var page = printer.Value.Print("Test Page", new CancellationToken()).GetAwaiter().GetResult();
+var data = page.Value.GetData();
+Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
+
+var loadSingleton = context.GetSingleObject(typeof(ILoadTest)) as ILoadTest;
+
+const int iterations = 10000;
+var timer = Stopwatch.StartNew();
+var x = 0;
+for (int i = 0; i < iterations; i++)
+{
+    x = loadSingleton.Next(x);
+}
+
+timer.Stop();
+Console.WriteLine("X is {0}", x);
+Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
