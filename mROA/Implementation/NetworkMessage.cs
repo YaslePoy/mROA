@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+// ReSharper disable UnusedMember.Global
 
 namespace mROA.Implementation;
 

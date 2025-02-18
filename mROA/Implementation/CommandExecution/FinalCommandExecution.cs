@@ -3,7 +3,7 @@ using mROA.Abstract;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace mROA.Implementation;
+namespace mROA.Implementation.CommandExecution;
 
 public class FinalCommandExecution : ICommandExecution
 {

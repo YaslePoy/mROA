@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace mROA.Implementation;
+namespace mROA.Implementation.CommandExecution;
 
 public class TypedFinalCommandExecution : FinalCommandExecution<object>
 {

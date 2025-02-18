@@ -1,7 +1,7 @@
 ﻿using mROA.Abstract;
 using mROA.Implementation.Frontend;
 
-namespace mROA.Implementation;
+namespace mROA.Implementation.CommandExecution;
 
 public class ExceptionCommandExecution : ICommandExecution
 {
