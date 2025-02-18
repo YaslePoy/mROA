@@ -6,11 +6,12 @@ namespace mROA.Implementation.Backend;
 public class HubRequestExtractor : IInjectableModule
 {
     private IConnectionHub _hub;
-    
+
     private IContextRepository? _contextRepository;
     private IMethodRepository? _methodRepository;
     private ISerializationToolkit? _serializationToolkit;
     private IExecuteModule? _executeModule;
+
     public void Inject<T>(T dependency)
     {
         switch (dependency)
@@ -38,7 +39,10 @@ public class HubRequestExtractor : IInjectableModule
     {
         var extractor = new RequestExtractor();
         extractor.Inject(interaction);
-        extractor.Inject(_contextRepository);
+        if (_contextRepository is IContextRepositoryHub contextHub)
+            extractor.Inject(contextHub.GetRepository(interaction.Id));
+        else
+            extractor.Inject(interaction);
         extractor.Inject(_methodRepository);
         extractor.Inject(_serializationToolkit);
         extractor.Inject(_executeModule);

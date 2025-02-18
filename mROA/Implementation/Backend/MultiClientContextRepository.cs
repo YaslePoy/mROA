@@ -51,6 +51,6 @@ public class MultiClientContextRepository(Func<int, IContextRepository> produceR
 
     public IContextRepository GetRepository(int clientId)
     {
-        return _repositories[clientId];
+        return GetRepositoryByClientId(clientId);
     }
 }

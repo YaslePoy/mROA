@@ -50,8 +50,6 @@ public class RequestExtractor : IRequestExtractor
         await Task.Yield();
         
         var multiClientOwnershipRepository = TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
-
-
         multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
 
         try
