@@ -19,14 +19,20 @@ builder.Modules.Add(new HubRequestExtractor());
 builder.UseBasicExecution();
 
 builder.Modules.Add(new RemoteContextRepository());
-builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
+// builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
+builder.Modules.Add(new MultiClientContextRepository(i =>
+{
+    var repo = new ContextRepository();
+    repo.FillSingletons(typeof(PrinterFactory).Assembly);
+    return repo;
+}));
 builder.SetupMethodsRepository(new CoCodegenMethodRepository());
 builder.Modules.Add(new CreativeSerializationModuleProducer([builder.GetModule<JsonSerializationToolkit>()!], typeof(RepresentationModule)));
 
 builder.Build();
 new RemoteTypeBinder();
 
-TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>();
+TransmissionConfig.RealContextRepository = builder.GetModule<MultiClientContextRepository>();
 TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
 TransmissionConfig.OwnershipRepository = new MultiClientOwnershipRepository();
 
