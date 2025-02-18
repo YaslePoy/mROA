@@ -61,6 +61,8 @@ public class RequestExtractor : IRequestExtractor
                 var request = 
                     _representationModule!.GetMessage<DefaultCallRequest>(messageType: MessageType.CallRequest);
 
+                Console.WriteLine("Executing {0}", request.Id);
+                
                 if (request.Parameter is not null)
                 {
                     var parameterType = _methodRepository!.GetMethod(request.CommandId).GetParameters().First()
@@ -75,7 +77,7 @@ public class RequestExtractor : IRequestExtractor
                     ? MessageType.FinishedCommandExecution
                     : MessageType.ExceptionCommandExecution;
 
-                _representationModule.PostCallMessage(request.CallRequestId, resultType, result, result.GetType());
+                _representationModule.PostCallMessage(request.Id, resultType, result, result.GetType());
             }
         }
         catch

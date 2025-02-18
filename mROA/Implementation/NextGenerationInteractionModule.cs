@@ -1,4 +1,6 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using mROA.Abstract;
 
 namespace mROA.Implementation;
@@ -11,7 +13,9 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
     private Task<NetworkMessage>? _currentReceiving;
     private const int BufferSize = ushort.MaxValue;
     private readonly byte[] _buffer = new byte[BufferSize];
+    private List<NetworkMessage> _messageBuffer = [];
 
+    
     public void Inject<T>(T dependency)
     {
         switch (dependency)
@@ -28,10 +32,11 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
 
     public Task<NetworkMessage> GetNextMessageReceiving()
     {
-        if (_currentReceiving is { IsCompleted: false })
+        Console.WriteLine(_currentReceiving?.Status);
+        if (_currentReceiving is { Status: TaskStatus.Running })
             return _currentReceiving;
 
-        _currentReceiving = GetNextMessage();
+        _currentReceiving = Task.Run(GetNextMessage);
         return _currentReceiving;
     }
 
@@ -40,12 +45,15 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
         if (BaseStream == null)
             throw new NullReferenceException("BaseStream is null");
         
+        Console.WriteLine("Sending {0}", JsonSerializer.Serialize(message));
+
+        
         var rawMessage = _serialization.Serialize(message);
         await BaseStream.WriteAsync(BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort)));
         await BaseStream.WriteAsync(rawMessage);
     }
 
-    private async Task<NetworkMessage> GetNextMessage()
+    private NetworkMessage GetNextMessage()
     {
         if (BaseStream == null)
             throw new NullReferenceException("BaseStream is null");
@@ -53,10 +61,17 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
         if (_serialization == null)
             throw new NullReferenceException("Serialization toolkit is null");
 
-        await BaseStream.ReadExactlyAsync(_buffer, 0, 2);
+
+        Console.WriteLine("Receiving message");
+        BaseStream.ReadExactly(_buffer, 0, 2);
         var len = BitConverter.ToUInt16(_buffer, 0);
-        await BaseStream.ReadExactlyAsync(_buffer, 0, len);
+        BaseStream.ReadExactly(_buffer, 0, len);
+
+        Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
         
-        return _serialization.Deserialize<NetworkMessage>(_buffer[..len])!;
+        var message = JsonSerializer.Deserialize<NetworkMessage>(Encoding.Default.GetString(_buffer[..len]));
+        _messageBuffer.Add(message!);
+
+        return message!;
     }
 }

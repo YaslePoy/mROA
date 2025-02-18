@@ -20,14 +20,14 @@ public abstract class RemoteObjectBase
     {
         var request = new DefaultCallRequest
             { CommandId = methodId, ObjectId = _id, Parameter = parameter, ParameterType = parameter?.GetType() };
-        await _representationModule.PostCallMessageAsync(request.CallRequestId, MessageType.CallRequest, request);
+        await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
         var successResponse =
             _representationModule.GetMessageAsync<FinalCommandExecution<T>>(
-                messageType: MessageType.FinishedCommandExecution, requestId: request.CallRequestId);
+                messageType: MessageType.FinishedCommandExecution, requestId: request.Id);
         var errorResponse =
             _representationModule.GetMessageAsync<ExceptionCommandExecution>(
-                messageType: MessageType.ExceptionCommandExecution, requestId: request.CallRequestId);
+                messageType: MessageType.ExceptionCommandExecution, requestId: request.Id);
         Task.WaitAny(successResponse, errorResponse);
 
         if (successResponse.IsCompletedSuccessfully)
@@ -40,14 +40,14 @@ public abstract class RemoteObjectBase
     {
         var request = new DefaultCallRequest
             { CommandId = methodId, ObjectId = _id, Parameter = parameter, ParameterType = parameter?.GetType() };
-        await _representationModule.PostCallMessageAsync(request.CallRequestId, MessageType.CallRequest, request);
+        await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
         var successResponse =
             _representationModule.GetMessageAsync<FinalCommandExecution>(
-                messageType: MessageType.FinishedCommandExecution, requestId: request.CallRequestId);
+                messageType: MessageType.FinishedCommandExecution, requestId: request.Id);
         var errorResponse =
             _representationModule.GetMessageAsync<ExceptionCommandExecution>(
-                messageType: MessageType.ExceptionCommandExecution, requestId: request.CallRequestId);
+                messageType: MessageType.ExceptionCommandExecution, requestId: request.Id);
 
         Task.WaitAny(successResponse, errorResponse);
 

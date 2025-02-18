@@ -28,7 +28,7 @@ TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>(
 TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
 
 builder.GetModule<NetworkFrontendBridge>()!.Connect();
- _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
+ // _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
 Console.WriteLine(TransmissionConfig.OwnershipRepository!.GetOwnershipId());
 var context = builder.GetModule<RemoteContextRepository>();
 
@@ -36,18 +36,27 @@ var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactor
 
 //правильный порядок команд 8-5-10-7
 var printer = factory.Create("Test");
+Thread.Sleep(100);
+
 var name = printer.Value.GetName();
 Console.WriteLine("Printer name : {0}", name);
-
+Thread.Sleep(100);
 
 factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
+Thread.Sleep(100);
+
 Console.WriteLine("Registered printer");
 
 var registred = factory.GetFirstPrinter();
+Thread.Sleep(100);
+Console.WriteLine("First printer");
+
 Console.WriteLine(registred.Value);
 Console.WriteLine("Collecting all printers");
 var names = factory.CollectAllNames();
-Console.WriteLine(names);
+Thread.Sleep(100);
+
+Console.WriteLine(string.Join(", ", names));
 Console.ReadLine();
 
 // var page = await printer.Value.Print("Test Page", new CancellationToken());
