@@ -1,5 +1,6 @@
 using mROA.Abstract;
 using mROA.Implementation.Backend;
+// ReSharper disable MethodHasAsyncOverload
 
 namespace mROA.Implementation.Frontend;
 
@@ -46,6 +47,8 @@ public class RequestExtractor : IRequestExtractor
         if (_methodRepository == null)
             throw new NullReferenceException("Method repository is null.");
 
+        await Task.Yield();
+        
         var multiClientOwnershipRepository = TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
 
 
@@ -55,8 +58,8 @@ public class RequestExtractor : IRequestExtractor
         {
             while (true)
             {
-                var request =
-                    await _representationModule!.GetMessage<DefaultCallRequest>(messageType: MessageType.CallRequest);
+                var request = 
+                    _representationModule!.GetMessage<DefaultCallRequest>(messageType: MessageType.CallRequest);
 
                 if (request.Parameter is not null)
                 {
@@ -72,7 +75,7 @@ public class RequestExtractor : IRequestExtractor
                     ? MessageType.FinishedCommandExecution
                     : MessageType.ExceptionCommandExecution;
 
-                await _representationModule.PostCallMessage(request.CallRequestId, resultType, result);
+                _representationModule.PostCallMessage(request.CallRequestId, resultType, result, result.GetType());
             }
         }
         catch

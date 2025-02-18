@@ -18,14 +18,19 @@ public class PrinterFactory : IPrinterFactory
 
     public void Register(SharedObject<IPrinter> printer)
     {
-        Console.WriteLine("Registered printer");
         _printers.Add(printer.Value);
+        Console.WriteLine("Registered printer");
     }
 
     public SharedObject<IPrinter> GetPrinterByName(string printerName)
     {
         Console.WriteLine("Getting printer");
         return new SharedObject<IPrinter>(_printers.Find(i => i.GetName() == printerName)!);
+    }
+
+    public SharedObject<IPrinter> GetFirstPrinter()
+    {
+        return new SharedObject<IPrinter>(_printers.First());
     }
 
     public string[] CollectAllNames()

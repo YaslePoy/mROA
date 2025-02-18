@@ -39,11 +39,15 @@ var printer = factory.Create("Test");
 var name = printer.Value.GetName();
 Console.WriteLine("Printer name : {0}", name);
 
-Console.WriteLine("Registered printer");
 
 factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
+Console.WriteLine("Registered printer");
+
+var registred = factory.GetFirstPrinter();
+Console.WriteLine(registred.Value);
 Console.WriteLine("Collecting all printers");
 var names = factory.CollectAllNames();
+Console.WriteLine(names);
 Console.ReadLine();
 
 // var page = await printer.Value.Print("Test Page", new CancellationToken());

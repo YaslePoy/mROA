@@ -11,6 +11,7 @@ public interface IPrinterFactory
     SharedObject<IPrinter> Create(string printerName);
     void Register(SharedObject<IPrinter> printer);
     SharedObject<IPrinter> GetPrinterByName(string printerName);
+    SharedObject<IPrinter> GetFirstPrinter();
     string[] CollectAllNames();
 
 }

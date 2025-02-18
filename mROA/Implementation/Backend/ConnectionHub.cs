@@ -12,6 +12,7 @@ public class ConnectionHub : IConnectionHub
         if (_serializationToolkit is null)
             throw new NullReferenceException("Serialization toolkit is null");
         
+        _connections.Add(interaction.ConnectionId, interaction);
         var module = new RepresentationModule();
         module.Inject(_serializationToolkit);
         module.Inject(interaction);

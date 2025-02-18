@@ -22,9 +22,14 @@ public class RepresentationModule : IRepresentationModule
 
     public int Id => _interaction.ConnectionId;
 
-    public async Task<T> GetMessage<T>(Guid? requestId, MessageType? messageType)
+    public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType)
     {
         return _serialization.Deserialize<T>(await GetRawMessage(requestId, messageType))!;
+    }
+
+    public T GetMessage<T>(Guid? requestId = null, MessageType? messageType = null)
+    {
+        return _serialization.Deserialize<T>(GetRawMessage(requestId, messageType).GetAwaiter().GetResult())!;
     }
 
     public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null)
@@ -38,14 +43,24 @@ public class RepresentationModule : IRepresentationModule
         }
     }
 
-    public async Task PostCallMessage<T>(Guid id, MessageType messageType, T payload)
+    public async Task PostCallMessageAsync<T>(Guid id, MessageType messageType, T payload)
     {
-        await PostCallMessage(id, messageType, payload, typeof(T));
+        await PostCallMessageAsync(id, messageType, payload, typeof(T));
     }
 
-    public async Task PostCallMessage(Guid id, MessageType messageType, object payload, Type payloadType)
+    public async Task PostCallMessageAsync(Guid id, MessageType messageType, object payload, Type payloadType)
     {
         await _interaction.PostMessage(new NetworkMessage
             { Id = id, SchemaId = messageType, Data = _serialization.Serialize(payload, payloadType) });
+    }
+
+    public void PostCallMessage<T>(Guid id, MessageType messageType, T payload)
+    {
+        PostCallMessageAsync(id, messageType, payload).GetAwaiter().GetResult();
+    }
+
+    public void PostCallMessage(Guid id, MessageType messageType, object payload, Type payloadType)
+    {
+        PostCallMessageAsync(id, messageType, payload, payloadType).GetAwaiter().GetResult();
     }
 }
