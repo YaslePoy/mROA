@@ -35,13 +35,26 @@ public class RepresentationModule : IRepresentationModule
 
     public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null)
     {
-        while (true)
+        var fromBuffer =
+            _interaction.UnhandledMessages.FirstOrDefault(message =>
+                (requestId is null || message.Id == requestId) &&
+                (messageType is null || message.SchemaId == messageType));
+        if (fromBuffer == null)
         {
-            var message = await _interaction.GetNextMessageReceiving();
-            if ((requestId is null || message.Id == requestId) &&
-                (messageType is null || message.SchemaId == messageType))
-                return message.Data;
+            while (true)
+            {
+                var message = await _interaction.GetNextMessageReceiving();
+                if ((requestId is null || message.Id == requestId) &&
+                    (messageType is null || message.SchemaId == messageType))
+                {
+                    _interaction.HandleMessage(message);
+                    return message.Data;
+                }
+            }
         }
+
+        _interaction.HandleMessage(fromBuffer);
+        return fromBuffer.Data;
     }
 
     public async Task PostCallMessageAsync<T>(Guid id, MessageType messageType, T payload)

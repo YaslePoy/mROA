@@ -18,8 +18,6 @@ builder.Modules.Add(new StaticRepresentationModuleProducer());
 builder.Modules.Add(new RequestExtractor());
 builder.Modules.Add(new BasicExecutionModule());
 builder.Modules.Add(new CoCodegenMethodRepository());
-// builder.Modules.Add(new StreamBasedVirtualBackendInteractionModule());
-// builder.Modules.Add(new JsonSerialisationModule());
 builder.UseCollectableContextRepository();
 builder.Build();
 
@@ -28,7 +26,7 @@ TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>(
 TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
 
 builder.GetModule<NetworkFrontendBridge>()!.Connect();
- // _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
+// _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
 Console.WriteLine(TransmissionConfig.OwnershipRepository!.GetOwnershipId());
 var context = builder.GetModule<RemoteContextRepository>();
 
@@ -36,6 +34,7 @@ var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactor
 
 //правильный порядок команд 8-5-10-7
 var printer = factory.Create("Test");
+Console.WriteLine("Printer created");
 Thread.Sleep(100);
 
 var name = printer.Value.GetName();
@@ -43,13 +42,13 @@ Console.WriteLine("Printer name : {0}", name);
 Thread.Sleep(100);
 
 factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
+Console.WriteLine("Registered printer");
 Thread.Sleep(100);
 
-Console.WriteLine("Registered printer");
 
 var registred = factory.GetFirstPrinter();
-Thread.Sleep(100);
 Console.WriteLine("First printer");
+Thread.Sleep(100);
 
 Console.WriteLine(registred.Value);
 Console.WriteLine("Collecting all printers");

@@ -61,7 +61,7 @@ public class RequestExtractor : IRequestExtractor
                 var request = 
                     _representationModule!.GetMessage<DefaultCallRequest>(messageType: MessageType.CallRequest);
 
-                Console.WriteLine("Executing {0}", request.Id);
+                // Console.WriteLine("Executing {0}", request.Id);
                 
                 if (request.Parameter is not null)
                 {

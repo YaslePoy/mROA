@@ -8,4 +8,6 @@ public interface INextGenerationInteractionModule : IInjectableModule
     public Stream? BaseStream { get; set; }
     Task<NetworkMessage> GetNextMessageReceiving();
     Task PostMessage(NetworkMessage message);
+    void HandleMessage(NetworkMessage message);
+    NetworkMessage[] UnhandledMessages { get; }
 }
