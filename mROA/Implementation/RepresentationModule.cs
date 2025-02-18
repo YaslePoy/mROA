@@ -20,7 +20,7 @@ public class RepresentationModule : IRepresentationModule
         }
     }
 
-    public int Id => _interaction.ConntectionId;
+    public int Id => _interaction.ConnectionId;
 
     public async Task<T> GetMessage<T>(Guid? requestId, MessageType? messageType)
     {

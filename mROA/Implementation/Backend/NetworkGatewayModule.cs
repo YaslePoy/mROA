@@ -10,6 +10,7 @@ public class NetworkGatewayModule : IGatewayModule
     private readonly IInjectableModule[]? _injectableModules;
     private readonly TcpListener? _tcpListener;
     private IConnectionHub? _hub;
+    private ISerializationToolkit _serializationToolkit;
 
     public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType, IInjectableModule[] injectableModules)
     {
@@ -46,25 +47,35 @@ public class NetworkGatewayModule : IGatewayModule
     {
         if (_hub is null)
             throw new NullReferenceException("Hub module is null");
-        
+
         if (_tcpListener == null)
             throw new NullReferenceException("TcpListener is null");
-        
+
         if (_injectableModules is null)
             throw new NullReferenceException("InjectableModules is null");
 
         if (_interactionModuleType is null)
             throw new NullReferenceException("InteractionModuleType is null");
-        
+
         while (true)
         {
             var client = _tcpListener.AcceptTcpClient();
             Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
-            var interacton = Activator.CreateInstance(_interactionModuleType) as INextGenerationInteractionModule;
-            
+            var interaction = Activator.CreateInstance(_interactionModuleType) as INextGenerationInteractionModule;
+
             foreach (var injectableModule in _injectableModules)
-                interacton.Inject(injectableModule);
-            _hub.RegisterInteraction(interacton);
+                interaction!.Inject(injectableModule);
+
+            interaction!.Inject(_serializationToolkit);
+            
+            interaction.BaseStream = client.GetStream();
+            
+            interaction.PostMessage(new NetworkMessage
+            {
+                Id = Guid.NewGuid(), SchemaId = MessageType.IdAssigning,
+                Data = _serializationToolkit.Serialize(new IdAssingnment { Id = interaction.ConnectionId })
+            });
+            _hub.RegisterInteraction(interaction);
             Console.WriteLine("Client registered");
         }
     }
@@ -73,5 +84,7 @@ public class NetworkGatewayModule : IGatewayModule
     {
         if (dependency is IConnectionHub interactionModule)
             _hub = interactionModule;
+        if (dependency is ISerializationToolkit serializationToolkit)
+            _serializationToolkit = serializationToolkit;
     }
 }

@@ -6,7 +6,7 @@ namespace mROA.Implementation;
 public class NextGenerationInteractionModule : INextGenerationInteractionModule
 {
     private ISerializationToolkit? _serialization;
-    public int ConntectionId { get; private set; }
+    public int ConnectionId { get; private set; }
     public Stream? BaseStream { get; set; }
     private Task<NetworkMessage>? _currentReceiving;
     private const int BufferSize = ushort.MaxValue;
@@ -20,7 +20,7 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
                 _serialization = toolkit;
                 break;
             case IIdentityGenerator identityGenerator:
-                ConntectionId = identityGenerator.GetNextIdentity();
+                ConnectionId = identityGenerator.GetNextIdentity();
                 break;
         }
     }

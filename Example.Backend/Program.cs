@@ -5,23 +5,31 @@ using mROA.Codegen;
 using mROA.Implementation;
 using mROA.Implementation.Backend;
 using mROA.Implementation.Bootstrap;
-using mROA.Implementation.Frontend;
 
 
 var builder = new FullMixBuilder();
 builder.UseJsonSerialisation();
-builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567));
-builder.UseStreamInteraction();
+builder.Modules.Add(new BackendIdentityGenerator());
+builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567), typeof(NextGenerationInteractionModule),
+    builder.GetModule<IIdentityGenerator>()!);
+
+builder.Modules.Add(new ConnectionHub());
+builder.Modules.Add(new HubRequestExtractor());
+
 builder.UseBasicExecution();
+
 builder.Modules.Add(new RemoteContextRepository());
 builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
 builder.SetupMethodsRepository(new CoCodegenMethodRepository());
-builder.Modules.Add(new CreativeSerializationModuleProducer([], typeof(JsonFrontendSerialisationModule)));
+builder.Modules.Add(new CreativeSerializationModuleProducer([builder.GetModule<JsonSerializationToolkit>()!], typeof(RepresentationModule)));
 
 builder.Build();
 new RemoteTypeBinder();
-TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
 
-var gateway = builder.GetModule<IGatewayModule>() ;
+TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>();
+TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
+TransmissionConfig.OwnershipRepository = new MultiClientOwnershipRepository();
+
+var gateway = builder.GetModule<IGatewayModule>();
 
 gateway.Run();

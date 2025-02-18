@@ -10,4 +10,8 @@ public class BackendIdentityGenerator : IIdentityGenerator
     { 
         return ++_currentId;
     }
+
+    public void Inject<T>(T dependency)
+    {
+    }
 }

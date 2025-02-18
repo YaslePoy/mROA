@@ -10,6 +10,7 @@ public class HubRequestExtractor : IInjectableModule
     private IContextRepository? _contextRepository;
     private IMethodRepository? _methodRepository;
     private ISerializationToolkit? _serializationToolkit;
+    private IExecuteModule? _executeModule;
     public void Inject<T>(T dependency)
     {
         switch (dependency)
@@ -27,6 +28,9 @@ public class HubRequestExtractor : IInjectableModule
             case ISerializationToolkit serializationToolkit:
                 _serializationToolkit = serializationToolkit;
                 break;
+            case IExecuteModule executeModule:
+                _executeModule = executeModule;
+                break;
         }
     }
 
@@ -37,6 +41,7 @@ public class HubRequestExtractor : IInjectableModule
         extractor.Inject(_contextRepository);
         extractor.Inject(_methodRepository);
         extractor.Inject(_serializationToolkit);
+        extractor.Inject(_executeModule);
         _ = extractor.StartExtraction();
     }
 }

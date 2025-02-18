@@ -3,7 +3,7 @@
 public delegate void ConnectionHandler(IRepresentationModule representationModule);
 public delegate void DisconnectionHandler(IRepresentationModule representationModule);
 
-public interface IConnectionHub
+public interface IConnectionHub : IInjectableModule
 {
     void RegisterInteraction(INextGenerationInteractionModule interaction);
     INextGenerationInteractionModule GetInteracion(int id);

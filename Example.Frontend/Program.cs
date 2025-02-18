@@ -9,9 +9,10 @@ using mROA.Implementation.Frontend;
 
 var builder = new FullMixBuilder();
 new RemoteTypeBinder();
+builder.Modules.Add(new JsonSerializationToolkit());
 builder.Modules.Add(new RemoteContextRepository());
-builder.Modules.Add(new JsonFrontendSerialisationModule());
-builder.Modules.Add(new StreamBasedFrontendInteractionModule());
+builder.Modules.Add(new NextGenerationInteractionModule());
+builder.Modules.Add(new RepresentationModule());
 builder.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
 builder.Modules.Add(new StaticRepresentationModuleProducer());
 // builder.Modules.Add(new BasicExecutionModule());
