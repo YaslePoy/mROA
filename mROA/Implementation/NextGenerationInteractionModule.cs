@@ -37,14 +37,8 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
             _currentReceiving = Task.Run(GetNextMessage);
             return _currentReceiving;
         }
-        lock (_currentReceiving)
-        {
-            if (_currentReceiving is { Status: TaskStatus.Running })
-                return _currentReceiving;
 
-            _currentReceiving = Task.Run(GetNextMessage);
-            return _currentReceiving;
-        }
+        return _currentReceiving;
     }
 
     public async Task PostMessage(NetworkMessage message)
@@ -86,6 +80,8 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
         var message = _serialization.Deserialize<NetworkMessage>(_buffer[..len]);
         _messageBuffer.Add(message!);
 
+        _currentReceiving = Task.Run(GetNextMessage);
+        
         return message!;
     }
 }

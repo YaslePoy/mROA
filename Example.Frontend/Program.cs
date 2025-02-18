@@ -26,7 +26,7 @@ TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>(
 TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
 
 builder.GetModule<NetworkFrontendBridge>()!.Connect();
-// _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
+_ = builder.GetModule<RequestExtractor>()!.StartExtraction();
 Console.WriteLine(TransmissionConfig.OwnershipRepository!.GetOwnershipId());
 var context = builder.GetModule<RemoteContextRepository>();
 
