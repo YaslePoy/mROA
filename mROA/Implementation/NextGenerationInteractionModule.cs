@@ -9,8 +9,8 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
     public Stream? BaseStream { get; set; }
     private Task<NetworkMessage>? _currentReceiving;
     private const int BufferSize = ushort.MaxValue;
-    private readonly byte[] _buffer = new byte[BufferSize];
-    private readonly List<NetworkMessage> _messageBuffer = [];
+    private readonly Memory<byte> _buffer = new byte[BufferSize];
+    private readonly List<NetworkMessage> _messageBuffer = new (128);
 
 
     public void Inject<T>(T dependency)
@@ -29,8 +29,6 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
 
     public Task<NetworkMessage> GetNextMessageReceiving()
     {
-        // Console.WriteLine(_currentReceiving?.Status);
-
         if (_currentReceiving != null) return _currentReceiving;
         _currentReceiving = Task.Run(GetNextMessage);
         return _currentReceiving;
@@ -59,6 +57,10 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
     }
 
     public NetworkMessage[] UnhandledMessages => _messageBuffer.ToArray();
+    public NetworkMessage? FirstByFilter(Predicate<NetworkMessage> predicate)
+    {
+        return _messageBuffer.FirstOrDefault(m => predicate(m));
+    }
 
     private NetworkMessage GetNextMessage()
     {
@@ -70,15 +72,14 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
 
 
         // Console.WriteLine("Receiving message");
-        BaseStream.ReadExactly(_buffer, 0, 2);
-        var len = BitConverter.ToUInt16(_buffer, 0);
-        BaseStream.ReadExactly(_buffer, 0, len);
+        var len = BitConverter.ToUInt16([(byte)BaseStream.ReadByte(), (byte)BaseStream.ReadByte()]);
+        var localSpan = _buffer.Span.Slice(0, len);
+        BaseStream.ReadExactly(localSpan);
 
         // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
 
-        var message = _serialization.Deserialize<NetworkMessage>(_buffer[..len]);
+        var message = _serialization.Deserialize<NetworkMessage>(localSpan);
         _messageBuffer.Add(message!);
-
         _currentReceiving = Task.Run(GetNextMessage);
         
         return message!;

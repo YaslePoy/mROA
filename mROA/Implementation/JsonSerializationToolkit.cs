@@ -25,6 +25,16 @@ public class JsonSerializationToolkit : ISerializationToolkit
         return JsonSerializer.Deserialize(rawData, type);
     }
 
+    public T? Deserialize<T>(Span<byte> rawData)
+    {
+        return JsonSerializer.Deserialize<T>(rawData);
+    }
+
+    public object? Deserialize(Span<byte> rawData, Type type)
+    {
+        return JsonSerializer.Deserialize(rawData, type);
+    }
+
     public T Cast<T>(object nonCasted)
     {
         return nonCasted switch

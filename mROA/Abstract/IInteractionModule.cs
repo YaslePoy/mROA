@@ -10,4 +10,5 @@ public interface INextGenerationInteractionModule : IInjectableModule
     Task PostMessage(NetworkMessage message);
     void HandleMessage(NetworkMessage message);
     NetworkMessage[] UnhandledMessages { get; }
+    NetworkMessage? FirstByFilter(Predicate<NetworkMessage> predicate);
 }

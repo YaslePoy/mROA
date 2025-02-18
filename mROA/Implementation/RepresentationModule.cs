@@ -44,9 +44,10 @@ public class RepresentationModule : IRepresentationModule
             throw new NullReferenceException("Interaction toolkit is not initialized");
         
         var fromBuffer =
-            _interaction.UnhandledMessages.FirstOrDefault(message =>
+            _interaction.FirstByFilter(message =>
                 (requestId is null || message.Id == requestId) &&
                 (messageType is null || message.SchemaId == messageType));
+        
         if (fromBuffer == null)
         {
             while (true)
