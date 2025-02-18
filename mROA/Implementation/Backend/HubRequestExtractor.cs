@@ -3,7 +3,7 @@ using mROA.Implementation.Frontend;
 
 namespace mROA.Implementation.Backend;
 
-public class HubRequestExtractor : IInjectableModule
+public class HubRequestExtractor(Type extractoType) : IInjectableModule
 {
     private IConnectionHub _hub;
 
@@ -37,7 +37,7 @@ public class HubRequestExtractor : IInjectableModule
 
     private void HubOnOnConnected(IRepresentationModule interaction)
     {
-        var extractor = new RequestExtractor();
+        var extractor = (IRequestExtractor)Activator.CreateInstance(extractoType)!;
         extractor.Inject(interaction);
         if (_contextRepository is IContextRepositoryHub contextHub)
             extractor.Inject(contextHub.GetRepository(interaction.Id));

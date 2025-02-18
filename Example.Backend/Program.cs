@@ -5,6 +5,7 @@ using mROA.Codegen;
 using mROA.Implementation;
 using mROA.Implementation.Backend;
 using mROA.Implementation.Bootstrap;
+using mROA.Implementation.Frontend;
 
 
 var builder = new FullMixBuilder();
@@ -14,7 +15,7 @@ builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567), typeof(NextG
     builder.GetModule<IIdentityGenerator>()!);
 
 builder.Modules.Add(new ConnectionHub());
-builder.Modules.Add(new HubRequestExtractor());
+builder.Modules.Add(new HubRequestExtractor(typeof(RequestExtractor)));
 
 builder.UseBasicExecution();
 
@@ -27,7 +28,8 @@ builder.Modules.Add(new MultiClientContextRepository(i =>
     return repo;
 }));
 builder.SetupMethodsRepository(new CoCodegenMethodRepository());
-builder.Modules.Add(new CreativeSerializationModuleProducer([builder.GetModule<JsonSerializationToolkit>()!], typeof(RepresentationModule)));
+builder.Modules.Add(new CreativeRepresentationModuleProducer([builder.GetModule<JsonSerializationToolkit>()!],
+    typeof(RepresentationModule)));
 
 builder.Build();
 new RemoteTypeBinder();

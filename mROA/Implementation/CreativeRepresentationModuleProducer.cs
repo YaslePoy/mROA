@@ -2,13 +2,13 @@
 
 namespace mROA.Implementation;
 
-public class CreativeSerializationModuleProducer : IRepresentationModuleProducer
+public class CreativeRepresentationModuleProducer : IRepresentationModuleProducer
 {
     private Type _reprModuleType;
     private IInjectableModule[] _creationModules;
     private IConnectionHub? _hub;
 
-    public CreativeSerializationModuleProducer(IInjectableModule[] creationModules, Type reprModuleType)
+    public CreativeRepresentationModuleProducer(IInjectableModule[] creationModules, Type reprModuleType)
     {
         _creationModules = creationModules;
         _reprModuleType = reprModuleType;
