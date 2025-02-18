@@ -15,8 +15,9 @@ builder.Modules.Add(new NextGenerationInteractionModule());
 builder.Modules.Add(new RepresentationModule());
 builder.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
 builder.Modules.Add(new StaticRepresentationModuleProducer());
-// builder.Modules.Add(new BasicExecutionModule());
-// builder.Modules.Add(new CoCodegenMethodRepository());
+builder.Modules.Add(new RequestExtractor());
+builder.Modules.Add(new BasicExecutionModule());
+builder.Modules.Add(new CoCodegenMethodRepository());
 // builder.Modules.Add(new StreamBasedVirtualBackendInteractionModule());
 // builder.Modules.Add(new JsonSerialisationModule());
 builder.UseCollectableContextRepository();
@@ -27,8 +28,7 @@ TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>(
 TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
 
 builder.GetModule<NetworkFrontendBridge>()!.Connect();
-// builder.GetModule<StreamBasedVirtualBackendInteractionModule>()!.StartVirtualInteraction();
-
+ _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
 Console.WriteLine(TransmissionConfig.OwnershipRepository!.GetOwnershipId());
 var context = builder.GetModule<RemoteContextRepository>();
 

@@ -1,4 +1,5 @@
-﻿using mROA.Abstract;
+﻿using System.Text.Json;
+using mROA.Abstract;
 
 namespace mROA.Implementation;
 
@@ -37,6 +38,7 @@ public class RepresentationModule : IRepresentationModule
         while (true)
         {
             var message = await _interaction.GetNextMessageReceiving();
+            Console.WriteLine("Message received {0}", JsonSerializer.Serialize(message));
             if ((requestId is null || message.Id == requestId) &&
                 (messageType is null || message.SchemaId == messageType))
                 return message.Data;
