@@ -32,12 +32,16 @@ public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
         
         _tcpClient.Connect(ipEndPoint);
         _interactionModule.BaseStream = _tcpClient.GetStream();
-        var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
+        _interactionModule.StartInfiniteReceiving();
+
+        var handle = _interactionModule.CurrentReceivingHandle;
+        handle.WaitOne();
+        var welcomeMessage = _interactionModule.LastMessage;
         if (welcomeMessage.SchemaId != MessageType.IdAssigning)
         {
             throw new Exception($"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.SchemaId.ToString()}");
         }
-
+        _interactionModule.HandleMessage(welcomeMessage);
         TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(_serialization.Deserialize<IdAssingnment>(welcomeMessage.Data)!.Id);
     }
 }

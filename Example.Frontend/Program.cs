@@ -71,6 +71,7 @@ var x = 0;
 for (int i = 0; i < iterations; i++)
 {
     x = loadSingleton.Next(x);
+    // Console.WriteLine(x);
 }
 
 timer.Stop();

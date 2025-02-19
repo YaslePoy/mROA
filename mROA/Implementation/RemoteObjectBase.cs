@@ -15,18 +15,27 @@ public abstract class RemoteObjectBase(int id, IRepresentationModule representat
         var request = new DefaultCallRequest
             { CommandId = methodId, ObjectId = id, Parameter = parameter, ParameterType = parameter?.GetType() };
         await representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
-
+        
+        var localTokenSource = new CancellationTokenSource();
+        
         var successResponse =
             representationModule.GetMessageAsync<FinalCommandExecution<T>>(
-                messageType: MessageType.FinishedCommandExecution, requestId: request.Id);
+                messageType: MessageType.FinishedCommandExecution, requestId: request.Id, token: localTokenSource.Token);
         var errorResponse =
             representationModule.GetMessageAsync<ExceptionCommandExecution>(
-                messageType: MessageType.ExceptionCommandExecution, requestId: request.Id);
+                messageType: MessageType.ExceptionCommandExecution, requestId: request.Id, token: localTokenSource.Token);
+        
         Task.WaitAny(successResponse, errorResponse);
+        
+
 
         if (successResponse.IsCompletedSuccessfully)
+        {
+            await localTokenSource.CancelAsync();
             return successResponse.Result.Result!;
-
+        }
+        
+        await localTokenSource.CancelAsync();
         throw errorResponse.Result.GetException();
     }
 

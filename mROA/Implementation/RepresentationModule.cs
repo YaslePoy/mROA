@@ -22,47 +22,74 @@ public class RepresentationModule : IRepresentationModule
 
     public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized")).ConnectionId;
 
-    public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType)
+    public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType,
+        CancellationToken token = default)
     {
         if (_serialization == null)
             throw new NullReferenceException("Serialization toolkit is not initialized");
-        
-        return _serialization.Deserialize<T>(await GetRawMessage(requestId, messageType))!;
+
+        return _serialization.Deserialize<T>(await GetRawMessage(m => m.IsValidMessage(requestId, messageType), token))!;
     }
 
     public T GetMessage<T>(Guid? requestId = null, MessageType? messageType = null)
     {
-        if (_serialization == null)
-            throw new NullReferenceException("Serialization toolkit is not initialized");
-        
-        return _serialization.Deserialize<T>(GetRawMessage(requestId, messageType).GetAwaiter().GetResult())!;
+        return GetMessage<T>(m => m.IsValidMessage(requestId, messageType));
     }
 
-    public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null)
+    public T GetMessage<T>(Predicate<NetworkMessage> filter)
     {
+        if (_serialization == null)
+            throw new NullReferenceException("Serialization toolkit is not initialized");
+
+        return _serialization.Deserialize<T>(GetRawMessage(filter).GetAwaiter().GetResult())!;
+    }
+
+    public async Task<byte[]> GetRawMessage(Predicate<NetworkMessage> filter, CancellationToken token = default)
+    {
+        await Task.Yield();
+
         if (_interaction == null)
             throw new NullReferenceException("Interaction toolkit is not initialized");
-        
-        var fromBuffer =
-            _interaction.FirstByFilter(message =>
-                (requestId is null || message.Id == requestId) &&
-                (messageType is null || message.SchemaId == messageType));
-        
-        if (fromBuffer == null)
+
+        // Console.WriteLine(
+        //     $"{DateTime.Now.TimeOfDay} {Environment.CurrentManagedThreadId} Representation : Reading");
+
+        if (filter(_interaction.LastMessage))
         {
-            while (true)
-            {
-                var message = await _interaction.GetNextMessageReceiving();
-                if ((requestId is not null && message.Id != requestId) ||
-                    (messageType is not null && message.SchemaId != messageType)) continue;
-                
-                _interaction.HandleMessage(message);
-                return message.Data;
-            }
+            _interaction.HandleMessage(_interaction.LastMessage);
+            return _interaction.LastMessage.Data;
         }
 
-        _interaction.HandleMessage(fromBuffer);
-        return fromBuffer.Data;
+        var message = _interaction.FirstByFilter(filter);
+
+        if (message != NetworkMessage.Null)
+        {
+            _interaction.HandleMessage(message);
+            return message.Data;
+        }
+
+
+        while (!token.IsCancellationRequested)
+        {
+            // Console.WriteLine(
+            //     $"{DateTime.Now.TimeOfDay} {Environment.CurrentManagedThreadId} Representation : Receiving message...");
+            var handle = _interaction.CurrentReceivingHandle;
+            handle.WaitOne();
+
+            message = _interaction.LastMessage;
+
+            // Console.WriteLine(
+            //     $"{DateTime.Now.TimeOfDay} {Environment.CurrentManagedThreadId} Representation : Message received {message.SchemaId} - {message.Id}");
+            if (!filter(message)) continue;
+
+            message = _interaction.LastMessage;
+            // Console.WriteLine(
+            //     $"{DateTime.Now.TimeOfDay} {Environment.CurrentManagedThreadId} Representation : Message received Successfully {message.SchemaId} - {message.Id}");
+            _interaction.HandleMessage(message);
+            return message.Data;
+        }
+
+        return [];
     }
 
     public async Task PostCallMessageAsync<T>(Guid id, MessageType messageType, T payload) where T : notnull
@@ -76,7 +103,7 @@ public class RepresentationModule : IRepresentationModule
             throw new NullReferenceException("Interaction toolkit is not initialized");
         if (_serialization == null)
             throw new NullReferenceException("Serialization toolkit is not initialized");
-        
+
         await _interaction.PostMessage(new NetworkMessage
             { Id = id, SchemaId = messageType, Data = _serialization.Serialize(payload, payloadType) });
     }
