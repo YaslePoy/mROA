@@ -31,7 +31,6 @@ public class NextGenTest
         {
             _listener.Start();
             _interactionModuleB.BaseStream = _listener.AcceptTcpClient().GetStream();
-
             foreach (var guid in guids)
             {
                 _interactionModuleB.PostMessage(new NetworkMessage { Id = guid, Data = "Hello user"u8.ToArray() });

@@ -5,7 +5,7 @@ namespace mROA.Abstract;
 public interface INextGenerationInteractionModule : IInjectableModule
 {
     int ConnectionId { get; }
-    public Stream? BaseStream { get; set; }
+    public Stream BaseStream { get; set; }
     NetworkMessage[] UnhandledMessages { get; }
     NetworkMessage LastMessage { get; }
     EventWaitHandle CurrentReceivingHandle { get; }

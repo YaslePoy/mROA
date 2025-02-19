@@ -56,13 +56,13 @@ public class RequestExtractor : IRequestExtractor
 
         try
         {
+            var lastCommandId = Guid.Empty;
             while (true)
             {
-                var request = 
-                    _representationModule!.GetMessage<DefaultCallRequest>(messageType: MessageType.CallRequest);
-
-                // Console.WriteLine("Executing {0}", request.Id);
                 
+                var request = 
+                    _representationModule!.GetMessage<DefaultCallRequest>(m => m.Id != lastCommandId && m.SchemaId == MessageType.CallRequest);
+                lastCommandId = request.Id;
                 if (request.Parameter is not null)
                 {
                     var parameterType = _methodRepository!.GetMethod(request.CommandId).GetParameters().First()

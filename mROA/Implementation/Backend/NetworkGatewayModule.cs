@@ -68,7 +68,7 @@ public class NetworkGatewayModule : IGatewayModule
             interaction!.Inject(_serialization);
             
             interaction.BaseStream = client.GetStream();
-            
+            interaction.StartInfiniteReceiving();
             interaction.PostMessage(new NetworkMessage
             {
                 Id = Guid.NewGuid(), SchemaId = MessageType.IdAssigning,
