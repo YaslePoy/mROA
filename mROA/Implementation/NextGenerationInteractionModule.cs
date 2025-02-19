@@ -11,7 +11,9 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
     private const int BufferSize = ushort.MaxValue;
     private readonly Memory<byte> _buffer = new byte[BufferSize];
     private readonly List<NetworkMessage> _messageBuffer = new (128);
-
+    public NetworkMessage[] UnhandledMessages => _messageBuffer.ToArray();
+    public NetworkMessage LastMessage { get; private set; } = NetworkMessage.Null;
+    public EventWaitHandle CurrentReceivingHandle { get; private set; } = new(false, EventResetMode.ManualReset);
 
     public void Inject<T>(T dependency)
     {
@@ -27,6 +29,19 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
     }
 
 
+    public async void StartInfiniteReceiving()
+    {
+        while (true)
+        {
+            var message = ReceiveMessage();
+            LastMessage = message;
+            CurrentReceivingHandle.Set();
+            CurrentReceivingHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+        }
+    }
+
+    
+    
     public Task<NetworkMessage> GetNextMessageReceiving()
     {
         if (_currentReceiving != null) return _currentReceiving;
@@ -56,7 +71,6 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
         _messageBuffer.Remove(message);
     }
 
-    public NetworkMessage[] UnhandledMessages => _messageBuffer.ToArray();
     public NetworkMessage? FirstByFilter(Predicate<NetworkMessage> predicate)
     {
         return _messageBuffer.FirstOrDefault(m => predicate(m));
@@ -71,17 +85,21 @@ public class NextGenerationInteractionModule : INextGenerationInteractionModule
             throw new NullReferenceException("Serialization toolkit is null");
 
 
-        // Console.WriteLine("Receiving message");
-        var len = BitConverter.ToUInt16([(byte)BaseStream.ReadByte(), (byte)BaseStream.ReadByte()]);
-        var localSpan = _buffer.Span.Slice(0, len);
-        BaseStream.ReadExactly(localSpan);
-
-        // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
-
-        var message = _serialization.Deserialize<NetworkMessage>(localSpan);
-        _messageBuffer.Add(message!);
+        var message = ReceiveMessage();
+        
+        _messageBuffer.Add(message);
         _currentReceiving = Task.Run(GetNextMessage);
         
+        return message!;
+    }
+
+    private NetworkMessage ReceiveMessage()
+    {
+        var len = BitConverter.ToUInt16([(byte)BaseStream!.ReadByte(), (byte)BaseStream.ReadByte()]);
+        var localSpan = _buffer.Span.Slice(0, len);
+        BaseStream.ReadExactly(localSpan);
+        
+        var message = _serialization!.Deserialize<NetworkMessage>(localSpan);
         return message!;
     }
 }
