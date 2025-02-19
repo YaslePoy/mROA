@@ -4,24 +4,20 @@
 
 namespace mROA.Implementation;
 
-public class NetworkMessage
+public sealed class NetworkMessage
 {
-    public static readonly NetworkMessage Null = new() { SchemaId = MessageType.Unknown, Id = Guid.Empty, Data = [] };
+    public static readonly NetworkMessage Null = new() { MessageType = EMessageType.Unknown, Id = Guid.Empty, Data = [] };
     public Guid Id { get; init; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public MessageType SchemaId { get; init; }
-
+    public EMessageType MessageType { get; init; }
     public required byte[] Data { get; init; }
-
-    public bool IsValidMessage(Guid? requestId = null, MessageType? messageType = null)
+    public bool IsValidMessage(Guid? requestId = null, EMessageType? messageType = null)
     {
         return (requestId is null || Id == requestId) &&
-               (messageType is null || SchemaId == messageType);
+               (messageType is null || MessageType == messageType);
     }
 }
 
-public enum MessageType
+public enum EMessageType
 {
     Unknown,
     FinishedCommandExecution,

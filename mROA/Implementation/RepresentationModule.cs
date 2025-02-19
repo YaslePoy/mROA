@@ -22,16 +22,17 @@ public class RepresentationModule : IRepresentationModule
 
     public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized")).ConnectionId;
 
-    public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType,
+    public async Task<T> GetMessageAsync<T>(Guid? requestId, EMessageType? messageType,
         CancellationToken token = default)
     {
         if (_serialization == null)
             throw new NullReferenceException("Serialization toolkit is not initialized");
 
-        return _serialization.Deserialize<T>(await GetRawMessage(m => m.IsValidMessage(requestId, messageType), token))!;
+        var raw = await GetRawMessage(m => m.IsValidMessage(requestId, messageType), token);
+        return _serialization.Deserialize<T>(raw)!;
     }
 
-    public T GetMessage<T>(Guid? requestId = null, MessageType? messageType = null)
+    public T GetMessage<T>(Guid? requestId = null, EMessageType? messageType = null)
     {
         return GetMessage<T>(m => m.IsValidMessage(requestId, messageType));
     }
@@ -40,8 +41,8 @@ public class RepresentationModule : IRepresentationModule
     {
         if (_serialization == null)
             throw new NullReferenceException("Serialization toolkit is not initialized");
-
-        return _serialization.Deserialize<T>(GetRawMessage(filter).GetAwaiter().GetResult())!;
+        var raw = GetRawMessage(filter).GetAwaiter().GetResult();
+        return _serialization.Deserialize<T>(raw)!;
     }
 
     public async Task<byte[]> GetRawMessage(Predicate<NetworkMessage> filter, CancellationToken token = default)
@@ -50,10 +51,7 @@ public class RepresentationModule : IRepresentationModule
 
         if (_interaction == null)
             throw new NullReferenceException("Interaction toolkit is not initialized");
-
-        // Console.WriteLine(
-        //     $"{DateTime.Now.TimeOfDay} {Environment.CurrentManagedThreadId} Representation : Reading");
-
+        
         if (filter(_interaction.LastMessage))
         {
             _interaction.HandleMessage(_interaction.LastMessage);
@@ -71,20 +69,16 @@ public class RepresentationModule : IRepresentationModule
 
         while (!token.IsCancellationRequested)
         {
-            // Console.WriteLine(
-            //     $"{DateTime.Now.TimeOfDay} {Environment.CurrentManagedThreadId} Representation : Receiving message...");
             var handle = _interaction.CurrentReceivingHandle;
             handle.WaitOne();
 
             message = _interaction.LastMessage;
 
-            // Console.WriteLine(
-            //     $"{DateTime.Now.TimeOfDay} {Environment.CurrentManagedThreadId} Representation : Message received {message.SchemaId} - {message.Id}");
-            if (!filter(message)) continue;
+            if (!filter(message)) 
+                continue;
 
             message = _interaction.LastMessage;
-            // Console.WriteLine(
-            //     $"{DateTime.Now.TimeOfDay} {Environment.CurrentManagedThreadId} Representation : Message received Successfully {message.SchemaId} - {message.Id}");
+
             _interaction.HandleMessage(message);
             return message.Data;
         }
@@ -92,29 +86,30 @@ public class RepresentationModule : IRepresentationModule
         return [];
     }
 
-    public async Task PostCallMessageAsync<T>(Guid id, MessageType messageType, T payload) where T : notnull
+    public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull
     {
-        await PostCallMessageAsync(id, messageType, payload, typeof(T));
+        await PostCallMessageAsync(id, eMessageType, payload, typeof(T));
     }
 
-    public async Task PostCallMessageAsync(Guid id, MessageType messageType, object payload, Type payloadType)
+    public async Task PostCallMessageAsync(Guid id, EMessageType eMessageType, object payload, Type payloadType)
     {
         if (_interaction == null)
             throw new NullReferenceException("Interaction toolkit is not initialized");
         if (_serialization == null)
             throw new NullReferenceException("Serialization toolkit is not initialized");
 
-        await _interaction.PostMessage(new NetworkMessage
-            { Id = id, SchemaId = messageType, Data = _serialization.Serialize(payload, payloadType) });
+        var message = new NetworkMessage
+            { Id = id, MessageType = eMessageType, Data = _serialization.Serialize(payload, payloadType) };
+        await _interaction.PostMessage(message);
     }
 
-    public void PostCallMessage<T>(Guid id, MessageType messageType, T payload) where T : notnull
+    public void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull
     {
-        PostCallMessageAsync(id, messageType, payload).GetAwaiter().GetResult();
+        PostCallMessageAsync(id, eMessageType, payload).GetAwaiter().GetResult();
     }
 
-    public void PostCallMessage(Guid id, MessageType messageType, object payload, Type payloadType)
+    public void PostCallMessage(Guid id, EMessageType eMessageType, object payload, Type payloadType)
     {
-        PostCallMessageAsync(id, messageType, payload, payloadType).GetAwaiter().GetResult();
+        PostCallMessageAsync(id, eMessageType, payload, payloadType).GetAwaiter().GetResult();
     }
 }

@@ -37,9 +37,9 @@ public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
         var handle = _interactionModule.CurrentReceivingHandle;
         handle.WaitOne();
         var welcomeMessage = _interactionModule.LastMessage;
-        if (welcomeMessage.SchemaId != MessageType.IdAssigning)
+        if (welcomeMessage.MessageType != EMessageType.IdAssigning)
         {
-            throw new Exception($"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.SchemaId.ToString()}");
+            throw new Exception($"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.MessageType.ToString()}");
         }
         _interactionModule.HandleMessage(welcomeMessage);
         TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(_serialization.Deserialize<IdAssingnment>(welcomeMessage.Data)!.Id);

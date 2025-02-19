@@ -14,27 +14,26 @@ public abstract class RemoteObjectBase(int id, IRepresentationModule representat
     {
         var request = new DefaultCallRequest
             { CommandId = methodId, ObjectId = id, Parameter = parameter, ParameterType = parameter?.GetType() };
-        await representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
-        
+        await representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request);
+
         var localTokenSource = new CancellationTokenSource();
-        
+
         var successResponse =
-            representationModule.GetMessageAsync<FinalCommandExecution<T>>(
-                messageType: MessageType.FinishedCommandExecution, requestId: request.Id, token: localTokenSource.Token);
-        var errorResponse =
-            representationModule.GetMessageAsync<ExceptionCommandExecution>(
-                messageType: MessageType.ExceptionCommandExecution, requestId: request.Id, token: localTokenSource.Token);
+            representationModule.GetMessageAsync<FinalCommandExecution<T>>(request.Id,
+                EMessageType.FinishedCommandExecution, localTokenSource.Token);
         
+        var errorResponse =
+            representationModule.GetMessageAsync<ExceptionCommandExecution>(request.Id,
+                EMessageType.ExceptionCommandExecution, localTokenSource.Token);
+
         Task.WaitAny(successResponse, errorResponse);
         
-
-
         if (successResponse.IsCompletedSuccessfully)
         {
             await localTokenSource.CancelAsync();
             return successResponse.Result.Result!;
         }
-        
+
         await localTokenSource.CancelAsync();
         throw errorResponse.Result.GetException();
     }
@@ -43,14 +42,14 @@ public abstract class RemoteObjectBase(int id, IRepresentationModule representat
     {
         var request = new DefaultCallRequest
             { CommandId = methodId, ObjectId = id, Parameter = parameter, ParameterType = parameter?.GetType() };
-        await representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
+        await representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request);
 
         var successResponse =
             representationModule.GetMessageAsync<FinalCommandExecution>(
-                messageType: MessageType.FinishedCommandExecution, requestId: request.Id);
+                messageType: EMessageType.FinishedCommandExecution, requestId: request.Id);
         var errorResponse =
             representationModule.GetMessageAsync<ExceptionCommandExecution>(
-                messageType: MessageType.ExceptionCommandExecution, requestId: request.Id);
+                messageType: EMessageType.ExceptionCommandExecution, requestId: request.Id);
 
         Task.WaitAny(successResponse, errorResponse);
 

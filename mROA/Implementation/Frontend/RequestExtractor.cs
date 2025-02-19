@@ -61,7 +61,7 @@ public class RequestExtractor : IRequestExtractor
             {
                 
                 var request = 
-                    _representationModule!.GetMessage<DefaultCallRequest>(m => m.Id != lastCommandId && m.SchemaId == MessageType.CallRequest);
+                    _representationModule!.GetMessage<DefaultCallRequest>(m => m.Id != lastCommandId && m.MessageType == EMessageType.CallRequest);
                 lastCommandId = request.Id;
                 if (request.Parameter is not null)
                 {
@@ -74,8 +74,8 @@ public class RequestExtractor : IRequestExtractor
                 var result = _executeModule.Execute(request, _contextRepository);
 
                 var resultType = result is FinalCommandExecution
-                    ? MessageType.FinishedCommandExecution
-                    : MessageType.ExceptionCommandExecution;
+                    ? EMessageType.FinishedCommandExecution
+                    : EMessageType.ExceptionCommandExecution;
 
                 _representationModule.PostCallMessage(request.Id, resultType, result, result.GetType());
             }

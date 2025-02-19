@@ -71,7 +71,7 @@ public class NetworkGatewayModule : IGatewayModule
             interaction.StartInfiniteReceiving();
             interaction.PostMessage(new NetworkMessage
             {
-                Id = Guid.NewGuid(), SchemaId = MessageType.IdAssigning,
+                Id = Guid.NewGuid(), MessageType = EMessageType.IdAssigning,
                 Data = _serialization.Serialize(new IdAssingnment { Id = interaction.ConnectionId })
             });
             _hub.RegisterInteraction(interaction);

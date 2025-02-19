@@ -39,6 +39,12 @@ public class MultiClientContextRepository(Func<int, IContextRepository> produceR
         return GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).GetObject<T>(id);
     }
 
+    public T GetSingleObject<T>()
+    {
+        var result = GetSingleObject(typeof(T));
+        return (T)result;
+    }
+
     public object GetSingleObject(Type type)
     {
         return GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).GetSingleObject(type); 

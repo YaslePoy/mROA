@@ -31,7 +31,12 @@ public class RemoteContextRepository : IContextRepository
         var remote = (T)Activator.CreateInstance(remoteType, id, _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
         return remote;
     }
-
+    public T GetSingleObject<T>()
+    {
+        var obj = GetSingleObject(typeof(T));
+        return (T)obj;
+    }
+    
     public object GetSingleObject(Type type)
     {
         if (_representationProducer == null)

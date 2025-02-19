@@ -54,12 +54,21 @@ public class ContextRepository : IContextRepository
 
     public T GetObject<T>(int id)
     {
-        return id == -1 || _storage.Length <= id ? throw new NullReferenceException("Cannot find that object. It is null"): (T)_storage[id]!;
+        return id == -1 || _storage.Length <= id
+            ? throw new NullReferenceException("Cannot find that object. It is null")
+            : (T)_storage[id]!;
+    }
+
+    public T GetSingleObject<T>()
+    {
+        var result = GetSingleObject(typeof(T));
+        return (T)result;
     }
 
     public object GetSingleObject(Type type)
     {
-        return _singletons!.GetValueOrDefault(type.GetHashCode()) ?? throw new ArgumentException("Unregistered singleton type");
+        return _singletons!.GetValueOrDefault(type.GetHashCode()) ??
+               throw new ArgumentException("Unregistered singleton type");
     }
 
     public int GetObjectIndex(object o)
@@ -81,8 +90,8 @@ public class ContextRepository : IContextRepository
         _storage = nextStorage;
         return _storage.Length;
     }
+
     public void Inject<T>(T dependency)
     {
     }
-
 }

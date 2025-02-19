@@ -32,7 +32,7 @@ _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
 Console.WriteLine(TransmissionConfig.OwnershipRepository.GetOwnershipId());
 var context = builder.GetModule<RemoteContextRepository>();
 
-var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactory;
+var factory = context.GetSingleObject<IPrinterFactory>();
 
 //правильный порядок команд 8-5-10-7
 var printer = factory.Create("Test");

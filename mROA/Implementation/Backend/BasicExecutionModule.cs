@@ -28,6 +28,7 @@ public class BasicExecutionModule : IExecuteModule
         var context = command.ObjectId != -1
             ? contextRepository.GetObject(command.ObjectId)
             : contextRepository.GetSingleObject(currentCommand.DeclaringType!);
+        
         var parameter = command.Parameter;
 
         if (currentCommand.ReturnType.BaseType == typeof(Task) &&
