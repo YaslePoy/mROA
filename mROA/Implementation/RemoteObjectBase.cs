@@ -1,53 +1,64 @@
-﻿using mROA.Abstract;
+﻿using System.Threading.Tasks;
+using mROA.Abstract;
 using mROA.Implementation.CommandExecution;
 
 // ReSharper disable UnusedMember.Global
 
-namespace mROA.Implementation;
-
-public abstract class RemoteObjectBase(int id, IRepresentationModule representationModule)
+namespace mROA.Implementation
 {
-    public int Id => id;
-    public int OwnerId => representationModule.Id;
-
-    protected async Task<T> GetResultAsync<T>(int methodId, object? parameter = default)
+    public abstract class RemoteObjectBase
     {
-        var request = new DefaultCallRequest
-            { CommandId = methodId, ObjectId = id, Parameter = parameter, ParameterType = parameter?.GetType() };
-        await representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
+        private readonly int _id;
+        private readonly IRepresentationModule _representationModule;
 
-        var successResponse =
-            representationModule.GetMessageAsync<FinalCommandExecution<T>>(
-                messageType: MessageType.FinishedCommandExecution, requestId: request.Id);
-        var errorResponse =
-            representationModule.GetMessageAsync<ExceptionCommandExecution>(
-                messageType: MessageType.ExceptionCommandExecution, requestId: request.Id);
-        Task.WaitAny(successResponse, errorResponse);
+        protected RemoteObjectBase(int id, IRepresentationModule representationModule)
+        {
+            _id = id;
+            _representationModule = representationModule;
+        }
 
-        if (successResponse.IsCompletedSuccessfully)
-            return successResponse.Result.Result!;
+        public int Id => _id;
+        public int OwnerId => _representationModule.Id;
 
-        throw errorResponse.Result.GetException();
-    }
+        protected async Task<T> GetResultAsync<T>(int methodId, object? parameter = default)
+        {
+            var request = new DefaultCallRequest
+                { CommandId = methodId, ObjectId = _id, Parameter = parameter, ParameterType = parameter?.GetType() };
+            await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
-    protected async Task CallAsync(int methodId, object? parameter = default)
-    {
-        var request = new DefaultCallRequest
-            { CommandId = methodId, ObjectId = id, Parameter = parameter, ParameterType = parameter?.GetType() };
-        await representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
+            var successResponse =
+                _representationModule.GetMessageAsync<FinalCommandExecution<T>>(
+                    messageType: MessageType.FinishedCommandExecution, requestId: request.Id);
+            var errorResponse =
+                _representationModule.GetMessageAsync<ExceptionCommandExecution>(
+                    messageType: MessageType.ExceptionCommandExecution, requestId: request.Id);
+            Task.WaitAny(successResponse, errorResponse);
 
-        var successResponse =
-            representationModule.GetMessageAsync<FinalCommandExecution>(
-                messageType: MessageType.FinishedCommandExecution, requestId: request.Id);
-        var errorResponse =
-            representationModule.GetMessageAsync<ExceptionCommandExecution>(
-                messageType: MessageType.ExceptionCommandExecution, requestId: request.Id);
+            if (successResponse.IsCompletedSuccessfully)
+                return successResponse.Result.Result!;
 
-        Task.WaitAny(successResponse, errorResponse);
+            throw errorResponse.Result.GetException();
+        }
 
-        if (successResponse.IsCompletedSuccessfully)
-            return;
+        protected async Task CallAsync(int methodId, object? parameter = default)
+        {
+            var request = new DefaultCallRequest
+                { CommandId = methodId, ObjectId = _id, Parameter = parameter, ParameterType = parameter?.GetType() };
+            await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
-        throw errorResponse.Result.GetException();
+            var successResponse =
+                _representationModule.GetMessageAsync<FinalCommandExecution>(
+                    messageType: MessageType.FinishedCommandExecution, requestId: request.Id);
+            var errorResponse =
+                _representationModule.GetMessageAsync<ExceptionCommandExecution>(
+                    messageType: MessageType.ExceptionCommandExecution, requestId: request.Id);
+
+            Task.WaitAny(successResponse, errorResponse);
+
+            if (successResponse.IsCompletedSuccessfully)
+                return;
+
+            throw errorResponse.Result.GetException();
+        }
     }
 }

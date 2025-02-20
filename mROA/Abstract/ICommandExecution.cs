@@ -1,8 +1,11 @@
-namespace mROA.Abstract;
+using System;
 
-public interface ICommandExecution
+namespace mROA.Abstract
 {
-    Guid Id { get; init; }
-    int ClientId { get; set; }
-    int CommandId { get; }
+    public interface ICommandExecution
+    {
+        Guid Id { get; set; }
+        int ClientId { get; set; }
+        int CommandId { get; }
+    }
 }

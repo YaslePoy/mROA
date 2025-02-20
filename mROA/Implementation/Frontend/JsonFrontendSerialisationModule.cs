@@ -1,6 +1,8 @@
-namespace mROA.Implementation.Frontend;
+using System;
 
-// public class JsonFrontendSerialisationModule
+namespace mROA.Implementation.Frontend
+{
+    // public class JsonFrontendSerialisationModule
 //     : ISerialisationModule.IFrontendSerialisationModule
 // {
 //     private IInteractionModule.IFrontendInteractionModule? _interactionModule;
@@ -77,8 +79,16 @@ namespace mROA.Implementation.Frontend;
 //     }
 // }
 
-public class RemoteException(string error) : Exception
-{
-    public Guid CallRequestId;
-    public override string Message => $"Error in request {CallRequestId} : {error}";
+    public class RemoteException : Exception
+    {
+        public Guid CallRequestId;
+        private readonly string _error;
+
+        public RemoteException(string error)
+        {
+            _error = error;
+        }
+
+        public override string Message => $"Error in request {CallRequestId} : {_error}";
+    }
 }

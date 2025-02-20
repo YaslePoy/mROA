@@ -1,17 +1,19 @@
-﻿using mROA.Abstract;
+﻿using System;
+using mROA.Abstract;
 using mROA.Implementation.Frontend;
 
-namespace mROA.Implementation.CommandExecution;
-
-public class ExceptionCommandExecution : ICommandExecution
+namespace mROA.Implementation.CommandExecution
 {
-    public Guid Id { get; init; }
-    public int ClientId { get; set; }
-    public int CommandId { get; init; }
-    public required string Exception { get; set; }
-
-    public RemoteException GetException()
+    public class ExceptionCommandExecution : ICommandExecution
     {
-        return new RemoteException(Exception) { CallRequestId = Id };
+        public Guid Id { get; set; }
+        public int ClientId { get; set; }
+        public int CommandId { get; set; }
+        public string Exception { get; set; }
+
+        public RemoteException GetException()
+        {
+            return new RemoteException(Exception) { CallRequestId = Id };
+        }
     }
 }

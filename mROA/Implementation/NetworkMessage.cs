@@ -1,18 +1,20 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 // ReSharper disable UnusedMember.Global
 
-namespace mROA.Implementation;
-
-public class NetworkMessage
+namespace mROA.Implementation
 {
-    public Guid Id { get; init; }
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public MessageType SchemaId { get; init; }
+    public class NetworkMessage
+    {
+        public Guid Id { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public MessageType SchemaId { get; set; }
 
-    public required byte[] Data { get; init; }
-}
+        public byte[] Data { get; set; }
+    }
 
-public enum MessageType
-{
-    Unknown, FinishedCommandExecution, ExceptionCommandExecution, AsyncCancelCommandExecution, CallRequest, IdAssigning 
+    public enum MessageType
+    {
+        Unknown, FinishedCommandExecution, ExceptionCommandExecution, AsyncCancelCommandExecution, CallRequest, IdAssigning 
+    }
 }

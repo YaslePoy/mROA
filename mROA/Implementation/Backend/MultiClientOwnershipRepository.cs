@@ -1,28 +1,31 @@
-﻿using mROA.Abstract;
+﻿using System;
+using System.Collections.Generic;
+using mROA.Abstract;
 
-namespace mROA.Implementation.Backend;
-
-public class MultiClientOwnershipRepository : IOwnershipRepository
+namespace mROA.Implementation.Backend
 {
-    private Dictionary<int, int> _ownerships = new();
-
-    public int GetOwnershipId()
+    public class MultiClientOwnershipRepository : IOwnershipRepository
     {
-        return _ownerships.GetValueOrDefault(Environment.CurrentManagedThreadId, 0);
-    }
+        private Dictionary<int, int> _ownerships = new();
 
-    public int GetHostOwnershipId()
-    {
-        return 0;
-    }
+        public int GetOwnershipId()
+        {
+            return _ownerships.GetValueOrDefault(Environment.CurrentManagedThreadId, 0);
+        }
 
-    public void RegisterOwnership(int ownershipId)
-    {
-        _ownerships.TryAdd(Environment.CurrentManagedThreadId, ownershipId);
-    }
+        public int GetHostOwnershipId()
+        {
+            return 0;
+        }
 
-    public void FreeOwnership()
-    {
-        _ownerships.Remove(Environment.CurrentManagedThreadId);
+        public void RegisterOwnership(int ownershipId)
+        {
+            _ownerships.TryAdd(Environment.CurrentManagedThreadId, ownershipId);
+        }
+
+        public void FreeOwnership()
+        {
+            _ownerships.Remove(Environment.CurrentManagedThreadId);
+        }
     }
 }

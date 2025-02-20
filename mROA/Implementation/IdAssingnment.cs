@@ -1,6 +1,7 @@
-namespace mROA.Implementation;
-
-public class IdAssingnment
+namespace mROA.Implementation
 {
-    public int Id { get; set; }
+    public class IdAssingnment
+    {
+        public int Id { get; set; }
+    }
 }

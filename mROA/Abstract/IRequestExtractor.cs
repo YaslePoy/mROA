@@ -1,6 +1,9 @@
-namespace mROA.Abstract;
+using System.Threading.Tasks;
 
-public interface IRequestExtractor : IInjectableModule
+namespace mROA.Abstract
 {
-    Task StartExtraction();
+    public interface IRequestExtractor : IInjectableModule
+    {
+        Task StartExtraction();
+    }
 }

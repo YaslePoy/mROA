@@ -1,7 +1,8 @@
-﻿namespace mROA.Abstract;
-
-public interface IOwnershipRepository
+﻿namespace mROA.Abstract
 {
-    int GetOwnershipId();
-    int GetHostOwnershipId();
+    public interface IOwnershipRepository
+    {
+        int GetOwnershipId();
+        int GetHostOwnershipId();
+    }
 }

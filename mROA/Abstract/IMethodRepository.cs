@@ -1,11 +1,13 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 
-namespace mROA.Abstract;
-
-public interface IMethodRepository : IInjectableModule
+namespace mROA.Abstract
 {
-    MethodInfo GetMethod(int id);
-    int RegisterMethod(MethodInfo method);
+    public interface IMethodRepository : IInjectableModule
+    {
+        MethodInfo GetMethod(int id);
+        int RegisterMethod(MethodInfo method);
     
-    IEnumerable<MethodInfo> GetMethods();
+        IEnumerable<MethodInfo> GetMethods();
+    }
 }

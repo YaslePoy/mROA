@@ -1,6 +1,9 @@
-namespace mROA.Abstract;
+using System;
 
-public interface IGatewayModule : IDisposable, IInjectableModule
-{ 
-    void Run();
+namespace mROA.Abstract
+{
+    public interface IGatewayModule : IDisposable, IInjectableModule
+    { 
+        void Run();
+    }
 }

@@ -1,9 +1,10 @@
 using mROA.Implementation.Attributes;
 
-namespace Example.Shared;
-
-[SharedObjectInterface]
-public interface IPage
+namespace Example.Shared
 {
-    byte[] GetData();
+    [SharedObjectInterface]
+    public interface IPage
+    {
+        byte[] GetData();
+    }
 }

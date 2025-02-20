@@ -1,3 +1,6 @@
-﻿namespace mROA.Implementation.Attributes;
+﻿using System;
 
-public class SharedObjectSingletonAttribute : Attribute;
+namespace mROA.Implementation.Attributes
+{
+    public class SharedObjectSingletonAttribute : Attribute { }
+}

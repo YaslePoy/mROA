@@ -1,16 +1,24 @@
 ﻿using mROA.Abstract;
 
-namespace mROA.Implementation.Frontend;
-
-public class StaticOwnershipRepository(int id) : IOwnershipRepository
+namespace mROA.Implementation.Frontend
 {
-    public int GetOwnershipId()
+    public class StaticOwnershipRepository : IOwnershipRepository
     {
-        return id;
-    }
+        private readonly int _id;
 
-    public int GetHostOwnershipId()
-    {
-        return id;
+        public StaticOwnershipRepository(int id)
+        {
+            _id = id;
+        }
+
+        public int GetOwnershipId()
+        {
+            return _id;
+        }
+
+        public int GetHostOwnershipId()
+        {
+            return _id;
+        }
     }
 }

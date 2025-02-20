@@ -1,13 +1,14 @@
 using System.Text;
 using Example.Shared;
 
-namespace Example.Backend;
-
-public class Page : IPage
+namespace Example.Backend
 {
-    public string Text;
-    public byte[] GetData()
+    public class Page : IPage
     {
-        return Encoding.UTF8.GetBytes(Text);
+        public string Text;
+        public byte[] GetData()
+        {
+            return Encoding.UTF8.GetBytes(Text);
+        }
     }
 }

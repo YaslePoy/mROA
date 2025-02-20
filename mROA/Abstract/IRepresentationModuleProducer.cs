@@ -1,6 +1,7 @@
-﻿namespace mROA.Abstract;
-
-public interface IRepresentationModuleProducer : IInjectableModule
+﻿namespace mROA.Abstract
 {
-    IRepresentationModule Produce(int id);
+    public interface IRepresentationModuleProducer : IInjectableModule
+    {
+        IRepresentationModule Produce(int id);
+    }
 }

@@ -1,87 +1,95 @@
-﻿using mROA.Abstract;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using mROA.Abstract;
 
-namespace mROA.Implementation;
-
-public class NextGenerationInteractionModule : INextGenerationInteractionModule
+namespace mROA.Implementation
 {
-    private ISerializationToolkit? _serialization;
-    public int ConnectionId { get; private set; }
-    public Stream? BaseStream { get; set; }
-    private Task<NetworkMessage>? _currentReceiving;
-    private const int BufferSize = ushort.MaxValue;
-    private readonly Memory<byte> _buffer = new byte[BufferSize];
-    private readonly List<NetworkMessage> _messageBuffer = new (128);
-
-
-    public void Inject<T>(T dependency)
+    public class NextGenerationInteractionModule : INextGenerationInteractionModule
     {
-        switch (dependency)
+        private ISerializationToolkit? _serialization;
+        public int ConnectionId { get; private set; }
+        public Stream? BaseStream { get; set; }
+        private Task<NetworkMessage>? _currentReceiving;
+        private const int BufferSize = ushort.MaxValue;
+        private readonly Memory<byte> _buffer = new byte[BufferSize];
+        private readonly List<NetworkMessage> _messageBuffer = new (128);
+
+
+        public void Inject<T>(T dependency)
         {
-            case ISerializationToolkit toolkit:
-                _serialization = toolkit;
-                break;
-            case IIdentityGenerator identityGenerator:
-                ConnectionId = identityGenerator.GetNextIdentity();
-                break;
+            switch (dependency)
+            {
+                case ISerializationToolkit toolkit:
+                    _serialization = toolkit;
+                    break;
+                case IIdentityGenerator identityGenerator:
+                    ConnectionId = identityGenerator.GetNextIdentity();
+                    break;
+            }
         }
-    }
 
+        public Task<NetworkMessage> GetNextMessageReceiving()
+        {
+            if (_currentReceiving != null) return _currentReceiving;
+            _currentReceiving = Task.Run(GetNextMessage);
+            return _currentReceiving;
 
-    public Task<NetworkMessage> GetNextMessageReceiving()
-    {
-        if (_currentReceiving != null) return _currentReceiving;
-        _currentReceiving = Task.Run(GetNextMessage);
-        return _currentReceiving;
+        }
 
-    }
+        public async Task PostMessage(NetworkMessage message)
+        {
+            if (BaseStream == null)
+                throw new NullReferenceException("BaseStream is null");
 
-    public async Task PostMessage(NetworkMessage message)
-    {
-        if (BaseStream == null)
-            throw new NullReferenceException("BaseStream is null");
-
-        if (_serialization == null)
-            throw new NullReferenceException("Serialization toolkit is not initialized");
+            if (_serialization == null)
+                throw new NullReferenceException("Serialization toolkit is not initialized");
         
-        // Console.WriteLine("Sending {0}", JsonSerializer.Serialize(message));
+            // Console.WriteLine("Sending {0}", JsonSerializer.Serialize(message));
 
 
-        var rawMessage = _serialization.Serialize(message);
-        await BaseStream.WriteAsync(BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort)));
-        await BaseStream.WriteAsync(rawMessage);
-    }
+            var rawMessage = _serialization.Serialize(message);
+            await BaseStream.WriteAsync(BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort)));
+            await BaseStream.WriteAsync(rawMessage);
+        }
 
-    public void HandleMessage(NetworkMessage message)
-    {
-        _messageBuffer.Remove(message);
-    }
+        public void HandleMessage(NetworkMessage message)
+        {
+            _messageBuffer.Remove(message);
+        }
 
-    public NetworkMessage[] UnhandledMessages => _messageBuffer.ToArray();
-    public NetworkMessage? FirstByFilter(Predicate<NetworkMessage> predicate)
-    {
-        return _messageBuffer.FirstOrDefault(m => predicate(m));
-    }
+        public NetworkMessage[] UnhandledMessages => _messageBuffer.ToArray();
+        public NetworkMessage? FirstByFilter(Predicate<NetworkMessage> predicate)
+        {
+            return _messageBuffer.FirstOrDefault(m => predicate(m));
+        }
 
-    private NetworkMessage GetNextMessage()
-    {
-        if (BaseStream == null)
-            throw new NullReferenceException("BaseStream is null");
+        private async Task<NetworkMessage> GetNextMessage()
+        {
+            if (BaseStream == null)
+                throw new NullReferenceException("BaseStream is null");
 
-        if (_serialization == null)
-            throw new NullReferenceException("Serialization toolkit is null");
+            if (_serialization == null)
+                throw new NullReferenceException("Serialization toolkit is null");
 
 
-        // Console.WriteLine("Receiving message");
-        var len = BitConverter.ToUInt16([(byte)BaseStream.ReadByte(), (byte)BaseStream.ReadByte()]);
-        var localSpan = _buffer.Span.Slice(0, len);
-        BaseStream.ReadExactly(localSpan);
+            // Console.WriteLine("Receiving message");
+            var firstBit = (byte)BaseStream.ReadByte();
+            var secondBit = (byte)BaseStream.ReadByte();
+            
+            var len = BitConverter.ToUInt16(new[] { firstBit, secondBit});
+            var localSpan = _buffer.Slice(0, len);
+            await BaseStream.ReadExactlyAsync(localSpan);
 
-        // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
+            // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
 
-        var message = _serialization.Deserialize<NetworkMessage>(localSpan);
-        _messageBuffer.Add(message!);
-        _currentReceiving = Task.Run(GetNextMessage);
+            var message = _serialization.Deserialize<NetworkMessage>(localSpan.Span);
+            _messageBuffer.Add(message!);
+            _currentReceiving = GetNextMessage();
         
-        return message!;
+            return message!;
+        }
     }
 }

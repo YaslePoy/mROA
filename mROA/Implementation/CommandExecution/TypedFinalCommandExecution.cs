@@ -1,10 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
-namespace mROA.Implementation.CommandExecution;
-
-public class TypedFinalCommandExecution : FinalCommandExecution<object>
+namespace mROA.Implementation.CommandExecution
 {
-    [JsonIgnore]
-    // ReSharper disable once UnusedAutoPropertyAccessor.Global
-    public Type? Type { get; set; }
+    public class TypedFinalCommandExecution : FinalCommandExecution<object>
+    {
+        [JsonIgnore]
+        // ReSharper disable once UnusedAutoPropertyAccessor.Global
+        public Type? Type { get; set; }
+    }
 }
