@@ -34,7 +34,7 @@ namespace mROA.Implementation
         public Task<NetworkMessage> GetNextMessageReceiving()
         {
             if (_currentReceiving != null) return _currentReceiving;
-            _currentReceiving = Task.Run(GetNextMessage);
+            _currentReceiving = Task.Run(async () => await GetNextMessage());
             return _currentReceiving;
 
         }
@@ -87,7 +87,7 @@ namespace mROA.Implementation
 
             var message = _serialization.Deserialize<NetworkMessage>(localSpan.Span);
             _messageBuffer.Add(message!);
-            _currentReceiving = GetNextMessage();
+            _currentReceiving = Task.Run(async () => await GetNextMessage());
         
             return message!;
         }

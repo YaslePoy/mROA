@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.CommandExecution;
 
@@ -26,16 +27,22 @@ namespace mROA.Implementation
                 { CommandId = methodId, ObjectId = _id, Parameter = parameter, ParameterType = parameter?.GetType() };
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
+            var localTokenSource = new CancellationTokenSource();
+
             var successResponse =
-                _representationModule.GetMessageAsync<FinalCommandExecution<T>>(
-                    messageType: MessageType.FinishedCommandExecution, requestId: request.Id);
+                _representationModule.GetMessageAsync<FinalCommandExecution<T>>(request.Id,
+                    MessageType.FinishedCommandExecution,
+                    localTokenSource.Token);
             var errorResponse =
-                _representationModule.GetMessageAsync<ExceptionCommandExecution>(
-                    messageType: MessageType.ExceptionCommandExecution, requestId: request.Id);
+                _representationModule.GetMessageAsync<ExceptionCommandExecution>(requestId: request.Id,
+                    MessageType.ExceptionCommandExecution, localTokenSource.Token);
+
             Task.WaitAny(successResponse, errorResponse);
 
             if (successResponse.IsCompletedSuccessfully)
+            {
                 return successResponse.Result.Result!;
+            }
 
             throw errorResponse.Result.GetException();
         }

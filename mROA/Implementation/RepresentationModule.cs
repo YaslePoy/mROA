@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
 
@@ -24,12 +25,12 @@ namespace mROA.Implementation
 
         public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized")).ConnectionId;
 
-        public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType)
+        public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType, CancellationToken token = default)
         {
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
         
-            return _serialization.Deserialize<T>(await GetRawMessage(requestId, messageType))!;
+            return _serialization.Deserialize<T>(await GetRawMessage(requestId, messageType, token))!;
         }
 
         public T GetMessage<T>(Guid? requestId = null, MessageType? messageType = null)
@@ -40,7 +41,7 @@ namespace mROA.Implementation
             return _serialization.Deserialize<T>(GetRawMessage(requestId, messageType).GetAwaiter().GetResult())!;
         }
 
-        public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null)
+        public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null, CancellationToken token = default)
         {
             if (_interaction == null)
                 throw new NullReferenceException("Interaction toolkit is not initialized");
@@ -52,7 +53,7 @@ namespace mROA.Implementation
         
             if (fromBuffer == null)
             {
-                while (true)
+                while (token.IsCancellationRequested == false)
                 {
                     var message = await _interaction.GetNextMessageReceiving();
                     if ((requestId is not null && message.Id != requestId) ||

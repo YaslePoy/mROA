@@ -85,7 +85,7 @@ namespace mROA.Implementation.Frontend
             }
             catch
             {
-                multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
+                multiClientOwnershipRepository?.FreeOwnership();
             }
         }
     }
