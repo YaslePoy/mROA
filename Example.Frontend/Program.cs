@@ -69,19 +69,19 @@ class Program
         var data = page.Value.GetData();
         Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
 
-        var loadSingleton = context.GetSingleObject(typeof(ILoadTest)) as ILoadTest;
-
-        const int iterations = 10000;
-        var timer = Stopwatch.StartNew();
-        var x = 0;
-        for (int i = 0; i < iterations; i++)
-        {
-            x = loadSingleton.Next(x);
-        }
-
-        timer.Stop();
-        Console.WriteLine("X is {0}", x);
-        Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
-        Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
+        // var loadSingleton = context.GetSingleObject(typeof(ILoadTest)) as ILoadTest;
+        //
+        // const int iterations = 10000;
+        // var timer = Stopwatch.StartNew();
+        // var x = 0;
+        // for (int i = 0; i < iterations; i++)
+        // {
+        //     x = loadSingleton.Next(x);
+        // }
+        //
+        // timer.Stop();
+        // Console.WriteLine("X is {0}", x);
+        // Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
+        // Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
     }
 }
