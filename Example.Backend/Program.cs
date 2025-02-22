@@ -34,7 +34,8 @@ class Program
         builder.Modules.Add(new CreativeRepresentationModuleProducer(
             new IInjectableModule[] { builder.GetModule<JsonSerializationToolkit>()! },
             typeof(RepresentationModule)));
-
+        builder.Modules.Add(new CancellationRepository());
+        
         builder.Build();
         new RemoteTypeBinder();
 

@@ -74,7 +74,7 @@ namespace mROA.Implementation.Frontend
                         request.Parameter = _serializationToolkit.Cast(request.Parameter, parameterType);
                     }
 
-                    var result = _executeModule.Execute(request, _contextRepository);
+                    var result = _executeModule.Execute(request, _contextRepository, _representationModule);
 
                     var resultType = result is FinalCommandExecution
                         ? MessageType.FinishedCommandExecution

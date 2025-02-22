@@ -10,20 +10,26 @@ namespace mROA.Implementation.Backend
     public class BasicExecutionModule : IExecuteModule
     {
         private IMethodRepository? _methodRepo;
+        private ICancellationRepository? _cancellationRepo;
 
         public void Inject<T>(T dependency)
         {
             if (dependency is IMethodRepository methodRepo) _methodRepo = methodRepo;
+            if (dependency is ICancellationRepository cancellationRepo) _cancellationRepo = cancellationRepo;
         }
 
-        public ICommandExecution Execute(ICallRequest command, IContextRepository contextRepository)
+        public ICommandExecution Execute(ICallRequest command, IContextRepository contextRepository,
+            IRepresentationModule representationModule)
         {
+            if (_cancellationRepo is null)
+                throw new NullReferenceException("Method repository was not defined");
+
             if (_methodRepo is null)
                 throw new NullReferenceException("Method repository was not defined");
-        
+
             if (contextRepository is null)
                 throw new NullReferenceException("Context repository was not defined");
-        
+
             var currentCommand = _methodRepo.GetMethod(command.CommandId);
             if (currentCommand == null)
                 throw new Exception($"Command {command.CommandId} not found");
@@ -35,10 +41,10 @@ namespace mROA.Implementation.Backend
 
             if (currentCommand.ReturnType.BaseType == typeof(Task) &&
                 currentCommand.ReturnType.GenericTypeArguments.Length == 1)
-                return TypedExecuteAsync(currentCommand, context, parameter, command);
+                return TypedExecuteAsync(currentCommand, context, parameter, command, _cancellationRepo, representationModule);
 
             if (currentCommand.ReturnType == typeof(Task))
-                return ExecuteAsync(currentCommand, context, parameter, command);
+                return ExecuteAsync(currentCommand, context, parameter, command, _cancellationRepo, representationModule);
 
             return Execute(currentCommand, context, parameter, command);
         }
@@ -48,8 +54,10 @@ namespace mROA.Implementation.Backend
         {
             try
             {
-                var finalResult = currentCommand.Invoke(context, parameter is null ? new object[0] : new[]
-                    { parameter });
+                var finalResult = currentCommand.Invoke(context, parameter is null
+                    ? new object[0]
+                    : new[]
+                        { parameter });
                 return new TypedFinalCommandExecution
                 {
                     CommandId = command.CommandId, Result = finalResult,
@@ -68,20 +76,34 @@ namespace mROA.Implementation.Backend
         }
 
         private static ICommandExecution ExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
-            ICallRequest command)
+            ICallRequest command, ICancellationRepository cancellationRepository, IRepresentationModule representationModule)
         {
             var tokenSource = new CancellationTokenSource();
+            cancellationRepository.RegisterCancellation(command.Id, tokenSource);
             var token = tokenSource.Token;
             try
             {
-                var result = (Task)currentCommand.Invoke(context, parameter is null ? new object[] { token } : new[]
-                    { parameter, token })!;
+                var result = (Task)currentCommand.Invoke(context, parameter is null
+                    ? new object[] { token }
+                    : new[]
+                        { parameter, token })!;
 
 
-                result.Wait(token);
+                result.ContinueWith(_ =>
+                {
+                    var payload = new FinalCommandExecution
+                    {
+                        Id = command.Id,
+                        CommandId = command.CommandId
+                    };
+                    representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution, payload);
+                }, token);
 
-
-                return new FinalCommandExecution { CommandId = command.CommandId, Id = command.Id };
+                return new AsyncCommandExecution
+                {
+                    Id = command.Id, CommandId = command.CommandId
+                };
+                
             }
             catch (Exception e)
             {
@@ -94,25 +116,36 @@ namespace mROA.Implementation.Backend
         }
 
         private static ICommandExecution TypedExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
-            ICallRequest command)
+            ICallRequest command, ICancellationRepository cancellationRepository, IRepresentationModule representationModule)
         {
             var tokenSource = new CancellationTokenSource();
+            cancellationRepository.RegisterCancellation(command.Id, tokenSource);
+
             var token = tokenSource.Token;
             try
             {
                 var result =
-                    (Task)currentCommand.Invoke(context, parameter is null ? new object[] { token } : new[]
-                        { parameter, token })!;
+                    (Task)currentCommand.Invoke(context, parameter is null
+                        ? new object[] { token }
+                        : new[]
+                            { parameter, token })!;
 
-                result.Wait(token);
-
-                var finalResult = result.GetType().GetProperty("Result")?.GetValue(result);
-                return new TypedFinalCommandExecution
+                result.ContinueWith(t =>
                 {
-                    Id = command.Id,
-                    Result = finalResult,
-                    CommandId = command.CommandId,
-                    Type = finalResult?.GetType()
+                    var finalResult = t.GetType().GetProperty("Result")?.GetValue(t);
+                    var payload = new TypedFinalCommandExecution
+                    {
+                        Id = command.Id,
+                        Result = finalResult,
+                        CommandId = command.CommandId,
+                        Type = finalResult?.GetType()
+                    };
+                    representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution, payload);
+                }, token);
+
+                return new AsyncCommandExecution
+                {
+                    Id = command.Id, CommandId = command.CommandId
                 };
             }
             catch (Exception e)

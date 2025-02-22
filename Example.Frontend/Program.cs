@@ -47,6 +47,7 @@ class Program
 
         var name = printer.Value.GetName();
         Console.WriteLine("Printer name : {0}", name);
+        
         Thread.Sleep(100);
 
         factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
