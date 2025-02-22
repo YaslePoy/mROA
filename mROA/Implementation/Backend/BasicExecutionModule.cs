@@ -41,10 +41,12 @@ namespace mROA.Implementation.Backend
 
             if (currentCommand.ReturnType.BaseType == typeof(Task) &&
                 currentCommand.ReturnType.GenericTypeArguments.Length == 1)
-                return TypedExecuteAsync(currentCommand, context, parameter, command, _cancellationRepo, representationModule);
+                return TypedExecuteAsync(currentCommand, context, parameter, command, _cancellationRepo,
+                    representationModule);
 
             if (currentCommand.ReturnType == typeof(Task))
-                return ExecuteAsync(currentCommand, context, parameter, command, _cancellationRepo, representationModule);
+                return ExecuteAsync(currentCommand, context, parameter, command, _cancellationRepo,
+                    representationModule);
 
             return Execute(currentCommand, context, parameter, command);
         }
@@ -76,7 +78,8 @@ namespace mROA.Implementation.Backend
         }
 
         private static ICommandExecution ExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
-            ICallRequest command, ICancellationRepository cancellationRepository, IRepresentationModule representationModule)
+            ICallRequest command, ICancellationRepository cancellationRepository,
+            IRepresentationModule representationModule)
         {
             var tokenSource = new CancellationTokenSource();
             cancellationRepository.RegisterCancellation(command.Id, tokenSource);
@@ -96,14 +99,17 @@ namespace mROA.Implementation.Backend
                         Id = command.Id,
                         CommandId = command.CommandId
                     };
+                    var multiClientOwnershipRepository =
+                        TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
+                    multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
                     representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution, payload);
+                    multiClientOwnershipRepository?.FreeOwnership();
                 }, token);
 
                 return new AsyncCommandExecution
                 {
                     Id = command.Id, CommandId = command.CommandId
                 };
-                
             }
             catch (Exception e)
             {
@@ -116,7 +122,8 @@ namespace mROA.Implementation.Backend
         }
 
         private static ICommandExecution TypedExecuteAsync(MethodInfo currentCommand, object context, object? parameter,
-            ICallRequest command, ICancellationRepository cancellationRepository, IRepresentationModule representationModule)
+            ICallRequest command, ICancellationRepository cancellationRepository,
+            IRepresentationModule representationModule)
         {
             var tokenSource = new CancellationTokenSource();
             cancellationRepository.RegisterCancellation(command.Id, tokenSource);
@@ -140,7 +147,11 @@ namespace mROA.Implementation.Backend
                         CommandId = command.CommandId,
                         Type = finalResult?.GetType()
                     };
+                    var multiClientOwnershipRepository =
+                        TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
+                    multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
                     representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution, payload);
+                    multiClientOwnershipRepository?.FreeOwnership();
                 }, token);
 
                 return new AsyncCommandExecution

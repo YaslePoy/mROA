@@ -99,5 +99,6 @@ namespace mROA.Implementation.Frontend
                 multiClientOwnershipRepository?.FreeOwnership();
             }
         }
+
     }
 }

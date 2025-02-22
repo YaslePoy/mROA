@@ -69,6 +69,7 @@ class Program
         Console.WriteLine(string.Join(", ", names));
 
         var page = printer.Value.Print("Test Page", new CancellationToken()).GetAwaiter().GetResult();
+        Console.WriteLine("Page printed");
         var data = page.Value.GetData();
         Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
 
