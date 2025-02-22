@@ -27,6 +27,8 @@ class Program
         builder.Modules.Add(new BasicExecutionModule());
         builder.Modules.Add(new CoCodegenMethodRepository());
         builder.UseCollectableContextRepository();
+        builder.Modules.Add(new CancellationRepository());
+
         builder.Build();
 
 

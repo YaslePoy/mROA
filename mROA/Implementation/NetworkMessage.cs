@@ -15,6 +15,6 @@ namespace mROA.Implementation
 
     public enum MessageType
     {
-        Unknown, FinishedCommandExecution, ExceptionCommandExecution, AsyncCancelCommandExecution, CallRequest, IdAssigning, CancelRequest
+        Unknown, FinishedCommandExecution, ExceptionCommandExecution, AsyncCommandExecution, CallRequest, IdAssigning, CancelRequest
     }
 }
