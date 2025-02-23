@@ -24,6 +24,10 @@ namespace mROA.Implementation
         public Type? ParameterType { get; set; }
 
         public object? Parameter { get; set; }
+        public override string ToString()
+        {
+            return $"Call request {{ Id : {Id}, CommandId : {CommandId}, ObjectId : {ObjectId} }}";
+        }
     }
 
     public class CancelRequest : ICallRequest
@@ -32,5 +36,9 @@ namespace mROA.Implementation
         public int CommandId { get; set; } = -2;
         public int ObjectId { get; set; } = -2;
         public object? Parameter { get; set; } = null;
+        public override string ToString()
+        {
+            return $"Cancel request {{ Id : {Id}, CommandId : {CommandId}, ObjectId : {ObjectId} }}";
+        }
     }
 }

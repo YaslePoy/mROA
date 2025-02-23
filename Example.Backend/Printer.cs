@@ -1,4 +1,6 @@
 using System;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Example.Shared;
@@ -22,7 +24,7 @@ namespace Example.Backend
 
         public void Dispose()
         {
-            Console.WriteLine("Dispose printer with name {0}", Name);
+            Console.WriteLine("Dispose printer with name {0}, Dispose works, Dispose works, Dispose works, Dispose works,", Name);
         }
     }
 }

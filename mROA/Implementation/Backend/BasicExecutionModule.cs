@@ -63,14 +63,24 @@ namespace mROA.Implementation.Backend
                 return ExecuteAsync(currentCommand, context, parameter, command, _cancellationRepo,
                     representationModule);
 
-            var result = Execute(currentCommand, context, parameter, command);
-
-            if (command.CommandId == -1)
+            try
             {
-                contextRepository.ClearObject(command.ObjectId);
-            }
+                var result = Execute(currentCommand, context, parameter, command);
+                if (command.CommandId == -1)
+                {
+                    Console.WriteLine("Disposing object");
+                    contextRepository.ClearObject(command.ObjectId);
+                }
             
-            return result;
+                return result;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+
         }
 
         private static ICommandExecution Execute(MethodInfo currentCommand, object context, object? parameter,

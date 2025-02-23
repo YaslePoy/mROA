@@ -75,6 +75,8 @@ class Program
             Console.WriteLine("Page printed");
             var data = page.Value.GetData();
             Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
+
+            Console.WriteLine("Dispose printer");
         }
 
 
