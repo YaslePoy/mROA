@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.CommandExecution;
@@ -7,7 +8,7 @@ using mROA.Implementation.CommandExecution;
 
 namespace mROA.Implementation
 {
-    public abstract class RemoteObjectBase
+    public abstract class RemoteObjectBase : IDisposable
     {
         private readonly int _id;
         private readonly IRepresentationModule _representationModule;
@@ -20,7 +21,7 @@ namespace mROA.Implementation
 
         public int Id => _id;
         public int OwnerId => _representationModule.Id;
-        
+
         protected async Task<T> GetResultAsync<T>(int methodId, object? parameter = default,
             CancellationToken cancellationToken = default)
         {
@@ -46,6 +47,7 @@ namespace mROA.Implementation
             if (cancellationToken.IsCancellationRequested)
             {
                 await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest, request.Id);
+                localTokenSource.Cancel();
                 cancellationToken.ThrowIfCancellationRequested();
             }
 
@@ -76,21 +78,42 @@ namespace mROA.Implementation
                 _representationModule.GetMessageAsync<ExceptionCommandExecution>(requestId: request.Id,
                     MessageType.ExceptionCommandExecution, localTokenSource.Token);
 
+            cancellationToken.Register(async () =>
+            {
+                Console.WriteLine("Cancelling task");
+                await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest,
+                    new CancelRequest
+                    {
+                        Id = request.Id
+                    });
+                localTokenSource.Cancel();
+            });
+
             Task.WaitAny(new Task[]
             {
-                successResponse, errorResponse
+                errorResponse, successResponse
             }, cancellationToken);
 
-            if (cancellationToken.IsCancellationRequested)
-            {
-                await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest, request.Id);
-                cancellationToken.ThrowIfCancellationRequested();
-            }
+            Console.WriteLine($"Handling message");
+
+            // if (cancellationToken.IsCancellationRequested)
+            // {
+            //     localTokenSource.Cancel();
+            //     return;
+            // }
 
             if (successResponse.IsCompletedSuccessfully)
                 return;
 
-            throw errorResponse.Result.GetException();
+            if (errorResponse.IsCompletedSuccessfully)
+                throw errorResponse.Result.GetException();
+        }
+
+        public void Dispose()
+        {
+            if (_id == -1)
+                return;
+            CallAsync(-1).Wait();
         }
     }
 }

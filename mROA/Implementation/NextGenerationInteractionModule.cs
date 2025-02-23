@@ -86,10 +86,11 @@ namespace mROA.Implementation
             // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
 
             var message = _serialization.Deserialize<NetworkMessage>(localSpan.Span);
-            _messageBuffer.Add(message!);
+            Console.WriteLine($"Received Message {message.SchemaId} - {message.Id}");
+            _messageBuffer.Add(message);
             _currentReceiving = Task.Run(async () => await GetNextMessage());
         
-            return message!;
+            return message;
         }
     }
 }

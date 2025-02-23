@@ -20,6 +20,11 @@ namespace Example.Frontend
             await Task.Yield();
             return new ClientBasedPage();
         }
+
+        public void Dispose()
+        {
+            
+        }
     }
 
     public class ClientBasedPage : IPage

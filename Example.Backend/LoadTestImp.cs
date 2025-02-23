@@ -31,7 +31,21 @@ namespace Example.Backend
 
         public async Task AsyncTest(CancellationToken token)
         {
-            await Task.Delay(TimeSpan.FromSeconds(5), token);
+            Console.WriteLine("Async Test");
+
+            for (int i = 0; i < 10; i++)
+            {
+                if (token.IsCancellationRequested)
+                {
+                    Console.WriteLine("Waiting canceled");
+                    return;
+                }
+                Console.WriteLine("Waiting...");
+                await Task.Delay(1000);
+            }
+            
+
+            Console.WriteLine("Waited until the end");
         }
     }
 }

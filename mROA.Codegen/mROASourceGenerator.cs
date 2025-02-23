@@ -233,6 +233,9 @@ namespace mROA.Codegen
 
         public MethodInfo GetMethod(int id)
         {{
+            if (id == -1)
+                return typeof(IDisposable).GetMethod(""Dispose"");
+
             if (_methods.Count <= id)
                 return null;
             

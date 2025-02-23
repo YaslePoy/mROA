@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Example.Shared;
@@ -17,6 +18,11 @@ namespace Example.Backend
         {
             // throw new Exception("The method or operation is not implemented.");
             return new Page {Text = text};
+        }
+
+        public void Dispose()
+        {
+            Console.WriteLine("Dispose printer with name {0}", Name);
         }
     }
 }

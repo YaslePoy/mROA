@@ -57,7 +57,8 @@ namespace mROA.Implementation
                 {
                     var message = await _interaction.GetNextMessageReceiving();
                     if ((requestId is not null && message.Id != requestId) ||
-                        (messageType is not null && message.SchemaId != messageType)) continue;
+                        (messageType is not null && message.SchemaId != messageType)) 
+                        continue;
                 
                     _interaction.HandleMessage(message);
                     return message.Data;
@@ -79,7 +80,9 @@ namespace mROA.Implementation
                 throw new NullReferenceException("Interaction toolkit is not initialized");
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
-        
+
+            Console.WriteLine($"Posting message: {id} - {messageType}");
+            
             await _interaction.PostMessage(new NetworkMessage
                 { Id = id, SchemaId = messageType, Data = _serialization.Serialize(payload, payloadType) });
         }

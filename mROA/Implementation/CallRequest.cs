@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
@@ -18,9 +19,18 @@ namespace mROA.Implementation
         public Guid Id { get; set; } = Guid.NewGuid();
         public int CommandId { get; set; }
         public int ObjectId { get; set; } = -1;
-    
+
         [JsonIgnore]
         public Type? ParameterType { get; set; }
+
         public object? Parameter { get; set; }
+    }
+
+    public class CancelRequest : ICallRequest
+    {
+        public Guid Id { get; set; }
+        public int CommandId { get; set; } = -2;
+        public int ObjectId { get; set; } = -2;
+        public object? Parameter { get; set; } = null;
     }
 }

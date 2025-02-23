@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.Backend;
@@ -53,45 +54,68 @@ namespace mROA.Implementation.Frontend
                 throw new NullReferenceException("Method repository is null.");
 
             await Task.Yield();
-        
-            var multiClientOwnershipRepository = TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
+
+            var multiClientOwnershipRepository =
+                TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
             multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
 
             try
             {
                 while (true)
                 {
-                    var request = 
-                        _representationModule!.GetMessage<DefaultCallRequest>(messageType: MessageType.CallRequest);
+                    Console.WriteLine("Waiting for request...");
+                    var tokenSource = new CancellationTokenSource();
+                    var token = tokenSource.Token;
+                    var defaultRequest =
+                        _representationModule!.GetMessageAsync<DefaultCallRequest>(
+                            messageType: MessageType.CallRequest, token: token);
+                    var cancelRequest =
+                        _representationModule!.GetMessageAsync<CancelRequest>(
+                            messageType: MessageType.CancelRequest, token: token);
 
-                    // Console.WriteLine("Executing {0}", request.Id);
-                
-                    if (request.Parameter is not null)
+                    Task.WaitAny(defaultRequest, cancelRequest);
+
+                    Console.WriteLine("Request received");
+
+                    if (cancelRequest.IsCompleted)
                     {
-                        var parameterType = _methodRepository!.GetMethod(request.CommandId).GetParameters().First()
-                            .ParameterType;
-
-                        request.Parameter = _serializationToolkit.Cast(request.Parameter, parameterType);
+                        Console.WriteLine("Cancelling request");
+                        var req = cancelRequest.Result;
+                        tokenSource.Cancel();
+                        _executeModule.Execute(req, _contextRepository, _representationModule);
                     }
-
-                    var result = _executeModule.Execute(request, _contextRepository, _representationModule);
-
-                    var resultType = MessageType.Unknown;
-
-                    switch (result)
+                    else
                     {
-                        case FinalCommandExecution:
-                            resultType = MessageType.FinishedCommandExecution;
-                            break;
-                        case AsyncCommandExecution:
-                            resultType = MessageType.AsyncCommandExecution;
-                            break;
-                        case ExceptionCommandExecution:
-                            resultType = MessageType.ExceptionCommandExecution;
-                            break;
-                    }
+                        tokenSource.Cancel();
+                        var request = defaultRequest.Result;
 
-                    _representationModule.PostCallMessage(request.Id, resultType, result, result.GetType());
+                        if (request.Parameter is not null)
+                        {
+                            var parameterType = _methodRepository!.GetMethod(request.CommandId).GetParameters().First()
+                                .ParameterType;
+
+                            request.Parameter = _serializationToolkit.Cast(request.Parameter, parameterType);
+                        }
+
+                        var result = _executeModule.Execute(request, _contextRepository, _representationModule);
+
+                        var resultType = MessageType.Unknown;
+
+                        switch (result)
+                        {
+                            case FinalCommandExecution:
+                                resultType = MessageType.FinishedCommandExecution;
+                                break;
+                            case AsyncCommandExecution:
+                                resultType = MessageType.AsyncCommandExecution;
+                                break;
+                            case ExceptionCommandExecution:
+                                resultType = MessageType.ExceptionCommandExecution;
+                                break;
+                        }
+
+                        _representationModule.PostCallMessage(request.Id, resultType, result, result.GetType());
+                    }
                 }
             }
             catch
@@ -99,6 +123,5 @@ namespace mROA.Implementation.Frontend
                 multiClientOwnershipRepository?.FreeOwnership();
             }
         }
-
     }
 }
