@@ -91,7 +91,8 @@ namespace mROA.Implementation.Frontend
 
                         if (request.Parameter is not null)
                         {
-                            var parameterType = _methodRepository!.GetMethod(request.CommandId).GetParameters().First()
+                            var method = _methodRepository!.GetMethod(request.CommandId);
+                            var parameterType = method.GetParameters().First()
                                 .ParameterType;
 
                             request.Parameter = _serializationToolkit.Cast(request.Parameter, parameterType);

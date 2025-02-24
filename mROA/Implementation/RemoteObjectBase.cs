@@ -27,6 +27,7 @@ namespace mROA.Implementation
         {
             var request = new DefaultCallRequest
                 { CommandId = methodId, ObjectId = _id, Parameter = parameter, ParameterType = parameter?.GetType() };
+            
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
             var localTokenSource = new CancellationTokenSource();

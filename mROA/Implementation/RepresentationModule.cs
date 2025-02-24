@@ -29,16 +29,18 @@ namespace mROA.Implementation
         {
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
-        
-            return _serialization.Deserialize<T>(await GetRawMessage(requestId, messageType, token))!;
+
+            var rawMessage = await GetRawMessage(requestId, messageType, token);
+            return _serialization.Deserialize<T>(rawMessage)!;
         }
 
         public T GetMessage<T>(Guid? requestId = null, MessageType? messageType = null)
         {
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
-        
-            return _serialization.Deserialize<T>(GetRawMessage(requestId, messageType).GetAwaiter().GetResult())!;
+
+            var rawMessage = GetRawMessage(requestId, messageType).GetAwaiter().GetResult();
+            return _serialization.Deserialize<T>(rawMessage)!;
         }
 
         public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null, CancellationToken token = default)
@@ -82,9 +84,10 @@ namespace mROA.Implementation
                 throw new NullReferenceException("Serialization toolkit is not initialized");
 
             Console.WriteLine($"Posting message: {id} - {messageType}");
-            
+
+            var serialized = _serialization.Serialize(payload, payloadType);
             await _interaction.PostMessage(new NetworkMessage
-                { Id = id, SchemaId = messageType, Data = _serialization.Serialize(payload, payloadType) });
+                { Id = id, SchemaId = messageType, Data = serialized });
         }
 
         public void PostCallMessage<T>(Guid id, MessageType messageType, T payload) where T : notnull

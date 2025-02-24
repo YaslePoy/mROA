@@ -88,10 +88,11 @@ namespace mROA.Implementation.Backend
         {
             try
             {
-                var finalResult = currentCommand.Invoke(context, parameter is null
+                var finalParameter = parameter is null
                     ? Array.Empty<object>()
                     : new[]
-                        { parameter });
+                        { parameter };
+                var finalResult = currentCommand.Invoke(context, finalParameter);
                 
                 return new TypedFinalCommandExecution
                 {
@@ -120,10 +121,11 @@ namespace mROA.Implementation.Backend
             token.Register(() => Console.WriteLine($"Cancellation requested check {command.Id}"));
             try
             {
-                var result = (Task)currentCommand.Invoke(context, parameter is null
+                var finalParameter = parameter is null
                     ? new object[] { token }
                     : new[]
-                        { parameter, token })!;
+                        { parameter, token };
+                var result = (Task)currentCommand.Invoke(context, finalParameter)!;
 
 
                 result.ContinueWith(_ =>
@@ -140,6 +142,7 @@ namespace mROA.Implementation.Backend
 
                     var multiClientOwnershipRepository =
                         TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
+                    
                     multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
                     representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution, payload);
                     multiClientOwnershipRepository?.FreeOwnership();
@@ -170,11 +173,12 @@ namespace mROA.Implementation.Backend
             var token = tokenSource.Token;
             try
             {
+                var finalParameter = parameter is null
+                    ? new object[] { token }
+                    : new[]
+                        { parameter, token };
                 var result =
-                    (Task)currentCommand.Invoke(context, parameter is null
-                        ? new object[] { token }
-                        : new[]
-                            { parameter, token })!;
+                    (Task)currentCommand.Invoke(context, finalParameter)!;
 
                 result.ContinueWith(t =>
                 {

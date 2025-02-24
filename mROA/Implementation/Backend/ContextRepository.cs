@@ -76,7 +76,7 @@ namespace mROA.Implementation.Backend
 
         public object GetSingleObject(Type type)
         {
-            return _singletons!.GetValueOrDefault(type.GetHashCode()) ?? throw new ArgumentException("Unregistered singleton type");
+            return _singletons.GetValueOrDefault(type.GetHashCode()) ?? throw new ArgumentException("Unregistered singleton type");
         }
 
         public int GetObjectIndex(object o)

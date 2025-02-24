@@ -25,8 +25,9 @@ namespace mROA.Implementation
                 throw new NullReferenceException("representation producer is not initialized");
 
             if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
+            var representationModule = _representationProducer.Produce(sharedObject.OwnerId);
             var remote = (T)Activator.CreateInstance(remoteType, sharedObject.ContextId,
-                _representationProducer.Produce(sharedObject.OwnerId))!;
+                representationModule)!;
             return remote;
         }
 
@@ -41,8 +42,9 @@ namespace mROA.Implementation
                 throw new NullReferenceException("representation producer is not initialized");
 
             if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
+            var representationModule = _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             var remote = (T)Activator.CreateInstance(remoteType, id,
-                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
+                representationModule)!;
             return remote;
         }
 
@@ -51,8 +53,9 @@ namespace mROA.Implementation
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
 
+            var representationModule = _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             return Activator.CreateInstance(RemoteTypes[type], -1,
-                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
+                representationModule)!;
         }
 
         public int GetObjectIndex(object o)

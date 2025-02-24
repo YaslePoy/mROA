@@ -45,7 +45,9 @@ namespace mROA.Implementation.Frontend
                 throw new Exception($"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.SchemaId.ToString()}");
             }
 
-            TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(_serialization.Deserialize<IdAssingnment>(welcomeMessage.Data)!.Id);
+
+            var assignment = _serialization.Deserialize<IdAssingnment>(welcomeMessage.Data)!;
+            TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);
         }
     }
 }

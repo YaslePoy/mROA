@@ -51,7 +51,8 @@ namespace mROA.Implementation
 
 
             var rawMessage = _serialization.Serialize(message);
-            await BaseStream.WriteAsync(BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort)));
+            var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
+            await BaseStream.WriteAsync(header);
             await BaseStream.WriteAsync(rawMessage);
         }
 
