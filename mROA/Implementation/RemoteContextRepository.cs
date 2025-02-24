@@ -8,6 +8,7 @@ namespace mROA.Implementation
     {
         private IRepresentationModuleProducer? _representationProducer;
         public static Dictionary<Type, Type> RemoteTypes = new();
+
         public int ResisterObject(object o)
         {
             throw new NotSupportedException();
@@ -16,6 +17,17 @@ namespace mROA.Implementation
         public void ClearObject(int id)
         {
             throw new NotSupportedException();
+        }
+
+        public T GetObjectBySharedObject<T>(SharedObject<T> sharedObject)
+        {
+            if (_representationProducer == null)
+                throw new NullReferenceException("representation producer is not initialized");
+
+            if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
+            var remote = (T)Activator.CreateInstance(remoteType, sharedObject.ContextId,
+                _representationProducer.Produce(sharedObject.OwnerId))!;
+            return remote;
         }
 
         public object GetObject(int id)
@@ -27,9 +39,10 @@ namespace mROA.Implementation
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
-        
+
             if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
-            var remote = (T)Activator.CreateInstance(remoteType, id, _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
+            var remote = (T)Activator.CreateInstance(remoteType, id,
+                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
             return remote;
         }
 
@@ -37,8 +50,9 @@ namespace mROA.Implementation
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
-        
-            return Activator.CreateInstance(RemoteTypes[type], -1, _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
+
+            return Activator.CreateInstance(RemoteTypes[type], -1,
+                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
         }
 
         public int GetObjectIndex(object o)
@@ -47,6 +61,7 @@ namespace mROA.Implementation
             {
                 return remote.Id;
             }
+
             throw new NotSupportedException();
         }
 

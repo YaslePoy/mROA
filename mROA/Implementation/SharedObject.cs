@@ -69,7 +69,7 @@ namespace mROA.Implementation
             set
             {
                 _contextId = value;
-                Value = GetDefaultContextRepository().GetObject<T>(_contextId)!;
+                Value = GetDefaultContextRepository().GetObjectBySharedObject<T>(this)!;
             }
         }
 

@@ -39,17 +39,28 @@ namespace mROA.Implementation
                 _representationModule.GetMessageAsync<ExceptionCommandExecution>(requestId: request.Id,
                     MessageType.ExceptionCommandExecution, localTokenSource.Token);
 
+            cancellationToken.Register(async () =>
+            {
+                Console.WriteLine("Cancelling task");
+                await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest,
+                    new CancelRequest
+                    {
+                        Id = request.Id
+                    });
+                localTokenSource.Cancel();
+            });
+            
             Task.WaitAny(new Task[]
             {
                 successResponse, errorResponse
             }, cancellationToken);
 
-            if (cancellationToken.IsCancellationRequested)
-            {
-                await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest, request.Id);
-                localTokenSource.Cancel();
-                cancellationToken.ThrowIfCancellationRequested();
-            }
+            // if (cancellationToken.IsCancellationRequested)
+            // {
+            //     await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest, request.Id);
+            //     localTokenSource.Cancel();
+            //     cancellationToken.ThrowIfCancellationRequested();
+            // }
 
             if (successResponse.IsCompletedSuccessfully)
             {
@@ -96,12 +107,6 @@ namespace mROA.Implementation
 
             Console.WriteLine($"Handling message");
 
-            // if (cancellationToken.IsCancellationRequested)
-            // {
-            //     localTokenSource.Cancel();
-            //     return;
-            // }
-
             if (successResponse.IsCompletedSuccessfully)
                 return;
 
@@ -114,6 +119,11 @@ namespace mROA.Implementation
             if (_id == -1)
                 return;
             CallAsync(-1).Wait();
+        }
+
+        public override string ToString()
+        {
+            return $"{{Id : {_id}, OwnerId : {OwnerId} }}";
         }
     }
 }

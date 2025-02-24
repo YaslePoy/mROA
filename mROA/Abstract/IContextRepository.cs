@@ -1,4 +1,5 @@
 ﻿using System;
+using mROA.Implementation;
 
 namespace mROA.Abstract
 {
@@ -6,7 +7,7 @@ namespace mROA.Abstract
     {
         int ResisterObject(object o);
         void ClearObject(int id);
-        object GetObject(int id);
+        T GetObjectBySharedObject<T>(SharedObject<T> sharedObject);
         T? GetObject<T>(int id);
         object GetSingleObject(Type type);
         int GetObjectIndex(object o);

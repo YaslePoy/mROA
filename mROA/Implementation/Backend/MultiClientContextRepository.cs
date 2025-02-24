@@ -37,9 +37,14 @@ namespace mROA.Implementation.Backend
             GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).ClearObject(id);
         }
 
+        public T GetObjectBySharedObject<T>(SharedObject<T> sharedObject)
+        {
+            return GetRepository(sharedObject.OwnerId).GetObject<T>(sharedObject.ContextId);
+        }
+
         public object GetObject(int id)
         {
-            return GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).GetObject(id);
+            return GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).GetObject<object>(id);
         }
 
         public T? GetObject<T>(int id)

@@ -73,6 +73,7 @@ class Program
 
             var page = disposingPrinter.Print("Test Page", new CancellationToken()).GetAwaiter().GetResult();
             Console.WriteLine("Page printed");
+            Console.WriteLine(page.Value.ToString());
             var data = page.Value.GetData();
             Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
 

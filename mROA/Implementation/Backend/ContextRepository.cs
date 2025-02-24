@@ -10,14 +10,22 @@ namespace mROA.Implementation.Backend
 {
     public class ContextRepository : IContextRepository
     {
-        private Dictionary<int, object?>? _singletons;
-        private object?[] _storage = new object[StartupSize];
+        private int _debugId = -1;
+        private static int LastDebugId = -1;
+        // [CanBeNull]
+        private Dictionary<int, object?> _singletons;
+        private object?[] _storage;
 
         private Task<int> _lastIndexFinder = Task.FromResult(0);
 
         private const int StartupSize = 1024;
         private const int GrowSize = 128;
 
+
+        public ContextRepository()
+        {
+            _storage = new object[StartupSize];
+        }
 
         public void FillSingletons(params Assembly[] assembly)
         {
@@ -50,8 +58,14 @@ namespace mROA.Implementation.Backend
             _lastIndexFinder = Task.FromResult(id);
         }
 
+        public T GetObjectBySharedObject<T>(SharedObject<T> sharedObject)
+        {
+            return (T)GetObject(sharedObject.ContextId);
+        }
+
         public object GetObject(int id)
         {
+            // Debug.Log($"Reading object {id} from repository with debug ID {_debugId}");
             return (id == -1 || _storage.Length <= id ? null : _storage[id]) ?? throw new NullReferenceException();
         }
 

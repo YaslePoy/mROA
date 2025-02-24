@@ -16,11 +16,4 @@ namespace mROA.Implementation.CommandExecution
             return new RemoteException(Exception) { CallRequestId = Id };
         }
     }
-
-    public class AsyncCommandExecution : ICommandExecution
-    {
-        public Guid Id { get; set; }
-        public int ClientId { get; set; }
-        public int CommandId { get; set; }
-    }
 }

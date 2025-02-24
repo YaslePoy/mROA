@@ -50,7 +50,7 @@ namespace mROA.Implementation.Backend
                 throw new Exception($"Command {command.CommandId} not found");
 
             var context = command.ObjectId != -1
-                ? contextRepository.GetObject(command.ObjectId)
+                ? contextRepository.GetObject<object>(command.ObjectId)
                 : contextRepository.GetSingleObject(currentCommand.DeclaringType!);
             var parameter = command.Parameter;
 
