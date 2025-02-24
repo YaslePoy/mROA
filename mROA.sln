@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Frontend", "Example
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA.Benchmark", "mROA.Benchmark\mROA.Benchmark.csproj", "{6868F42B-E30D-4040-AD4A-BC2A2E76D03A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA.Cbor", "mROA.Cbor\mROA.Cbor.csproj", "{6211E4EA-13FD-4EB1-8E6A-C0173DD0784A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{6868F42B-E30D-4040-AD4A-BC2A2E76D03A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6868F42B-E30D-4040-AD4A-BC2A2E76D03A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6868F42B-E30D-4040-AD4A-BC2A2E76D03A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6211E4EA-13FD-4EB1-8E6A-C0173DD0784A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6211E4EA-13FD-4EB1-8E6A-C0173DD0784A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6211E4EA-13FD-4EB1-8E6A-C0173DD0784A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6211E4EA-13FD-4EB1-8E6A-C0173DD0784A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

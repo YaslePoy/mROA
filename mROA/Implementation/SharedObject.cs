@@ -32,6 +32,10 @@ namespace mROA.Implementation
 
     }
 
+    public class SharedObject : SharedObject<object>
+    {
+        
+    }
     public class SharedObject<T> where T : notnull
     {
         private IContextRepository GetDefaultContextRepository() =>

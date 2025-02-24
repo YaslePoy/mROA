@@ -10,9 +10,8 @@ namespace mROA.Benchmark
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
-            var summary = BenchmarkRunner.Run<CollectionsSpeed>();
-
+            // Console.WriteLine("Hello, World!");
+            // var summary = BenchmarkRunner.Run<CollectionsSpeed>();
         }
     }
 
@@ -26,7 +25,7 @@ namespace mROA.Benchmark
         public CollectionsSpeed()
         {
             _array = Enumerable.Range(0, N).ToArray();
-            _immutable = [.._array];
+            // _immutable = [.._array];
         }
 
         [Benchmark]
