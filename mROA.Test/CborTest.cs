@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using mROA.Cbor;
 
 namespace mROA.Test;
@@ -43,9 +44,6 @@ public class CborTest
     public void ComplexFlat()
     {
         var value = _basicCollectionElement;
-        List<int> first = [1, 2, 3];
-        List<int> second = [1, 2, 3];
-        var eq = first.Equals(second);
         var data = _serializationToolKit.Serialize(value, null);
         var deserialize = _serializationToolKit.Deserialize<BasicCollectionElement>(data, null);
         Assert.That(value, Is.EqualTo(deserialize));
@@ -54,6 +52,10 @@ public class CborTest
     [Test]
     public void ComplexFull()
     {
+        var value = _complexTestObject;
+        var data = _serializationToolKit.Serialize(value, null);
+        var deserialize = _serializationToolKit.Deserialize<ComplexTestObject>(data, null);
+        Assert.That(value, Is.EqualTo(deserialize));
     }
 
     public void SharedObject()
@@ -71,7 +73,7 @@ public class CborTest
 
         protected bool Equals(ComplexTestObject other)
         {
-            return IntValue == other.IntValue && DoubleValue.Equals(other.DoubleValue) && StringValue == other.StringValue && IntArray.Equals(other.IntArray) && CollectionElements.Equals(other.CollectionElements);
+            return IntValue == other.IntValue && DoubleValue.Equals(other.DoubleValue) && StringValue == other.StringValue && IntArray.SequenceEqual(other.IntArray) && CollectionElements.SequenceEqual(other.CollectionElements);
         }
 
         public override bool Equals(object? obj)

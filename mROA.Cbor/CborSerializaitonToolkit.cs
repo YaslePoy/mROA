@@ -194,7 +194,7 @@ namespace mROA.Cbor
                     if (type.IsSubclassOf(typeof(ISharedObject)))
                         return ReadSharedObject(reader, type, context);
                     
-                    if (type.IsSubclassOf(typeof(IList)))
+                    if (type.IsSubclassOf(typeof(IList)) || type.IsArray)
                         return ReadList(reader, type, context);
                     
                     return ReadObject(reader, type, context);
