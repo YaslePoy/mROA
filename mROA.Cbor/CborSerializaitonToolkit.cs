@@ -221,13 +221,14 @@ namespace mROA.Cbor
                 Type elementType = typeof(object);
 
                 if (type is { IsArray: true })
-                    elementType = type.GetGenericArguments()[0];
+                    elementType = type.GetElementType();
 
 
                 for (int i = 0; i < length; i++)
                 {
                     values[i] = ReadData(reader, elementType, context);
                 }
+                return values;
             }
 
             return Array.Empty<object>();
