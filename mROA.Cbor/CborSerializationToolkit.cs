@@ -11,7 +11,7 @@ using mROA.Implementation.Attributes;
 
 namespace mROA.Cbor
 {
-    public class CborSerializaitonToolkit : IContextualSerializationToolKit
+    public class CborSerializationToolkit : IContextualSerializationToolKit
     {
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
@@ -122,9 +122,6 @@ namespace mROA.Cbor
 
         private void WriteList(IList list, CborWriter writer, IEndPointContext context)
         {
-
-
-
             writer.WriteStartArray(list.Count);
 
             foreach (var element in list)
@@ -193,10 +190,10 @@ namespace mROA.Cbor
 
                     if (type.IsSubclassOf(typeof(ISharedObject)))
                         return ReadSharedObject(reader, type, context);
-                    
-                    if (type.IsSubclassOf(typeof(IList)) || type.IsArray)
+
+                    if (typeof(IList).IsAssignableFrom(type) || type.IsArray)
                         return ReadList(reader, type, context);
-                    
+
                     return ReadObject(reader, type, context);
 
                 case CborReaderState.StartMap:
@@ -216,20 +213,26 @@ namespace mROA.Cbor
             var length = reader.ReadStartArray();
             if (length != null)
             {
-                var values = new object[length.Value];
-
-                Type elementType = typeof(object);
+                var elementType = typeof(object);
 
                 if (type is { IsArray: true })
                     elementType = type.GetElementType();
+                else if (typeof(IList).IsAssignableFrom(type))
+                    elementType = type.GetGenericArguments()[0];
+
+                Array values = Array.CreateInstance(elementType, length.Value);
 
 
                 for (int i = 0; i < length; i++)
                 {
-                    values[i] = ReadData(reader, elementType, context);
+                    values.SetValue(ReadData(reader, elementType, context), i);
                 }
+
+                reader.ReadEndArray();
                 return values;
             }
+
+            reader.ReadEndArray();
 
             return Array.Empty<object>();
         }

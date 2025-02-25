@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 using mROA.Abstract;
+
 // ReSharper disable UnusedMember.Global
 #pragma warning disable CS8618, CS9264
 
@@ -20,7 +21,8 @@ namespace mROA.Implementation
 
         public static IContextRepository RemoteEndpointContextRepository
         {
-            get => _remoteEndpointContextRepository ?? throw new NullReferenceException("RemoteEndpointContextRepository is null");
+            get => _remoteEndpointContextRepository ??
+                   throw new NullReferenceException("RemoteEndpointContextRepository is null");
             set => _remoteEndpointContextRepository = value;
         }
 
@@ -29,14 +31,13 @@ namespace mROA.Implementation
             get => _ownershipRepository ?? throw new NullReferenceException("OwnershipRepository is null");
             set => _ownershipRepository = value;
         }
-
     }
 
     public interface ISharedObject
     {
         IEndPointContext EndPointContext { get; set; }
     }
-    
+
     public class SharedObject<T> : ISharedObject where T : notnull
     {
         private IContextRepository GetDefaultContextRepository() =>
@@ -105,6 +106,12 @@ namespace mROA.Implementation
         public static implicit operator SharedObject<T>(T value) =>
             new(value);
 
-        public IEndPointContext EndPointContext { get; set; }
+        public IEndPointContext EndPointContext { get; set; } = new EndPointContext
+        {
+            RealRepository = TransmissionConfig.RealContextRepository,
+            RemoteRepository = TransmissionConfig.RemoteEndpointContextRepository,
+            HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(),
+            OwnerFunc = TransmissionConfig.OwnershipRepository.GetOwnershipId
+        };
     }
 }

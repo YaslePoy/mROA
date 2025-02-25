@@ -14,7 +14,9 @@ public class CborTest
     [SetUp]
     public void Setup()
     {
-        _complexTestObject = new ()
+        _basicCollectionElement = new() { A = 567565, B = "test text", C = 2.781f };
+
+        _complexTestObject = new ComplexTestObject
         {
             IntValue = 123,
             DoubleValue = 3.14159,
@@ -26,8 +28,7 @@ public class CborTest
             ],
             IntArray = [1, 4, 8, 16, 87]
         };
-        _basicCollectionElement = new() { A = 567565, B = "test text", C = 2.781f };
-        _serializationToolKit = new CborSerializaitonToolkit();
+        _serializationToolKit = new CborSerializationToolkit();
     }
 
     [Test]
@@ -69,7 +70,7 @@ public class CborTest
         public double DoubleValue { get; set; }
         public string StringValue { get; set; }
         public int[] IntArray { get; set; }
-        public BasicCollectionElement[] CollectionElements { get; set; }
+        public List<BasicCollectionElement> CollectionElements { get; set; }
 
         protected bool Equals(ComplexTestObject other)
         {
