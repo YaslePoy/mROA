@@ -87,7 +87,9 @@ namespace mROA.Implementation
             // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
 
             var message = _serialization.Deserialize<NetworkMessage>(localSpan.Span);
+#if TRACE
             Console.WriteLine($"Received Message {message.SchemaId} - {message.Id}");
+#endif
             _messageBuffer.Add(message);
             _currentReceiving = Task.Run(async () => await GetNextMessage());
         

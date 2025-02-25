@@ -79,7 +79,8 @@ namespace mROA.Implementation
             }
         }
 
-        [JsonIgnore] public T Value { get; private set; }
+        [JsonIgnore]
+        public T Value { get; private set; }
 
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once UnusedMember.Global
@@ -106,6 +107,7 @@ namespace mROA.Implementation
         public static implicit operator SharedObject<T>(T value) =>
             new(value);
 
+        [JsonIgnore]
         public IEndPointContext EndPointContext { get; set; } = new EndPointContext
         {
             RealRepository = TransmissionConfig.RealContextRepository,

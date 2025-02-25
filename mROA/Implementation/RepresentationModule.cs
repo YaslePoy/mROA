@@ -23,9 +23,11 @@ namespace mROA.Implementation
             }
         }
 
-        public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized")).ConnectionId;
+        public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized"))
+            .ConnectionId;
 
-        public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType, CancellationToken token = default)
+        public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType,
+            CancellationToken token = default)
         {
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
@@ -43,25 +45,26 @@ namespace mROA.Implementation
             return _serialization.Deserialize<T>(rawMessage)!;
         }
 
-        public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null, CancellationToken token = default)
+        public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null,
+            CancellationToken token = default)
         {
             if (_interaction == null)
                 throw new NullReferenceException("Interaction toolkit is not initialized");
-        
+
             var fromBuffer =
                 _interaction.FirstByFilter(message =>
                     (requestId is null || message.Id == requestId) &&
                     (messageType is null || message.SchemaId == messageType));
-        
+
             if (fromBuffer == null)
             {
                 while (token.IsCancellationRequested == false)
                 {
                     var message = await _interaction.GetNextMessageReceiving();
                     if ((requestId is not null && message.Id != requestId) ||
-                        (messageType is not null && message.SchemaId != messageType)) 
+                        (messageType is not null && message.SchemaId != messageType))
                         continue;
-                
+
                     _interaction.HandleMessage(message);
                     return message.Data;
                 }
@@ -82,8 +85,9 @@ namespace mROA.Implementation
                 throw new NullReferenceException("Interaction toolkit is not initialized");
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
-
+#if TRACE
             Console.WriteLine($"Posting message: {id} - {messageType}");
+#endif
 
             var serialized = _serialization.Serialize(payload, payloadType);
             await _interaction.PostMessage(new NetworkMessage

@@ -42,7 +42,9 @@ namespace mROA.Implementation
 
             cancellationToken.Register(async () =>
             {
+#if TRACE
                 Console.WriteLine("Cancelling task");
+#endif
                 await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest,
                     new CancelRequest
                     {
@@ -92,7 +94,9 @@ namespace mROA.Implementation
 
             cancellationToken.Register(async () =>
             {
+#if TRACE
                 Console.WriteLine("Cancelling task");
+#endif
                 await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest,
                     new CancelRequest
                     {
@@ -106,8 +110,9 @@ namespace mROA.Implementation
                 errorResponse, successResponse
             }, cancellationToken);
 
+#if TRACE
             Console.WriteLine($"Handling message");
-
+#endif
             if (successResponse.IsCompletedSuccessfully)
                 return;
 

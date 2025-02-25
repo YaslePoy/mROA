@@ -12,6 +12,16 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>RPC</PackageTags>
         <LangVersion>9</LangVersion>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants />
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants />
     </PropertyGroup>
 
     <ItemGroup>

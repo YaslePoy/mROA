@@ -21,8 +21,9 @@ namespace mROA.Implementation.Backend
         public ICommandExecution Execute(ICallRequest command, IContextRepository contextRepository,
             IRepresentationModule representationModule)
         {
+#if TRACE
             Console.WriteLine(command.GetType().Name);
-
+#endif
             if (_cancellationRepo is null)
                 throw new NullReferenceException("Method repository was not defined");
 
@@ -34,7 +35,9 @@ namespace mROA.Implementation.Backend
 
             if (command is CancelRequest)
             {
+#if TRACE
                 Console.WriteLine("Final cancelling request");
+#endif
                 var cts = _cancellationRepo.GetCancellation(command.Id);
                 cts.Cancel();
                 _cancellationRepo.FreeCancelation(command.Id);
@@ -68,7 +71,9 @@ namespace mROA.Implementation.Backend
                 var result = Execute(currentCommand, context, parameter, command);
                 if (command.CommandId == -1)
                 {
+#if TRACE
                     Console.WriteLine("Disposing object");
+#endif
                     contextRepository.ClearObject(command.ObjectId);
                 }
             
@@ -118,7 +123,9 @@ namespace mROA.Implementation.Backend
             var tokenSource = new CancellationTokenSource();
             cancellationRepository.RegisterCancellation(command.Id, tokenSource);
             var token = tokenSource.Token;
+#if TRACE
             token.Register(() => Console.WriteLine($"Cancellation requested check {command.Id}"));
+#endif
             try
             {
                 var finalParameter = parameter is null
