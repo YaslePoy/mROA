@@ -32,11 +32,12 @@ namespace mROA.Implementation
 
     }
 
-    public class SharedObject : SharedObject<object>
+    public interface ISharedObject
     {
-        
+        IEndPointContext EndPointContext { get; set; }
     }
-    public class SharedObject<T> where T : notnull
+    
+    public class SharedObject<T> : ISharedObject where T : notnull
     {
         private IContextRepository GetDefaultContextRepository() =>
             (OwnerId == TransmissionConfig.OwnershipRepository.GetHostOwnershipId()
@@ -103,5 +104,7 @@ namespace mROA.Implementation
 
         public static implicit operator SharedObject<T>(T value) =>
             new(value);
+
+        public IEndPointContext EndPointContext { get; set; }
     }
 }

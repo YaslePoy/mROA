@@ -70,6 +70,7 @@ namespace mROA.Test
         [TearDown]
         public void TearDown()
         {
+            _listener.Stop();
             _listener.Dispose();
         }
     }
