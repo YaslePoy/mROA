@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -20,7 +21,7 @@ namespace mROA.Implementation
         public int CommandId { get; set; }
         public int ObjectId { get; set; } = -1;
 
-        [JsonIgnore]
+        [SerializationIgnore]
         public Type? ParameterType { get; set; }
 
         public object? Parameter { get; set; }

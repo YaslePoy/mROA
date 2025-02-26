@@ -10,8 +10,8 @@ namespace mROA.Abstract
         object? Deserialize(byte[] rawData, Type type);
         T? Deserialize<T>(Span<byte> rawData);
         object? Deserialize(Span<byte> rawData, Type type);
-        T Cast<T>(object nonCasted);
-        object Cast(object nonCasted, Type type);
+        T? Cast<T>(object nonCasted);
+        object? Cast(object nonCasted, Type type);
 
     }
 }

@@ -26,38 +26,43 @@ namespace mROA.Cbor
             writer.Encode(destination);
         }
 
-        public T Deserialize<T>(byte[] rawData, IEndPointContext context)
+        public T Deserialize<T>(byte[] rawData, IEndPointContext? context)
         {
-            return (T)Deserialize(rawData, typeof(T), context);
+            return (T)Deserialize(rawData, typeof(T), context) ?? default;
         }
 
-        public object Deserialize(byte[] rawData, Type type, IEndPointContext context)
+        public object? Deserialize(byte[] rawData, Type type, IEndPointContext? context)
         {
             return Deserialize(rawData.AsMemory(), type, context);
         }
 
-        public T Deserialize<T>(ReadOnlyMemory<byte> rawData, IEndPointContext context)
+        public T Deserialize<T>(ReadOnlyMemory<byte> rawMemory, IEndPointContext? context)
         {
-            return (T)Deserialize(rawData, typeof(T), context);
+            return (T)Deserialize(rawMemory, typeof(T), context);
         }
 
-        public object Deserialize(ReadOnlyMemory<byte> rawData, Type type, IEndPointContext context)
+        public object? Deserialize(ReadOnlyMemory<byte> rawMemory, Type type, IEndPointContext? context)
         {
-            var reader = new CborReader(rawData);
+            var reader = new CborReader(rawMemory);
             return ReadData(reader, type, context);
         }
 
-        public T Cast<T>(object nonCasted, IEndPointContext context)
+        public T Cast<T>(object nonCasted, IEndPointContext? context)
         {
             return (T)Cast(nonCasted, typeof(T), context);
         }
 
-        public object Cast(object nonCasted, Type type, IEndPointContext context)
+        public object Cast(object nonCasted, Type type, IEndPointContext? context)
         {
+            if (nonCasted.GetType() == type)
+                return nonCasted;
+
+            if (nonCasted is PreParsedValue preParsed)
+                return preParsed.ToObject(type, context);
             return null;
         }
 
-        private void WriteData(object? obj, CborWriter writer, IEndPointContext context)
+        private void WriteData(object? obj, CborWriter writer, IEndPointContext? context)
         {
             switch (obj)
             {
@@ -94,6 +99,9 @@ namespace mROA.Cbor
                 case DateTimeOffset dto:
                     writer.WriteDateTimeOffset(dto);
                     break;
+                case Guid g:
+                    writer.WriteByteString(g.ToByteArray());
+                    break;
                 case byte[] bytes:
                     writer.WriteByteString(bytes);
                     break;
@@ -104,13 +112,14 @@ namespace mROA.Cbor
                     WriteList(enumerable, writer, context);
                     break;
                 case ISharedObject sharedObject:
-                    sharedObject.EndPointContext = context;
+                    if (context != null)
+                        sharedObject.EndPointContext = context;
                     WriteObject(sharedObject, writer, context);
                     break;
                 default:
                     if (obj.GetType().IsEnum)
                     {
-                        writer.WriteUInt32((uint)obj);
+                        writer.WriteInt32((int)obj);
                         break;
                     }
 
@@ -119,7 +128,7 @@ namespace mROA.Cbor
             }
         }
 
-        private void WriteList(IList list, CborWriter writer, IEndPointContext context)
+        private void WriteList(IList list, CborWriter writer, IEndPointContext? context)
         {
             writer.WriteStartArray(list.Count);
 
@@ -129,7 +138,7 @@ namespace mROA.Cbor
             writer.WriteEndArray();
         }
 
-        private void WriteDictionary(IDictionary dictionary, CborWriter writer, IEndPointContext context)
+        private void WriteDictionary(IDictionary dictionary, CborWriter writer, IEndPointContext? context)
         {
             writer.WriteStartMap(dictionary.Count);
             var keysEnumerator = dictionary.Keys.GetEnumerator();
@@ -147,7 +156,7 @@ namespace mROA.Cbor
             (valuesEnumerator as IDisposable)?.Dispose();
         }
 
-        private void WriteObject(object obj, CborWriter writer, IEndPointContext context)
+        private void WriteObject(object obj, CborWriter writer, IEndPointContext? context)
         {
             var type = obj.GetType();
             var properties = FilterProperties(type.GetProperties());
@@ -155,7 +164,7 @@ namespace mROA.Cbor
             WriteList(values, writer, context);
         }
 
-        private object ReadData(CborReader reader, Type? type, IEndPointContext context)
+        private object? ReadData(CborReader reader, Type? type, IEndPointContext? context)
         {
             var state = reader.PeekState();
             switch (state)
@@ -164,20 +173,24 @@ namespace mROA.Cbor
                     return reader.ReadBoolean();
                 case CborReaderState.UnsignedInteger:
                 case CborReaderState.NegativeInteger:
-                    if (type == typeof(int))
+                    if (type == typeof(int) || type is { IsEnum: true })
                         return reader.ReadInt32();
                     if (type == typeof(long))
                         return reader.ReadInt64();
-                    if (type == typeof(uint) || type.IsEnum)
+                    if (type == typeof(uint))
                         return reader.ReadUInt32();
                     if (type == typeof(ulong))
                         return reader.ReadUInt64();
-                    break;
+
+                    return reader.ReadInt32();
                 case CborReaderState.ByteString:
+                    if (type == typeof(Guid))
+                        return new Guid(reader.ReadByteString());
                     return reader.ReadByteString();
                 case CborReaderState.TextString:
                     return reader.ReadTextString();
                 case CborReaderState.Null:
+                    reader.ReadNull();
                     return null;
                 case CborReaderState.DoublePrecisionFloat:
                     return reader.ReadDouble();
@@ -207,36 +220,51 @@ namespace mROA.Cbor
         }
 
 
-        private Array ReadList(CborReader reader, Type? type, IEndPointContext context)
+        private IList ReadList(CborReader reader, Type? type, IEndPointContext? context)
         {
             var length = reader.ReadStartArray();
             if (length != null)
             {
                 var elementType = typeof(object);
-
                 if (type is { IsArray: true })
+                {
                     elementType = type.GetElementType();
-                else if (typeof(IList).IsAssignableFrom(type))
+                    Array values = Array.CreateInstance(elementType, length.Value);
+
+
+                    for (int i = 0; i < length; i++)
+                    {
+                        values.SetValue(ReadData(reader, elementType, context), i);
+                    }
+
+                    reader.ReadEndArray();
+                    return values;
+                }
+
+                if (typeof(IList).IsAssignableFrom(type))
                     elementType = type.GetGenericArguments()[0];
-
-                Array values = Array.CreateInstance(elementType, length.Value);
-
+                else elementType = typeof(object);
+                Type genericListType = typeof(List<>).MakeGenericType(elementType);
+                var list = (IList)Activator.CreateInstance(genericListType, length);
 
                 for (int i = 0; i < length; i++)
                 {
-                    values.SetValue(ReadData(reader, elementType, context), i);
+                    list.Add(ReadData(reader, elementType, context));
                 }
 
                 reader.ReadEndArray();
-                return values;
+
+
+                return list;
+
+
+                return null;
             }
 
-            reader.ReadEndArray();
-
-            return Array.Empty<object>();
+            return null;
         }
 
-        private IDictionary ReadDictionary(CborReader reader, Type type, IEndPointContext context)
+        private IDictionary ReadDictionary(CborReader reader, Type type, IEndPointContext? context)
         {
             var dictionaryInstance = (Activator.CreateInstance(type) as IDictionary)!;
             var length = reader.ReadStartArray();
@@ -253,8 +281,13 @@ namespace mROA.Cbor
             return dictionaryInstance;
         }
 
-        private object ReadObject(CborReader reader, Type type, IEndPointContext context)
+        private object ReadObject(CborReader reader, Type type, IEndPointContext? context)
         {
+            if (type == typeof(object))
+            {
+                return new PreParsedValue(ReadList(reader, null, context) as List<object>);
+            }
+
             var instance = Activator.CreateInstance(type)!;
 
             FillObject(instance, type, reader, context);
@@ -262,32 +295,50 @@ namespace mROA.Cbor
             return instance;
         }
 
-        private ISharedObject ReadSharedObject(CborReader reader, Type type, IEndPointContext context)
+        private ISharedObject ReadSharedObject(CborReader reader, Type type, IEndPointContext? context)
         {
             var sharedObject = (Activator.CreateInstance(type) as ISharedObject)!;
-            sharedObject.EndPointContext = context;
+            if (context != null)
+            {
+                sharedObject.EndPointContext = context;
+            }
 
             FillObject(sharedObject, type, reader, context);
 
             return sharedObject;
         }
 
-        private void FillObject(object obj, Type type, CborReader reader, IEndPointContext context)
+        private void FillObject(object obj, Type type, CborReader reader, IEndPointContext? context)
         {
-            var properties = FilterProperties(type.GetProperties());
-
-            _ = reader.ReadStartArray();
-
-            foreach (var property in properties)
+            try
             {
-                var value = ReadData(reader, property.PropertyType, context);
-                property.SetValue(obj, value);
-            }
+                var propertyInfos = type.GetProperties();
+                var properties = FilterProperties(propertyInfos);
 
-            reader.ReadEndArray();
+                var length = reader.ReadStartArray();
+#if TRACE
+                Console.WriteLine($"Reading list of {length} objects, {properties.Count} properties found");       
+#endif
+
+                for (var index = 0; index < length; index++)
+                {
+                    var property = properties[index];
+                    var value = ReadData(reader, property.PropertyType, context);
+                    property.SetValue(obj, value);
+                }
+
+                reader.ReadEndArray();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                reader.ReadEndArray();
+
+                throw;
+            }
         }
 
-        private List<PropertyInfo> FilterProperties(PropertyInfo[] properties)
+        public static List<PropertyInfo> FilterProperties(PropertyInfo[] properties)
         {
             var finalProperties = new List<PropertyInfo>(properties.Length);
             foreach (var property in properties)
@@ -297,6 +348,50 @@ namespace mROA.Cbor
             }
 
             return finalProperties;
+        }
+
+        public void Inject<T>(T dependency)
+        {
+        }
+
+        public byte[] Serialize<T>(T objectToSerialize)
+        {
+            return Serialize(objectToSerialize, typeof(T));
+        }
+
+        public byte[] Serialize(object objectToSerialize, Type type)
+        {
+            return Serialize(objectToSerialize, context: null);
+        }
+
+        public T Deserialize<T>(byte[] rawData)
+        {
+            return Deserialize<T>(rawData: rawData, context: null);
+        }
+
+        public object? Deserialize(byte[] rawData, Type type)
+        {
+            return Deserialize(rawData: rawData, type, context: null);
+        }
+
+        public T Deserialize<T>(Span<byte> rawData)
+        {
+            return Deserialize<T>(rawData.ToArray().AsMemory(), context: null);
+        }
+
+        public object? Deserialize(Span<byte> rawData, Type type)
+        {
+            return Deserialize(rawData: rawData.ToArray(), type: type);
+        }
+
+        public T Cast<T>(object nonCasted)
+        {
+            return Cast<T>(nonCasted: nonCasted, context: null);
+        }
+
+        public object Cast(object nonCasted, Type type)
+        {
+            return Cast(nonCasted: nonCasted, type: type, context: null);
         }
     }
 }

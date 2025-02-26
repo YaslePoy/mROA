@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 using mROA.Abstract;
+using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -9,9 +10,9 @@ namespace mROA.Implementation.CommandExecution
     public class FinalCommandExecution : ICommandExecution
     {
         public Guid Id { get; set; }
-        [JsonIgnore]
+        [SerializationIgnore]
         public int ClientId { get; set; }
-        [JsonIgnore]
+        [SerializationIgnore]
         public int CommandId { get; set; }
     }
 

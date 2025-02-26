@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Example.Frontend;
 using Example.Shared;
+using mROA.Cbor;
 using mROA.Codegen;
 using mROA.Implementation;
 using mROA.Implementation.Backend;
@@ -17,7 +18,9 @@ class Program
     {
         var builder = new FullMixBuilder();
         new RemoteTypeBinder();
-        builder.Modules.Add(new JsonSerializationToolkit());
+        // builder.Modules.Add(new JsonSerializationToolkit());
+        builder.Modules.Add(new CborSerializationToolkit());
+
         builder.Modules.Add(new RemoteContextRepository());
         builder.Modules.Add(new NextGenerationInteractionModule());
         builder.Modules.Add(new RepresentationModule());

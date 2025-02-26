@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using mROA.Abstract;
+using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedMember.Global
 #pragma warning disable CS8618, CS9264
@@ -41,7 +42,7 @@ namespace mROA.Implementation
 
     public class SharedObject<T> : ISharedObject where T : notnull
     {
-        [JsonIgnore]
+        [SerializationIgnore]
         public IEndPointContext EndPointContext { get; set; } = new EndPointContext
         {
             RealRepository = TransmissionConfig.RealContextRepository,
@@ -88,7 +89,7 @@ namespace mROA.Implementation
             }
         }
 
-        [JsonIgnore]
+        [SerializationIgnore]
         public T Value { get; private set; }
 
         // ReSharper disable once MemberCanBePrivate.Global

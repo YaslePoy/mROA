@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Example.Backend;
 using mROA.Abstract;
+using mROA.Cbor;
 using mROA.Codegen;
 using mROA.Implementation;
 using mROA.Implementation.Backend;
@@ -12,7 +13,8 @@ class Program
     public static void Main(string[] args)
     {
         var builder = new FullMixBuilder();
-        builder.UseJsonSerialisation();
+        // builder.UseJsonSerialisation();
+        builder.Modules.Add(new CborSerializationToolkit());
         builder.Modules.Add(new BackendIdentityGenerator());
         builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567), typeof(NextGenerationInteractionModule),
             builder.GetModule<IIdentityGenerator>()!);

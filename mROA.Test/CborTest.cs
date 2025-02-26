@@ -21,6 +21,7 @@ public class CborTest
             IntValue = 123,
             DoubleValue = 3.14159,
             StringValue = "abc",
+            EnumValue = TestEnum.X,
             CollectionElements =
             [
                 _basicCollectionElement,
@@ -69,6 +70,7 @@ public class CborTest
         public int IntValue { get; set; }
         public double DoubleValue { get; set; }
         public string StringValue { get; set; }
+        public TestEnum EnumValue { get; set; }
         public int[] IntArray { get; set; }
         public List<BasicCollectionElement> CollectionElements { get; set; }
 
@@ -114,5 +116,10 @@ public class CborTest
         {
             return HashCode.Combine(A, B, C);
         }
+    }
+    
+    public enum TestEnum
+    {
+        X = -5, Y, Z
     }
 }
