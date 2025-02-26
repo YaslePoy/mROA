@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using mROA.Abstract;
 
 // ReSharper disable UnusedMember.Global
@@ -40,10 +41,18 @@ namespace mROA.Implementation
 
     public class SharedObject<T> : ISharedObject where T : notnull
     {
+        [JsonIgnore]
+        public IEndPointContext EndPointContext { get; set; } = new EndPointContext
+        {
+            RealRepository = TransmissionConfig.RealContextRepository,
+            RemoteRepository = TransmissionConfig.RemoteEndpointContextRepository,
+            HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(),
+            OwnerFunc = TransmissionConfig.OwnershipRepository.GetOwnershipId
+        };
         private IContextRepository GetDefaultContextRepository() =>
-            (OwnerId == TransmissionConfig.OwnershipRepository.GetHostOwnershipId()
-                ? TransmissionConfig.RealContextRepository
-                : TransmissionConfig.RemoteEndpointContextRepository) ??
+            (OwnerId == EndPointContext.HostId
+                ? EndPointContext.RealRepository
+                : EndPointContext.RemoteRepository) ??
             throw new NullReferenceException(
                 "DefaultContextRepository was not defined");
 
@@ -54,7 +63,7 @@ namespace mROA.Implementation
         {
             get
             {
-                _ownerId = _ownerId == -1 ? TransmissionConfig.OwnershipRepository.GetOwnershipId() : _ownerId;
+                _ownerId = _ownerId == -1 ? EndPointContext.OwnerId : _ownerId;
                 return _ownerId;
             }
             set => _ownerId = value;
@@ -69,7 +78,7 @@ namespace mROA.Implementation
                 if (_contextId != -2)
                     return _contextId;
 
-                _contextId = TransmissionConfig.RealContextRepository.GetObjectIndex(Value);
+                _contextId = EndPointContext.RealRepository.GetObjectIndex(Value);
                 return _contextId;
             }
             set
@@ -99,21 +108,13 @@ namespace mROA.Implementation
                 _contextId = ro.Id;
             }
             else
-                _ownerId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId();
+                _ownerId = EndPointContext.HostId;
         }
 
         public static implicit operator T(SharedObject<T> value) => value.Value;
 
         public static implicit operator SharedObject<T>(T value) =>
             new(value);
-
-        [JsonIgnore]
-        public IEndPointContext EndPointContext { get; set; } = new EndPointContext
-        {
-            RealRepository = TransmissionConfig.RealContextRepository,
-            RemoteRepository = TransmissionConfig.RemoteEndpointContextRepository,
-            HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(),
-            OwnerFunc = TransmissionConfig.OwnershipRepository.GetOwnershipId
-        };
+        
     }
 }
