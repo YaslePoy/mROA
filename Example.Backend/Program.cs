@@ -34,7 +34,7 @@ class Program
         }));
         builder.SetupMethodsRepository(new CoCodegenMethodRepository());
         builder.Modules.Add(new CreativeRepresentationModuleProducer(
-            new IInjectableModule[] { builder.GetModule<CborSerializationToolkit>()! },
+            new IInjectableModule[] { builder.GetModule<ISerializationToolkit>()! },
             typeof(RepresentationModule)));
         builder.Modules.Add(new CancellationRepository());
         

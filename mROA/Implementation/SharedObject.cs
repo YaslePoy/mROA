@@ -11,6 +11,9 @@ namespace mROA.Implementation
 {
     public static class TransmissionConfig
     {
+#if TRACE
+        public static int TotalTransmittedBytes { get; set; } = 0;
+#endif
         private static IContextRepository? _realContextRepository;
         private static IContextRepository? _remoteEndpointContextRepository;
         private static IOwnershipRepository? _ownershipRepository;
@@ -43,6 +46,7 @@ namespace mROA.Implementation
     public class SharedObject<T> : ISharedObject where T : notnull
     {
         [SerializationIgnore]
+        [JsonIgnore]
         public IEndPointContext EndPointContext { get; set; } = new EndPointContext
         {
             RealRepository = TransmissionConfig.RealContextRepository,
@@ -50,6 +54,7 @@ namespace mROA.Implementation
             HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(),
             OwnerFunc = TransmissionConfig.OwnershipRepository.GetOwnershipId
         };
+
         private IContextRepository GetDefaultContextRepository() =>
             (OwnerId == EndPointContext.HostId
                 ? EndPointContext.RealRepository
@@ -89,8 +94,7 @@ namespace mROA.Implementation
             }
         }
 
-        [SerializationIgnore]
-        public T Value { get; private set; }
+        [JsonIgnore] [SerializationIgnore] public T Value { get; private set; }
 
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once UnusedMember.Global
@@ -116,6 +120,5 @@ namespace mROA.Implementation
 
         public static implicit operator SharedObject<T>(T value) =>
             new(value);
-        
     }
 }

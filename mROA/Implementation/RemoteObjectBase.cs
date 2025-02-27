@@ -26,7 +26,8 @@ namespace mROA.Implementation
             CancellationToken cancellationToken = default)
         {
             var request = new DefaultCallRequest
-                { CommandId = methodId, ObjectId = _id, Parameter = parameter, ParameterType = parameter?.GetType() };
+                { CommandId = methodId, ObjectId = _id, Parameter = parameter
+                };
             
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
@@ -79,7 +80,8 @@ namespace mROA.Implementation
             CancellationToken cancellationToken = default)
         {
             var request = new DefaultCallRequest
-                { CommandId = methodId, ObjectId = _id, Parameter = parameter, ParameterType = parameter?.GetType() };
+                { CommandId = methodId, ObjectId = _id, Parameter = parameter
+                };
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
             var localTokenSource = new CancellationTokenSource();

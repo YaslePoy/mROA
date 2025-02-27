@@ -82,6 +82,7 @@ namespace mROA.Implementation
             
             var len = BitConverter.ToUInt16(new[] { firstBit, secondBit});
             var localSpan = _buffer.Slice(0, len);
+            
             await BaseStream.ReadExactlyAsync(localSpan);
 
             // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
@@ -89,6 +90,8 @@ namespace mROA.Implementation
             var message = _serialization.Deserialize<NetworkMessage>(localSpan.Span);
 #if TRACE
             Console.WriteLine($"Received Message {message.SchemaId} - {message.Id}");
+            TransmissionConfig.TotalTransmittedBytes += len;
+            Console.WriteLine($"Total recieced bytes are {TransmissionConfig.TotalTransmittedBytes}");
 #endif
             _messageBuffer.Add(message);
             _currentReceiving = Task.Run(async () => await GetNextMessage());

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.Json.Serialization;
 using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -20,9 +19,6 @@ namespace mROA.Implementation
         public Guid Id { get; set; } = Guid.NewGuid();
         public int CommandId { get; set; }
         public int ObjectId { get; set; } = -1;
-
-        [SerializationIgnore]
-        public Type? ParameterType { get; set; }
 
         public object? Parameter { get; set; }
         public override string ToString()
