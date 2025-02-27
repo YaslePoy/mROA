@@ -43,8 +43,7 @@ namespace mROA.Implementation.Backend
                 _cancellationRepo.FreeCancelation(command.Id);
                 return new FinalCommandExecution
                 {
-                    Id = command.Id,
-                    CommandId = command.CommandId
+                    Id = command.Id
                 };
             }
 
@@ -76,7 +75,7 @@ namespace mROA.Implementation.Backend
 #endif
                     contextRepository.ClearObject(command.ObjectId);
                 }
-            
+
                 return result;
             }
             catch (Exception e)
@@ -84,8 +83,6 @@ namespace mROA.Implementation.Backend
                 Console.WriteLine(e);
                 throw;
             }
-
-
         }
 
         private static ICommandExecution Execute(MethodInfo currentCommand, object context, object? parameter,
@@ -98,19 +95,26 @@ namespace mROA.Implementation.Backend
                     : new[]
                         { parameter };
                 var finalResult = currentCommand.Invoke(context, finalParameter);
-                
-                return new TypedFinalCommandExecution
+
+                if (currentCommand.ReturnType.Name == "Void")
                 {
-                    CommandId = command.CommandId, Result = finalResult,
-                    Id = command.Id,
-                    Type = currentCommand.ReturnType
+                    return new FinalCommandExecution
+                    {
+                        Id = command.Id
+                    };
+                }
+
+                return new FinalCommandExecution<object>
+                {
+                    Result = finalResult,
+                    Id = command.Id
                 };
             }
             catch (Exception e)
             {
                 return new ExceptionCommandExecution
                 {
-                    Id = command.Id, CommandId = command.CommandId,
+                    Id = command.Id,
                     Exception = e.ToString()
                 };
             }
@@ -139,17 +143,16 @@ namespace mROA.Implementation.Backend
                 {
                     if (token.IsCancellationRequested)
                         return;
-                    
+
                     var payload = new FinalCommandExecution
                     {
-                        Id = command.Id,
-                        CommandId = command.CommandId
+                        Id = command.Id
                     };
                     _cancellationRepo.FreeCancelation(command.Id);
 
                     var multiClientOwnershipRepository =
                         TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
-                    
+
                     multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
                     representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution, payload);
                     multiClientOwnershipRepository?.FreeOwnership();
@@ -157,14 +160,14 @@ namespace mROA.Implementation.Backend
 
                 return new AsyncCommandExecution
                 {
-                    Id = command.Id, CommandId = command.CommandId
+                    Id = command.Id
                 };
             }
             catch (Exception e)
             {
                 return new ExceptionCommandExecution
                 {
-                    Id = command.Id, CommandId = command.CommandId,
+                    Id = command.Id,
                     Exception = e.ToString()
                 };
             }
@@ -190,12 +193,10 @@ namespace mROA.Implementation.Backend
                 result.ContinueWith(t =>
                 {
                     var finalResult = t.GetType().GetProperty("Result")?.GetValue(t);
-                    var payload = new TypedFinalCommandExecution
+                    var payload = new FinalCommandExecution<object>
                     {
                         Id = command.Id,
-                        Result = finalResult,
-                        CommandId = command.CommandId,
-                        Type = finalResult?.GetType()
+                        Result = finalResult
                     };
                     _cancellationRepo.FreeCancelation(command.Id);
 
@@ -208,14 +209,14 @@ namespace mROA.Implementation.Backend
 
                 return new AsyncCommandExecution
                 {
-                    Id = command.Id, CommandId = command.CommandId
+                    Id = command.Id
                 };
             }
             catch (Exception e)
             {
                 return new ExceptionCommandExecution
                 {
-                    Id = command.Id, CommandId = command.CommandId,
+                    Id = command.Id,
                     Exception = e.ToString()
                 };
             }

@@ -7,8 +7,6 @@ namespace mROA.Implementation.CommandExecution
     public class ExceptionCommandExecution : ICommandExecution
     {
         public Guid Id { get; set; }
-        public int ClientId { get; set; }
-        public int CommandId { get; set; }
         public string Exception { get; set; }
 
         public RemoteException GetException()

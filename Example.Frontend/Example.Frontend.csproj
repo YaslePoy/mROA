@@ -9,6 +9,14 @@
         <LangVersion>9</LangVersion>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants />
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants />
+    </PropertyGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\Example.Shared\Example.Shared.csproj" />
     </ItemGroup>
