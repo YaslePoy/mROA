@@ -30,48 +30,6 @@ namespace {Namespace}
     }}
 }}";
 
-        // public void Initialize(IncrementalGeneratorInitializationContext context)
-        // {
-        //     // Filter classes annotated with the [Report] attribute. Only filtered Syntax Nodes can trigger code generation.
-        //     var provider = context.SyntaxProvider
-        //         .CreateSyntaxProvider(
-        //             (s, _) => s is InterfaceDeclarationSyntax,
-        //             (ctx, _) => GetClassDeclarationForSourceGen(ctx))
-        //         .Where(t => t.reportAttributeFound)
-        //         .Select((t, _) => t.Item1);
-        //
-        //     // Generate the source code.
-        //     context.RegisterSourceOutput(context.CompilationProvider.Combine(provider.Collect()),
-        //         ((ctx, t) => GenerateCode(ctx, t.Left, t.Right)));
-        // }
-
-        /// <summary>
-        /// Checks whether the Node is annotated with the [Report] attribute and maps syntax context to the specific node type (ClassDeclarationSyntax).
-        /// </summary>
-        /// <param name="context">Syntax context, based on CreateSyntaxProvider predicate</param>
-        /// <returns>The specific cast and whether the attribute was found.</returns>
-        // private static (InterfaceDeclarationSyntax, bool reportAttributeFound) GetClassDeclarationForSourceGen(
-        //     GeneratorSyntaxContext context)
-        // {
-        //     var classDeclarationSyntax = (InterfaceDeclarationSyntax)context.Node;
-        //
-        //     // Go through all attributes of the class.
-        //     foreach (AttributeListSyntax attributeListSyntax in classDeclarationSyntax.AttributeLists)
-        //     foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
-        //     {
-        //         if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
-        //             continue; // if we can't get the symbol, ignore it
-        //
-        //         string attributeName = attributeSymbol.ContainingType.ToDisplayString();
-        //
-        //         // Check the full name of the [Report] attribute.
-        //         if (attributeName == "mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
-        //             return (classDeclarationSyntax, true);
-        //     }
-        //
-        //     return (classDeclarationSyntax, false);
-        // }
-
         /// <summary>
         /// Generate code action.
         /// It will be executed on specific nodes (ClassDeclarationSyntax annotated with the [Report] attribute) changed by the user.
@@ -99,6 +57,8 @@ namespace {Namespace}
 
                 var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
 
+                
+                
                 // 'Identifier' means the token of the node. Get class name from the syntax node.
                 var className = classDeclarationSyntax.Identifier.Text;
 
@@ -112,13 +72,12 @@ namespace {Namespace}
 
 
                 var methodsText = new List<string>();
-
+                
                 foreach (var method in methodBody)
                 {
                     var index = methods.Count;
                     methods.Add((namespaceName + "." + originalName, method));
                     var sb = new StringBuilder();
-
 
                     bool isAsync = method.ReturnType.Name == "Task";
                     bool isVoid = method.ReturnType.Name == "Void" ||
@@ -150,30 +109,6 @@ namespace {Namespace}
 
                     if (!isVoid)
                         prefix = "return " + prefix;
-
-                    // if (method.ReturnType.OriginalDefinition.ToString() == "System.Threading.Tasks.Task<TResult>")
-                    // {
-                    //     var type = method.ReturnType.ToString();
-                    //     type = type.Substring(type.IndexOf('<') + 1);
-                    //     type = type.Substring(0, type.Length - 1);
-                    //     sb.AppendLine(
-                    //         $"\t\tvar response = await serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId);");
-                    //     sb.AppendLine($"\t\treturn ({type})response.Result;");
-                    // }
-                    // else if (!isAsync && method.ReturnType.ToDisplayString() != "void")
-                    // {
-                    //     var type = method.ReturnType.ToDisplayString();
-                    //     sb.AppendLine(
-                    //         $"\t\tvar response = serialisationModule.GetFinalCommandExecution<{type}>(defaultCallRequestCodegen.CallRequestId).GetAwaiter().GetResult();");
-                    //     sb.AppendLine($"\t\treturn ({type})response.Result;");
-                    // }
-                    // else
-                    // {
-                    //     sb.AppendLine(
-                    //         "\t\tserialisationModule.GetNextCommandExecution<FinalCommandExecution>(defaultCallRequestCodegen.CallRequestId).Wait();");
-                    // }
-                    //
-                    // sb.AppendLine("\t}");
 
                     sb.AppendLine("\t\t\t" + prefix + caller + postfix + ";");
 
@@ -213,8 +148,11 @@ namespace {namespaceName}
 
             if (methods.Count != 0)
             {
+                // var methodsStringed = methods.Select(i =>
+                //         $"typeof({i.Item1}).GetMethod(\"{i.Item2.Name}\", new Type[] {{{string.Join(", ", i.Item2.Parameters.Select(p => $"typeof({p.Type.ToDisplayString()})"))}}})")
+                //     .ToList();
                 var methodsStringed = methods.Select(i =>
-                        $"typeof({i.Item1}).GetMethod(\"{i.Item2.Name}\", new Type[] {{{string.Join(", ", i.Item2.Parameters.Select(p => $"typeof({p.Type.ToDisplayString()})"))}}})")
+                        $"typeof({i.Item1}).GetMethod(\"{i.Item2.Name}\")")
                     .ToList();
 
                 var coCodegenRepoCode = @$"// <auto-generated/>

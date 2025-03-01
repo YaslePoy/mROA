@@ -12,7 +12,7 @@ namespace mROA.Implementation
     public static class TransmissionConfig
     {
 #if TRACE
-        public static int TotalTransmittedBytes { get; set; } = 0;
+        public static int TotalTransmittedBytes { get; set; }
 #endif
         private static IContextRepository? _realContextRepository;
         private static IContextRepository? _remoteEndpointContextRepository;

@@ -148,7 +148,7 @@ namespace mROA.Implementation.Backend
                     {
                         Id = command.Id
                     };
-                    _cancellationRepo.FreeCancelation(command.Id);
+                    _cancellationRepo?.FreeCancelation(command.Id);
 
                     var multiClientOwnershipRepository =
                         TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
