@@ -46,8 +46,7 @@ class Program
         var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactory;
 
 //правильный порядок команд 8-5-10-7
-        var printer = factory.Create("Test");
-        using (var disposingPrinter = printer.Value)
+        using (var disposingPrinter = factory.Create("Test"))
         {
             Console.WriteLine("Printer created");
             Thread.Sleep(100);
@@ -57,7 +56,7 @@ class Program
 
             Thread.Sleep(100);
 
-            factory.Register(new SharedObject<IPrinter>(new ClientBasedPrinter()));
+            factory.Register(new ClientBasedPrinter());
             Console.WriteLine("Registered printer");
             Thread.Sleep(100);
 
@@ -66,7 +65,7 @@ class Program
             Console.WriteLine("First printer");
             Thread.Sleep(100);
 
-            Console.WriteLine(registred.Value);
+            Console.WriteLine(registred);
             Console.WriteLine("Collecting all printers");
             var names = factory.CollectAllNames();
             Thread.Sleep(100);
@@ -75,8 +74,8 @@ class Program
 
             var page = disposingPrinter.Print("Test Page", new CancellationToken()).GetAwaiter().GetResult();
             Console.WriteLine("Page printed");
-            Console.WriteLine(page.Value.ToString());
-            var data = page.Value.GetData();
+            Console.WriteLine(page.ToString());
+            var data = page.GetData();
             Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
 
             Console.WriteLine("Dispose printer");

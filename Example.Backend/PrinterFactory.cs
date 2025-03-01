@@ -12,27 +12,27 @@ namespace Example.Backend
     {
         private List<IPrinter> _printers = new List<IPrinter>();
 
-        public SharedObject<IPrinter> Create(string printerName)
+        public IPrinter Create(string printerName)
         {
             Console.WriteLine("Creating printer");
             return new Printer { Name = printerName };
         }
 
-        public void Register(SharedObject<IPrinter> printer)
+        public void Register(IPrinter printer)
         {
-            _printers.Add(printer.Value);
+            _printers.Add(printer);
             Console.WriteLine("Registered printer");
         }
 
-        public SharedObject<IPrinter> GetPrinterByName(string printerName)
+        public IPrinter GetPrinterByName(string printerName)
         {
             Console.WriteLine("Getting printer");
-            return new SharedObject<IPrinter>(_printers.Find(i => i.GetName() == printerName)!);
+            return (_printers.Find(i => i.GetName() == printerName)!);
         }
 
-        public SharedObject<IPrinter> GetFirstPrinter()
+        public IPrinter GetFirstPrinter()
         {
-            return new SharedObject<IPrinter>(_printers.First());
+            return _printers.First();
         }
 
         public string[] CollectAllNames()

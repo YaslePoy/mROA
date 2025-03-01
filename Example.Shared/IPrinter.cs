@@ -10,7 +10,7 @@ namespace Example.Shared
     public interface IPrinter : IDisposable
     {
         string GetName();
-        Task<SharedObject<IPage>> Print(string text, CancellationToken cancellationToken);
+        Task<IPage> Print(string text, CancellationToken cancellationToken);
     
     }
 }

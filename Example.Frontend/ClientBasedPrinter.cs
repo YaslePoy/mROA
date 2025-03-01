@@ -14,7 +14,7 @@ namespace Example.Frontend
             return "ClientBasedPrinter from mroa";
         }
 
-        public async Task<SharedObject<IPage>> Print(string text, CancellationToken cancellationToken)
+        public async Task<IPage> Print(string text, CancellationToken cancellationToken)
         {
             Console.WriteLine($"Printed: {text}");
             await Task.Yield();

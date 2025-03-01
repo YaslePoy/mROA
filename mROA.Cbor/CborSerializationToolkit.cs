@@ -160,6 +160,9 @@ namespace mROA.Cbor
         private void WriteObject(object obj, CborWriter writer, IEndPointContext? context)
         {
             var type = obj.GetType();
+            
+            
+            
             var properties = FilterProperties(type.GetProperties());
             var values = properties.Select(property => property.GetValue(obj)).ToList();
             WriteList(values, writer, context);
