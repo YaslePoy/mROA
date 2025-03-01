@@ -10,23 +10,23 @@ namespace mROA.Implementation
 {
     public abstract class RemoteObjectBase : IDisposable
     {
-        private readonly int _id;
+        private readonly UniversalObjectIdentifier _identifier;
         private readonly IRepresentationModule _representationModule;
 
         protected RemoteObjectBase(int id, IRepresentationModule representationModule)
         {
-            _id = id;
+            _identifier = new UniversalObjectIdentifier { ContextId = id, OwnerId = representationModule.Id };
             _representationModule = representationModule;
         }
 
-        public int Id => _id;
-        public int OwnerId => _representationModule.Id;
+        public int Id => _identifier.ContextId;
+        public int OwnerId => _identifier.OwnerId;
 
         protected async Task<T> GetResultAsync<T>(int methodId, object? parameter = default,
             CancellationToken cancellationToken = default)
         {
             var request = new DefaultCallRequest
-                { CommandId = methodId, ObjectId = _id, Parameter = parameter
+                { CommandId = methodId, ObjectId = _identifier.ContextId, Parameter = parameter
                 };
             
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
@@ -80,7 +80,7 @@ namespace mROA.Implementation
             CancellationToken cancellationToken = default)
         {
             var request = new DefaultCallRequest
-                { CommandId = methodId, ObjectId = _id, Parameter = parameter
+                { CommandId = methodId, ObjectId = _identifier.ContextId, Parameter = parameter
                 };
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
@@ -124,14 +124,14 @@ namespace mROA.Implementation
 
         public void Dispose()
         {
-            if (_id == -1)
+            if (_identifier.IsStatic)
                 return;
             CallAsync(-1).Wait();
         }
 
         public override string ToString()
         {
-            return $"{{Id : {_id}, OwnerId : {OwnerId} }}";
+            return _identifier.ToString();
         }
     }
 }

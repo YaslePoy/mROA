@@ -12,6 +12,7 @@ namespace mROA.Cbor
 {
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
+        private List<Type> _remoteTypes;
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
             var writer = new CborWriter();
@@ -352,6 +353,7 @@ namespace mROA.Cbor
 
         public void Inject<T>(T dependency)
         {
+            _remoteTypes = RemoteContextRepository.RemoteTypes.Keys.ToList();
         }
 
         public byte[] Serialize<T>(T objectToSerialize)
