@@ -39,10 +39,10 @@ namespace mROA.Implementation.Backend
             repository.ClearObject(id);
         }
 
-        public T GetObjectBySharedObject<T>(SharedObject<T> sharedObject)
+        public T GetObjectBySharedObject<T>(SharedObjectShellShell<T> sharedObjectShellShell)
         {
-            var repository = GetRepository(sharedObject.Identifier.OwnerId);
-            return repository.GetObject<T>(sharedObject.Identifier.ContextId);
+            var repository = GetRepository(sharedObjectShellShell.Identifier.OwnerId);
+            return repository.GetObject<T>(sharedObjectShellShell.Identifier.ContextId);
         }
 
         public object GetObject(int id)

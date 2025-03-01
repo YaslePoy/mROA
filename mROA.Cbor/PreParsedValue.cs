@@ -21,11 +21,25 @@ namespace mROA.Cbor
 
         public object? ToObject(Type type, IEndPointContext? context)
         {
+            
+            if (type.IsInterface)
+            {
+                var sharedShell = typeof(SharedObjectShellShell<>).MakeGenericType(type);
+                var so =
+                    Activator.CreateInstance(sharedShell) as
+                        ISharedObjectShell;
+                if (context != null)
+                    so.EndPointContext = context;
+
+                so.Identifier = UniversalObjectIdentifier.FromFlat((ulong)_properties[0]);
+                return so.UniversalValue;
+            }
+            
             var instance = Activator.CreateInstance(type);
             if (instance == null)
                 return null;
 
-            if (instance is ISharedObject sharedObject && context != null)
+            if (instance is ISharedObjectShell sharedObject && context != null)
             {
                 sharedObject.EndPointContext = context;
             }

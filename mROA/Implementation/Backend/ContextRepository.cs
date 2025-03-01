@@ -58,9 +58,9 @@ namespace mROA.Implementation.Backend
             _lastIndexFinder = Task.FromResult(id);
         }
 
-        public T GetObjectBySharedObject<T>(SharedObject<T> sharedObject)
+        public T GetObjectBySharedObject<T>(SharedObjectShellShell<T> sharedObjectShellShell)
         {
-            return (T)GetObject(sharedObject.Identifier.ContextId);
+            return (T)GetObject(sharedObjectShellShell.Identifier.ContextId);
         }
 
         public object GetObject(int id)

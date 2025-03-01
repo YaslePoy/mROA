@@ -7,7 +7,7 @@ using mROA.Implementation.Attributes;
 namespace Example.Shared
 {
     [SharedObjectInterface]
-    public interface IPrinter : IDisposable
+    public interface IPrinter : IDisposable, IShared
     {
         string GetName();
         Task<IPage> Print(string text, CancellationToken cancellationToken);

@@ -7,7 +7,7 @@ namespace mROA.Abstract
     {
         int ResisterObject(object o);
         void ClearObject(int id);
-        T GetObjectBySharedObject<T>(SharedObject<T> sharedObject);
+        T GetObjectBySharedObject<T>(SharedObjectShellShell<T> sharedObjectShellShell);
         T? GetObject<T>(int id);
         object GetSingleObject(Type type);
         int GetObjectIndex(object o);

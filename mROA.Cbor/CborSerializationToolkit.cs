@@ -12,7 +12,6 @@ namespace mROA.Cbor
 {
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
-        private List<Type> _remoteTypes;
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
             var writer = new CborWriter();
@@ -79,9 +78,6 @@ namespace mROA.Cbor
                 case double d:
                     writer.WriteDouble(d);
                     break;
-                // case decimal dec:
-                //     writer.WriteDecimal(dec);
-                //     break;
                 case bool b:
                     writer.WriteBoolean(b);
                     break;
@@ -112,7 +108,7 @@ namespace mROA.Cbor
                 case IList enumerable:
                     WriteList(enumerable, writer, context);
                     break;
-                case ISharedObject sharedObject:
+                case ISharedObjectShell sharedObject:
                     if (context != null)
                         sharedObject.EndPointContext = context;
                     WriteObject(sharedObject, writer, context);
@@ -160,9 +156,24 @@ namespace mROA.Cbor
         private void WriteObject(object obj, CborWriter writer, IEndPointContext? context)
         {
             var type = obj.GetType();
-            
-            
-            
+
+            if (obj is IShared)
+            {
+                var generic = obj.GetType().GetInterfaces().FirstOrDefault(i => typeof(IShared).IsAssignableFrom(i));
+                var sharedShell = typeof(SharedObjectShellShell<>).MakeGenericType(generic);
+                var so =
+                    Activator.CreateInstance(sharedShell, obj) as
+                        ISharedObjectShell;
+                if (context != null)
+                    so.EndPointContext = context;
+
+                writer.WriteStartArray(1);
+                writer.WriteUInt64(so.Identifier.Flat);
+                writer.WriteEndArray();
+
+                return;
+            }
+
             var properties = FilterProperties(type.GetProperties());
             var values = properties.Select(property => property.GetValue(obj)).ToList();
             WriteList(values, writer, context);
@@ -204,7 +215,7 @@ namespace mROA.Cbor
                     if (type == null)
                         return ReadList(reader, null, context);
 
-                    if (type.IsSubclassOf(typeof(ISharedObject)))
+                    if (type.IsSubclassOf(typeof(ISharedObjectShell)))
                         return ReadSharedObject(reader, type, context);
 
                     if (typeof(IList).IsAssignableFrom(type) || type.IsArray)
@@ -287,10 +298,28 @@ namespace mROA.Cbor
 
         private object ReadObject(CborReader reader, Type type, IEndPointContext? context)
         {
-            
             if (type == typeof(object))
             {
                 return new PreParsedValue(ReadList(reader, null, context) as List<object>);
+            }
+
+            if (type.IsInterface)
+            {
+                Console.WriteLine("Interface");
+
+                var sharedShell = typeof(SharedObjectShellShell<>).MakeGenericType(type);
+                var so =
+                    Activator.CreateInstance(sharedShell) as
+                        ISharedObjectShell;
+                if (context != null)
+                    so.EndPointContext = context;
+
+                reader.ReadStartArray();
+                var identifier = reader.ReadUInt64();
+                reader.ReadEndArray();
+
+                so.Identifier = UniversalObjectIdentifier.FromFlat(identifier);
+                return so.UniversalValue;
             }
 
             var instance = Activator.CreateInstance(type)!;
@@ -300,9 +329,9 @@ namespace mROA.Cbor
             return instance;
         }
 
-        private ISharedObject ReadSharedObject(CborReader reader, Type type, IEndPointContext? context)
+        private ISharedObjectShell ReadSharedObject(CborReader reader, Type type, IEndPointContext? context)
         {
-            var sharedObject = (Activator.CreateInstance(type) as ISharedObject)!;
+            var sharedObject = (Activator.CreateInstance(type) as ISharedObjectShell)!;
             if (context != null)
             {
                 sharedObject.EndPointContext = context;
@@ -321,9 +350,8 @@ namespace mROA.Cbor
             var length = reader.ReadStartArray();
             try
             {
-
 #if TRACE
-                Console.WriteLine($"Reading list of {length} objects, {properties.Count} properties found");       
+                Console.WriteLine($"Reading list of {length} objects, {properties.Count} properties found");
 #endif
 
                 for (var index = 0; index < length; index++)
@@ -358,7 +386,6 @@ namespace mROA.Cbor
 
         public void Inject<T>(T dependency)
         {
-            _remoteTypes = RemoteContextRepository.RemoteTypes.Keys.ToList();
         }
 
         public byte[] Serialize<T>(T objectToSerialize)

@@ -9,19 +9,18 @@ namespace mROA.Implementation
         public int OwnerId;
 
         public static UniversalObjectIdentifier Null = new UniversalObjectIdentifier { ContextId = -2, OwnerId = -1 };
+        public static UniversalObjectIdentifier FromFlat(ulong flat) => new() { Flat = flat };
+
         public override string ToString()
         {
             return $"{{ {nameof(ContextId)}: {ContextId}, {nameof(OwnerId)}: {OwnerId} }}";
         }
 
         public bool IsStatic => ContextId == -1;
-        
+
         public ulong Flat
         {
-            get
-            {
-                return (ulong)OwnerId << 32 | (uint)ContextId;
-            }
+            get { return (ulong)OwnerId << 32 | (uint)ContextId; }
             set
             {
                 OwnerId = (int)(value >> 32);
