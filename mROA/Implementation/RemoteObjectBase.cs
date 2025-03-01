@@ -21,7 +21,7 @@ namespace mROA.Implementation
 
         public int Id => _identifier.ContextId;
         public int OwnerId => _identifier.OwnerId;
-
+        public UniversalObjectIdentifier Identifier => _identifier;
         protected async Task<T> GetResultAsync<T>(int methodId, object? parameter = default,
             CancellationToken cancellationToken = default)
         {

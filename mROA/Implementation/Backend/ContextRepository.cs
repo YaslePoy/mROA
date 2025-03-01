@@ -60,7 +60,7 @@ namespace mROA.Implementation.Backend
 
         public T GetObjectBySharedObject<T>(SharedObject<T> sharedObject)
         {
-            return (T)GetObject(sharedObject.ContextId);
+            return (T)GetObject(sharedObject.Identifier.ContextId);
         }
 
         public object GetObject(int id)

@@ -183,7 +183,7 @@ namespace mROA.Cbor
                     if (type == typeof(ulong))
                         return reader.ReadUInt64();
 
-                    return reader.ReadInt32();
+                    return reader.ReadUInt64();
                 case CborReaderState.ByteString:
                     if (type == typeof(Guid))
                         return new Guid(reader.ReadByteString());
@@ -284,6 +284,7 @@ namespace mROA.Cbor
 
         private object ReadObject(CborReader reader, Type type, IEndPointContext? context)
         {
+            
             if (type == typeof(object))
             {
                 return new PreParsedValue(ReadList(reader, null, context) as List<object>);
@@ -311,12 +312,13 @@ namespace mROA.Cbor
 
         private void FillObject(object obj, Type type, CborReader reader, IEndPointContext? context)
         {
+            var propertyInfos = type.GetProperties();
+            var properties = FilterProperties(propertyInfos);
+
+            var length = reader.ReadStartArray();
             try
             {
-                var propertyInfos = type.GetProperties();
-                var properties = FilterProperties(propertyInfos);
 
-                var length = reader.ReadStartArray();
 #if TRACE
                 Console.WriteLine($"Reading list of {length} objects, {properties.Count} properties found");       
 #endif
@@ -342,7 +344,7 @@ namespace mROA.Cbor
         public static List<PropertyInfo> FilterProperties(PropertyInfo[] properties)
         {
             var finalProperties = new List<PropertyInfo>(properties.Length);
-            foreach (var property in properties)
+            foreach (var property in properties.Where(i => i.CanWrite && i.CanRead))
             {
                 if (property.GetCustomAttribute<SerializationIgnoreAttribute>() == null)
                     finalProperties.Add(property);

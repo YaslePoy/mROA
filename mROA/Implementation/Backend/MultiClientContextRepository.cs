@@ -41,8 +41,8 @@ namespace mROA.Implementation.Backend
 
         public T GetObjectBySharedObject<T>(SharedObject<T> sharedObject)
         {
-            var repository = GetRepository(sharedObject.OwnerId);
-            return repository.GetObject<T>(sharedObject.ContextId);
+            var repository = GetRepository(sharedObject.Identifier.OwnerId);
+            return repository.GetObject<T>(sharedObject.Identifier.ContextId);
         }
 
         public object GetObject(int id)

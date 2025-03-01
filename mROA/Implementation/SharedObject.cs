@@ -56,43 +56,57 @@ namespace mROA.Implementation
         };
 
         private IContextRepository GetDefaultContextRepository() =>
-            (OwnerId == EndPointContext.HostId
+            (_identifier.OwnerId == EndPointContext.HostId
                 ? EndPointContext.RealRepository
                 : EndPointContext.RemoteRepository) ??
             throw new NullReferenceException(
                 "DefaultContextRepository was not defined");
 
-        private int _contextId = -2;
-        private int _ownerId = -1;
+        private UniversalObjectIdentifier _identifier = UniversalObjectIdentifier.Null;
 
-        public int OwnerId
+        public UniversalObjectIdentifier Identifier
         {
             get
             {
-                _ownerId = _ownerId == -1 ? EndPointContext.OwnerId : _ownerId;
-                return _ownerId;
-            }
-            set => _ownerId = value;
-        }
-
-        // ReSharper disable once MemberCanBePrivate.Global
-        public int ContextId
-        {
-            // ReSharper disable once UnusedMember.Global
-            get
-            {
-                if (_contextId != -2)
-                    return _contextId;
-
-                _contextId = EndPointContext.RealRepository.GetObjectIndex(Value);
-                return _contextId;
+                _identifier.OwnerId = _identifier.OwnerId == -1 ? EndPointContext.OwnerId : _identifier.OwnerId;
+                return _identifier;
             }
             set
             {
-                _contextId = value;
+                _identifier = value;
                 Value = GetDefaultContextRepository().GetObjectBySharedObject(this);
             }
         }
+
+
+        // public int OwnerId
+        // {
+        //     get
+        //     {
+        //         _ownerId = _ownerId == -1 ? EndPointContext.OwnerId : _ownerId;
+        //         return _ownerId;
+        //     }
+        //     set => _ownerId = value;
+        // }
+        //
+        // // ReSharper disable once MemberCanBePrivate.Global
+        // public int ContextId
+        // {
+        //     // ReSharper disable once UnusedMember.Global
+        //     get
+        //     {
+        //         if (_contextId != -2)
+        //             return _contextId;
+        //
+        //         _contextId = EndPointContext.RealRepository.GetObjectIndex(Value);
+        //         return _contextId;
+        //     }
+        //     set
+        //     {
+        //         _contextId = value;
+        //         Value = GetDefaultContextRepository().GetObjectBySharedObject(this);
+        //     }
+        // }
 
         [JsonIgnore] [SerializationIgnore] public T Value { get; private set; }
 
@@ -109,57 +123,18 @@ namespace mROA.Implementation
 
             if (value is RemoteObjectBase ro)
             {
-                _ownerId = ro.OwnerId;
-                _contextId = ro.Id;
+                _identifier = ro.Identifier;
             }
             else
-                _ownerId = EndPointContext.HostId;
+            {
+                _identifier.OwnerId = EndPointContext.HostId;
+                _identifier.ContextId = EndPointContext.RealRepository.GetObjectIndex(Value);
+            }
         }
 
         public static implicit operator T(SharedObject<T> value) => value.Value;
 
         public static implicit operator SharedObject<T>(T value) =>
             new(value);
-    }
-
-    public struct UniversalObjectIdentifier : IEquatable<UniversalObjectIdentifier>
-    {
-        public int ContextId;
-        public int OwnerId;
-
-        public override string ToString()
-        {
-            return $"{nameof(ContextId)}: {ContextId}, {nameof(OwnerId)}: {OwnerId}";
-        }
-
-        public bool IsStatic => ContextId == -1;
-        
-        public ulong Flat
-        {
-            get
-            {
-                return (ulong)OwnerId << 32 | (uint)ContextId;
-            }
-            set
-            {
-                OwnerId = (int)(value >> 32);
-                ContextId = (int)(value & 0xFFFFFFFF);
-            }
-        }
-
-        public bool Equals(UniversalObjectIdentifier other)
-        {
-            return ContextId == other.ContextId && OwnerId == other.OwnerId;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is UniversalObjectIdentifier other && Equals(other);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(ContextId, OwnerId);
-        }
     }
 }

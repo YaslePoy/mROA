@@ -25,8 +25,8 @@ namespace mROA.Implementation
                 throw new NullReferenceException("representation producer is not initialized");
 
             if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
-            var representationModule = _representationProducer.Produce(sharedObject.OwnerId);
-            var remote = (T)Activator.CreateInstance(remoteType, sharedObject.ContextId,
+            var representationModule = _representationProducer.Produce(sharedObject.Identifier.OwnerId);
+            var remote = (T)Activator.CreateInstance(remoteType, sharedObject.Identifier.ContextId,
                 representationModule)!;
             return remote;
         }

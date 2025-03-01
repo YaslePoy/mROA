@@ -5,13 +5,18 @@ using mROA.Implementation;
 
 namespace mROA.Cbor
 {
-    public class PreParsedValue
+    public interface IPreParsedValue
     {
-        public List<object> Properties { get; set; }
+        object? ToObject(Type type, IEndPointContext? context);
+    }
+
+    public class PreParsedValue : IPreParsedValue
+    {
+        private List<object> _properties { get; set; }
 
         public PreParsedValue(List<object> properties)
         {
-            Properties = properties;
+            _properties = properties;
         }
 
         public object? ToObject(Type type, IEndPointContext? context)
@@ -24,14 +29,31 @@ namespace mROA.Cbor
             {
                 sharedObject.EndPointContext = context;
             }
-            
+
             var properties = CborSerializationToolkit.FilterProperties(type.GetProperties());
             for (var index = 0; index < properties.Count; index++)
             {
                 var property = properties[index];
-                property.SetValue(instance, Properties[index]);
+                property.SetValue(instance, _properties[index] is IPreParsedValue ppv ? ppv.ToObject(property.PropertyType, context) : _properties[index]);
             }
+
             return instance;
+        }
+    }
+
+    public class ParsedValue : IPreParsedValue
+    {
+        public ParsedValue(object? value)
+        {
+            _value = value;
+        }
+
+        private object? _value;
+
+
+        public object? ToObject(Type type, IEndPointContext? context)
+        {
+            return _value;
         }
     }
 }
