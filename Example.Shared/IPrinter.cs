@@ -11,6 +11,5 @@ namespace Example.Shared
     {
         string GetName();
         Task<IPage> Print(string text, CancellationToken cancellationToken);
-    
     }
 }

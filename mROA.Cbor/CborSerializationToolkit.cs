@@ -305,7 +305,6 @@ namespace mROA.Cbor
 
             if (type.IsInterface)
             {
-                Console.WriteLine("Interface");
 
                 var sharedShell = typeof(SharedObjectShellShell<>).MakeGenericType(type);
                 var so =
