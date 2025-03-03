@@ -20,7 +20,7 @@ namespace mROA.Implementation
 
         public ulong Flat
         {
-            get { return (ulong)OwnerId << 32 | (uint)ContextId; }
+            get => (ulong)OwnerId << 32 | (uint)ContextId;
             set
             {
                 OwnerId = (int)(value >> 32);
