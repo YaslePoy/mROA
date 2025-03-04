@@ -180,17 +180,6 @@ namespace mROA.Codegen
             return _methods[id];
         }}
 
-        public int RegisterMethod(MethodInfo method)
-        {{
-            _methods.Add(method);
-            return _methods.Count - 1;
-        }}
-
-        public IEnumerable<MethodInfo> GetMethods()
-        {{
-            return _methods;
-        }}
-
         public void Inject<T>(T dependency)
         {{
         }}

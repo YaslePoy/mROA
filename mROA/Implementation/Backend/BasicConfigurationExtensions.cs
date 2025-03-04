@@ -8,11 +8,6 @@ namespace mROA.Implementation.Backend
 {
     public static class BasicConfigurationExtensions
     {
-        public static void UseJsonSerialisation(this FullMixBuilder builder)
-        {
-            builder.Modules.Add(new JsonSerializationToolkit());
-        }
-
         public static void UseNetworkGateway(this FullMixBuilder builder, IPEndPoint endPoint, Type interactionModuleType, params IInjectableModule[] injectableModules)
         {
             builder.Modules.Add(new NetworkGatewayModule(endPoint, interactionModuleType, injectableModules));

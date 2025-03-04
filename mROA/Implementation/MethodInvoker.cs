@@ -9,11 +9,23 @@ namespace mROA.Implementation
         public bool IsVoid { get; set; }
         public Type[] ParameterTypes { get; set; } = Type.EmptyTypes;
         public Type? ReturnType { get; set; }
-        public Func<object?, object, object?[], object[]> Invoking { get; set; }
+        public Func<object, object?[], object[], object?> Invoking { get; set; }
 
         public object? Invoke(object instance, object?[] parameters, object[] special)
         {
             return Invoking(instance, parameters, special);
         }
+
+        public static MethodInvoker Dispose = new MethodInvoker
+        {
+            IsAsync = false,
+            IsVoid = true,
+            ReturnType = null,
+            Invoking = ((instance, parameters, special) =>
+            {
+                (instance as IDisposable)?.Dispose();
+                return null;
+            })
+        };
     }
 }

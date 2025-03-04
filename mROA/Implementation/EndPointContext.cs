@@ -9,12 +9,11 @@ namespace mROA.Implementation
         public IContextRepository RealRepository { get; set; }
         public IContextRepository RemoteRepository { get; set; }
         public int HostId { get; set; }
+
         public int OwnerId
         {
             get => OwnerFunc();
-            set
-            {
-                OwnerFunc = () => value;
-            } }
+            set { OwnerFunc = () => value; }
+        }
     }
 }
