@@ -1,12 +1,15 @@
+using System;
+using System.Collections.Generic;
+using mROA.Implementation;
 using mROA.Implementation.Attributes;
 
 namespace Example.Shared
 {
-    // [SharedObjectInterface]
-    // public interface IDataList<T> : IShared
-    // {
-    //     T Get(int index);
-    //     void Add(T item);
-    //     void Set(int index, T item);
-    // }
+    public interface IDataList<T> : IShared, IDisposable
+    {
+        IReadOnlyList<T> Collection { get; }
+        T Get(int index);
+        void Add(T item);
+        void Set(int index, T item);
+    }
 }

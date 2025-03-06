@@ -11,7 +11,7 @@ namespace mROA.Implementation
         Guid Id { get; }
         int CommandId { get; }
         int ObjectId { get; }
-        object? Parameter { get; }
+        object?[]? Parameters { get; }
     }
 
     public class DefaultCallRequest : ICallRequest
@@ -20,7 +20,7 @@ namespace mROA.Implementation
         public int CommandId { get; set; }
         public int ObjectId { get; set; } = -1;
 
-        public object? Parameter { get; set; }
+        public object?[]? Parameters { get; set; }
         public override string ToString()
         {
             return $"Call request {{ Id : {Id}, CommandId : {CommandId}, ObjectId : {ObjectId} }}";
@@ -32,7 +32,7 @@ namespace mROA.Implementation
         public Guid Id { get; set; }
         public int CommandId { get; set; } = -2;
         public int ObjectId { get; set; } = -2;
-        public object? Parameter { get; set; } = null;
+        public object?[]? Parameters { get; set; } = null;
         public override string ToString()
         {
             return $"Cancel request {{ Id : {Id}, CommandId : {CommandId}, ObjectId : {ObjectId} }}";

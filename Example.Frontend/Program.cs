@@ -17,7 +17,7 @@ class Program
     public static void Main(string[] args)
     {
         var builder = new FullMixBuilder();
-        new RemoteTypeBinder();
+        // new RemoteTypeBinder();
         // builder.Modules.Add(new JsonSerializationToolkit());
         builder.Modules.Add(new CborSerializationToolkit());
 
@@ -106,5 +106,7 @@ class Program
         // Console.WriteLine("X is {0}", x);
         // Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
         // Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
+
+
     }
 }

@@ -52,8 +52,11 @@ namespace mROA.Cbor
             return (T)Cast(nonCasted, typeof(T), context);
         }
 
-        public object Cast(object nonCasted, Type type, IEndPointContext? context)
+        public object? Cast(object? nonCasted, Type type, IEndPointContext? context)
         {
+            if (nonCasted == null)
+                return null;
+            
             if (nonCasted.GetType() == type)
                 return nonCasted;
 

@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Example.Backend;
+using Example.Shared;
 using mROA.Abstract;
 using mROA.Cbor;
 using mROA.Codegen;
@@ -48,5 +49,6 @@ class Program
         var gateway = builder.GetModule<IGatewayModule>();
 
         gateway.Run();
+        
     }
 }

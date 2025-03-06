@@ -94,15 +94,6 @@ namespace mROA.Implementation.Frontend
                         tokenSource.Cancel();
                         var request = defaultRequest.Result;
 
-                        if (request.Parameter is not null)
-                        {
-                            var method = _methodRepository!.GetMethod(request.CommandId);
-                            var parameterType = method.GetParameters().First()
-                                .ParameterType;
-
-                            request.Parameter = _serializationToolkit.Cast(request.Parameter, parameterType);
-                        }
-
                         var result = _executeModule.Execute(request, _contextRepository, _representationModule);
 
                         var resultType = MessageType.Unknown;

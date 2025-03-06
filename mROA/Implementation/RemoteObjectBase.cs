@@ -22,11 +22,11 @@ namespace mROA.Implementation
         public int Id => _identifier.ContextId;
         public int OwnerId => _identifier.OwnerId;
         public UniversalObjectIdentifier Identifier => _identifier;
-        protected async Task<T> GetResultAsync<T>(int methodId, object? parameter = default,
+        protected async Task<T> GetResultAsync<T>(int methodId, object?[]? parameters = null,
             CancellationToken cancellationToken = default)
         {
             var request = new DefaultCallRequest
-                { CommandId = methodId, ObjectId = _identifier.ContextId, Parameter = parameter
+                { CommandId = methodId, ObjectId = _identifier.ContextId, Parameters = parameters
                 };
             
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
@@ -76,11 +76,11 @@ namespace mROA.Implementation
             throw errorResponse.Result.GetException();
         }
 
-        protected async Task CallAsync(int methodId, object? parameter = default,
+        protected async Task CallAsync(int methodId, object?[]? parameters = null,
             CancellationToken cancellationToken = default)
         {
             var request = new DefaultCallRequest
-                { CommandId = methodId, ObjectId = _identifier.ContextId, Parameter = parameter
+                { CommandId = methodId, ObjectId = _identifier.ContextId, Parameters = parameters
                 };
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 

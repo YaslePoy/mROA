@@ -8,6 +8,7 @@ namespace mROA.Abstract
         bool IsVoid { get; }
         Type[] ParameterTypes { get; }
         Type? ReturnType { get; }
-        object? Invoke(object instance, object?[] parameters, object[] special);
+        object? Invoke(object instance, object?[]? parameters, object[] special);
+        Type SuitableType { get; } 
     }
 }
