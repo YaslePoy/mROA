@@ -72,7 +72,7 @@ class Program
 
             Console.WriteLine(string.Join(", ", names));
 
-            var page = disposingPrinter.Print("Test Page", new CancellationToken()).GetAwaiter().GetResult();
+            var page = disposingPrinter.Print("Test Page", false, CancellationToken.None).GetAwaiter().GetResult();
             Console.WriteLine("Page printed");
             Console.WriteLine(page.ToString());
             var data = page.GetData();

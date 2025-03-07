@@ -10,6 +10,8 @@ namespace Example.Shared
         IReadOnlyList<T> Collection { get; }
         T Get(int index);
         void Add(T item);
-        void Set(int index, T item);
+        void Remove(int index, T item);
+        event Action<T> OnAdd;
+        event Action<T> OnRemove;
     }
 }
