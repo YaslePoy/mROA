@@ -76,7 +76,6 @@ namespace mROA.Implementation.Frontend
                             messageType: MessageType.CancelRequest, token: token);
 
                     Task.WaitAny(defaultRequest, cancelRequest);
-                    
 #if TRACE
                     Console.WriteLine("Request received");
 #endif

@@ -28,9 +28,9 @@ namespace mROA.Codegen
             // var test = asm.GetManifestResourceStream("mROA.Codegen.test.tpt");
             // var reader = new StreamReader(test);
             // var allText = reader.ReadToEnd();
-            var methods = new List<(string, IMethodSymbol)>();
             var frontendContextRepo = new List<string>();
 
+            List<IMethodSymbol> innerMethods = new List<IMethodSymbol>();
             var declarations = classes.ToList().OrderBy(i => i.Identifier.Text).ToList();
             foreach (var classDeclarationSyntax in declarations)
             {
@@ -41,81 +41,36 @@ namespace mROA.Codegen
 
                 var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
                 var className = classDeclarationSyntax.Identifier.Text;
-                var innerMembers = CollectMembers(classSymbol);
-                var associated = innerMembers.Select(i => i.AssociatedSymbol).Where(i => i != null).Select(i => i!).Distinct(SymbolEqualityComparer.Default).ToList();
-                
+                innerMethods = CollectMembers(classSymbol)
+                    .Where(i => i.MethodKind != MethodKind.EventAdd || i.MethodKind != MethodKind.EventRemove)
+                    .ToList();
+                var associated = innerMethods.Select(i => i.AssociatedSymbol as IPropertySymbol).Where(i => i != null)
+                    .Select(i => i!).Distinct(SymbolEqualityComparer.Default).Cast<IPropertySymbol>().ToList();
+
                 var originalName = className;
 
                 className = className.TrimStart('I') + "RemoteEndpoint";
 
-                var remoteEndpointMember = new List<string>();
-                
-                foreach (var method in innerMembers.OfType<IMethodSymbol>())
+
+                var declaredMethods = new List<string>();
+                var propertiesAccessMethods = new List<(string, IMethodSymbol)>();
+                var propertiesImplementations = new List<string>(associated.Count);
+                foreach (var method in innerMethods)
                 {
-                    if (method.MethodKind is MethodKind.EventAdd or MethodKind.EventRemove)
-                        continue;
-
-
-                    var index = methods.Count;
-                    methods.Add((namespaceName + "." + originalName, method));
-                    var sb = new StringBuilder();
-
-                    bool isParametrized;
-
-                    bool isAsync;
-                    bool isVoid;
-
-                    List<IParameterSymbol>? parameters;
-
-                    switch (method.ReturnType)
+                    switch (method.MethodKind)
                     {
-                        case INamedTypeSymbol namedType:
-                            isAsync = namedType.Name == "Task";
-                            isVoid = isAsync && namedType.TypeParameters.Length == 0 || namedType.Name == "Void";
-                            parameters = method.Parameters.ToList();
-                            parameters.RemoveAll(i => i.Type.Name is "CancellationToken" or "RequestContext");
-                            isParametrized = parameters.Count != 0;
-                            break;
-                        case IArrayTypeSymbol:
-                            isAsync = false;
-                            isVoid = false;
-                            isParametrized = method.Parameters.Length != 0;
-                            break;
-                        default:
+                        case MethodKind.PropertyGet or MethodKind.PropertySet:
+                            GeneratePropertyMethod(method, innerMethods, propertiesAccessMethods);
                             continue;
+                        default:
+                            GenerateDeclaretedMethod(method, declaredMethods, innerMethods);
+                            break;
                     }
+                }
 
-                    //Creating signature
-                    sb.AppendLine("public" + (isAsync
-                                      ? " async "
-                                      : " ") +
-                                  $"{method.ReturnType.ToDisplayString()} {method.Name}({string.Join(", ", method.Parameters.Select(ToFullString))}){{");
-
-
-                    var prefix = isAsync ? "await " : "";
-                    var postfix = !isAsync ? isVoid ? ".Wait()" : ".GetAwaiter().GetResult()" : "";
-                    var parameterLink = isParametrized
-                        ? ", new object[] {" + string.Join(", ", method.Parameters.Select(i => i.Name)) + "}"
-                        : string.Empty;
-                    var tokenInsert = isAsync
-                        ? isParametrized
-                            ? ", cancellationToken : " + method.Parameters[1].Name
-                            : ", cancellationToken : " + method.Parameters[0].Name
-                        : String.Empty;
-                    var caller = isVoid
-                        ? $"CallAsync({index}{parameterLink}{tokenInsert})"
-                        : isAsync
-                            ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>({index}{parameterLink}{tokenInsert})"
-                            : $"GetResultAsync<{ToFullString(method.ReturnType)}>({index}{parameterLink}{tokenInsert})";
-
-                    if (!isVoid)
-                        prefix = "return " + prefix;
-
-                    sb.AppendLine("\t\t\t" + prefix + caller + postfix + ";");
-
-                    sb.AppendLine("\t\t}");
-
-                    remoteEndpointMember.Add(sb.ToString());
+                foreach (var prop in associated)
+                {
+                    var start = $"public {prop.Type.ToDisplayString()} {prop.Name}";
                 }
 
                 var code = $@"// <auto-generated/>
@@ -134,7 +89,7 @@ namespace {namespaceName}
         {{
         }}
 
-        {string.Join("\r\n\t", remoteEndpointMember)}
+        {string.Join("\r\n\t", declaredMethods)}
     }}
 }}
 ";
@@ -147,7 +102,7 @@ namespace {namespaceName}
                     $"{{ typeof({classSymbol.ToDisplayString()}), typeof({namespaceName}.{className}) }}");
             }
 
-            if (methods.Count != 0)
+            if (innerMethods.Count != 0)
             {
                 var methodsStringed = Array.Empty<string>();
 
@@ -208,6 +163,101 @@ namespace mROA.Codegen
 ";
                 // context.AddSource("RemoteTypeBinder.g.cs", SourceText.From(fronendRepoCode, Encoding.UTF8));
             }
+        }
+
+        private void GenerateDeclaretedMethod(IMethodSymbol method, List<string> declaretedMethods,
+            List<IMethodSymbol> methods)
+        {
+            var index = methods.IndexOf(method);
+            var sb = new StringBuilder();
+
+            bool isParametrized;
+
+            bool isAsync;
+            bool isVoid;
+
+            List<IParameterSymbol>? parameters;
+
+            switch (method.ReturnType)
+            {
+                case INamedTypeSymbol namedType:
+                    isAsync = namedType.Name == "Task";
+                    isVoid = isAsync && namedType.TypeParameters.Length == 0 || namedType.Name == "Void";
+                    parameters = method.Parameters.ToList();
+                    parameters.RemoveAll(i => i.Type.Name is "CancellationToken" or "RequestContext");
+                    isParametrized = parameters.Count != 0;
+                    break;
+                case IArrayTypeSymbol:
+                    isAsync = false;
+                    isVoid = false;
+                    isParametrized = method.Parameters.Length != 0;
+                    break;
+                default:
+                    return;
+            }
+
+            //Creating signature
+            sb.AppendLine("public" + (isAsync
+                              ? " async "
+                              : " ") +
+                          $"{method.ReturnType.ToDisplayString()} {method.Name}({string.Join(", ", method.Parameters.Select(ToFullString))}){{");
+
+
+            var prefix = isAsync ? "await " : "";
+            var postfix = !isAsync ? isVoid ? ".Wait()" : ".GetAwaiter().GetResult()" : "";
+            var parameterLink = isParametrized
+                ? ", new object[] {" + string.Join(", ", method.Parameters.Select(i => i.Name)) + "}"
+                : string.Empty;
+            var tokenInsert = isAsync
+                ? isParametrized
+                    ? ", cancellationToken : " + method.Parameters[1].Name
+                    : ", cancellationToken : " + method.Parameters[0].Name
+                : String.Empty;
+            var caller = isVoid
+                ? $"CallAsync({index}{parameterLink}{tokenInsert})"
+                : isAsync
+                    ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>({index}{parameterLink}{tokenInsert})"
+                    : $"GetResultAsync<{ToFullString(method.ReturnType)}>({index}{parameterLink}{tokenInsert})";
+
+            if (!isVoid)
+                prefix = "return " + prefix;
+
+            sb.AppendLine("\t\t\t" + prefix + caller + postfix + ";");
+
+            sb.AppendLine("\t\t}");
+
+            declaretedMethods.Add(sb.ToString());
+        }
+
+        public void GeneratePropertyMethod(IMethodSymbol method, List<IMethodSymbol> methods,
+            List<(string, IMethodSymbol)> propsCollection)
+        {
+            var index = methods.IndexOf(method);
+            var sb = new StringBuilder();
+            if (method.MethodKind == MethodKind.PropertyGet)
+            {
+                var parametersArray = "";
+                if (method.Parameters.Length != 0)
+                {
+                    parametersArray = $", new object[] {{{string.Join(", ", method.Parameters.Select(p => p.Name))}}}";
+                }
+
+                sb.AppendLine(
+                    $"get => GetResultAsync<{method.ReturnType.ToDisplayString()}>({index}{parametersArray}).Wait();");
+            }
+            else
+            {
+                var parametersArray = "";
+                if (method.Parameters.Length != 0)
+                {
+                    parametersArray = ", " + string.Join(", ", method.Parameters.Select(p => p.Name));
+                }
+
+                sb.AppendLine(
+                    $"set => CallAsync({index}, new object[] {{ value{parametersArray} }}).GetAwaiter().GetResult();");
+            }
+
+            propsCollection.Add((sb.ToString(), method));
         }
 
         private static string ToFullString(IParameterSymbol parameter)
