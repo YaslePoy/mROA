@@ -1,11 +1,21 @@
 using System;
 using System.Collections.Generic;
 using Example.Shared;
+using mROA.Abstract;
+using mROA.Implementation;
 
 namespace Example.Backend
 {
-    public class PagesList : IPagesList
+    public class PagesList : RemoteObjectBase, IPagesList
     {
+        public IReadOnlyList<IPage> Collection { get; }
+
+        public Example.Shared.IPage this[int index]
+        {
+            get => GetResultAsync<Example.Shared.IPage>(3, new object[] { index }).GetAwaiter().GetResult();
+            set => CallAsync(5, new object[] { index, value }).Wait();
+        }
+
         public IPage Get(int index)
         {
             throw new System.NotImplementedException();
@@ -27,6 +37,10 @@ namespace Example.Backend
         public void Dispose()
         {
             // TODO release managed resources here
+        }
+
+        public PagesList(int id, IRepresentationModule representationModule) : base(id, representationModule)
+        {
         }
     }
 }
