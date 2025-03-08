@@ -423,7 +423,7 @@ namespace mROA.Codegen
                         "parameters[" + (method.Parameters.Length - 1) + "]");
                     backend = $@"new mROA.Implementation.MethodInvoker 
 {level}{{
-{level}    IsVoid = false,
+{level}    IsVoid = true,
 {level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
 {level}    ParameterTypes = new Type[] {{ {parameterTypes} }},
 {level}    SuitableType = typeof({method.ContainingType.ToDisplayString()}),
@@ -434,7 +434,7 @@ namespace mROA.Codegen
                 {
                     backend = $@"new mROA.Implementation.MethodInvoker 
 {level}{{
-{level}    IsVoid = false,
+{level}    IsVoid = true,
 {level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
 {level}    ParameterTypes = new Type[] {{ typeof({method.Parameters.First().Type.ToDisplayString()}) }},
 {level}    SuitableType = typeof({method.ContainingType.ToDisplayString()}),
