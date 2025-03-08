@@ -10,7 +10,7 @@ namespace Example.Backend
     {
         public string Name;
 
-        public decimal Resource { get; set; }
+        public double Resource { get; set; } = 100d;
 
         public string GetName()
         {
@@ -22,6 +22,7 @@ namespace Example.Backend
             // throw new Exception("The method or operation is not implemented.");
             var page = new Page { Text = text };
             OnPrint?.Invoke(page);
+            Resource /= 1.5;
             return page;
         }
 

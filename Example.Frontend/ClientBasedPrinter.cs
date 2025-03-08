@@ -8,7 +8,7 @@ namespace Example.Frontend
 {
     public class ClientBasedPrinter : IPrinter
     {
-        public decimal Resource { get; set; }
+        public double Resource { get; set; }
 
         public string GetName()
         {

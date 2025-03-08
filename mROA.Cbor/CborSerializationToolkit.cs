@@ -56,13 +56,13 @@ namespace mROA.Cbor
         {
             if (nonCasted == null)
                 return null;
-            
+
             if (nonCasted.GetType() == type)
                 return nonCasted;
 
             if (nonCasted is PreParsedValue preParsed)
                 return preParsed.ToObject(type, context);
-            return null;
+            return Convert.ChangeType(nonCasted, type);
         }
 
         private void WriteData(object? obj, CborWriter writer, IEndPointContext? context)
@@ -214,6 +214,9 @@ namespace mROA.Cbor
                     return reader.ReadDouble();
                 case CborReaderState.SinglePrecisionFloat:
                     return reader.ReadSingle();
+                case CborReaderState.HalfPrecisionFloat:
+                    return type == typeof(float) ? reader.ReadSingle() : reader.ReadDouble();
+
                 case CborReaderState.StartArray:
                     if (type == null)
                         return ReadList(reader, null, context);
@@ -308,7 +311,6 @@ namespace mROA.Cbor
 
             if (type.IsInterface)
             {
-
                 var sharedShell = typeof(SharedObjectShellShell<>).MakeGenericType(type);
                 var so =
                     Activator.CreateInstance(sharedShell) as

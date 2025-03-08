@@ -75,6 +75,12 @@ class Program
             var page = disposingPrinter.Print("Test Page", false, CancellationToken.None).GetAwaiter().GetResult();
             Console.WriteLine("Page printed");
             Console.WriteLine(page.ToString());
+
+            Console.WriteLine($"Printer resource : {disposingPrinter.Resource}");
+            Console.WriteLine("Restoring resource");
+            disposingPrinter.Resource = 100;
+            Console.WriteLine($"Printer resource again : {disposingPrinter.Resource}");
+
             var data = page.GetData();
             Console.WriteLine("Data : {0}", Encoding.UTF8.GetString(data));
 

@@ -436,6 +436,7 @@ namespace mROA.Codegen
 {level}{{
 {level}    IsVoid = false,
 {level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
+{level}    ParameterTypes = new Type[] {{ typeof({method.Parameters.First().Type.ToDisplayString()}) }},
 {level}    SuitableType = typeof({method.ContainingType.ToDisplayString()}),
 {level}    Invoking = (i, parameters, _) => (i as {method.ContainingType.ToDisplayString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name} = {Caster((method.AssociatedSymbol as IPropertySymbol)!.Type, "parameters[0]")},
 {level}}}";

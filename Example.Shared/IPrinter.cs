@@ -9,7 +9,7 @@ namespace Example.Shared
     [SharedObjectInterface]
     public interface IPrinter : IDisposable, IShared
     {
-        decimal Resource { get; set; }
+        double Resource { get; set; }
         string GetName();
         Task<IPage> Print(string text, bool someParameter, CancellationToken cancellationToken);
         event Action<IPage> OnPrint;
