@@ -79,7 +79,7 @@ namespace mROA.Implementation.Backend
 
                 object?[]? castedParams = null;
 
-                if (invoker.ParameterTypes != Type.EmptyTypes)
+                if (invoker.ParameterTypes.Length != 0)
                 {
                     castedParams = new object[invoker.ParameterTypes.Length];
                     for (int i = 0; i < castedParams.Length; i++)

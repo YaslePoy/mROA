@@ -17,7 +17,7 @@ class Program
     public static void Main(string[] args)
     {
         var builder = new FullMixBuilder();
-        // new RemoteTypeBinder();
+        new RemoteTypeBinder();
         // builder.Modules.Add(new JsonSerializationToolkit());
         builder.Modules.Add(new CborSerializationToolkit());
 

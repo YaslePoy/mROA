@@ -20,7 +20,6 @@ namespace mROA.Implementation
         public static readonly IMethodInvoker Dispose = new MethodInvoker
         {
             IsVoid = true,
-            ReturnType = null,
             Invoking = (instance, _, _) =>
             {
                 (instance as IDisposable)?.Dispose();

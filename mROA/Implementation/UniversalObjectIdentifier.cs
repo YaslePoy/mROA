@@ -6,13 +6,6 @@ namespace mROA.Implementation
 #pragma warning disable CS8618, CS9264
     public struct UniversalObjectIdentifier : IEquatable<UniversalObjectIdentifier>
     {
-        private static IMethodInvoker x = new MethodInvoker
-        {
-            IsVoid = false,
-            ReturnType = typeof(void),
-            ParameterTypes = Type.EmptyTypes
-            
-        };
         public int ContextId;
         public int OwnerId;
 
