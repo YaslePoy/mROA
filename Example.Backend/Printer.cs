@@ -10,6 +10,8 @@ namespace Example.Backend
     {
         public string Name;
 
+        public decimal Resource { get; set; }
+
         public string GetName()
         {
             return Name;
@@ -30,5 +32,6 @@ namespace Example.Backend
             Console.WriteLine(
                 "Dispose printer with name {0}, Dispose works, Dispose works, Dispose works, Dispose works,", Name);
         }
+        
     }
 }

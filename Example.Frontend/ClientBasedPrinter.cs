@@ -8,16 +8,8 @@ namespace Example.Frontend
 {
     public class ClientBasedPrinter : IPrinter
     {
-        public int Prop { get; set; }
-        public int get_Prop()
-        {
-            return 1;
-        }
-        
-        public int set_Prop(int value)
-        {
-            return 1;
-        }
+        public decimal Resource { get; set; }
+
         public string GetName()
         {
             Console.WriteLine("ClientBasedPrinter called from server!!!!!!!!!!! Vova likes that:)");
