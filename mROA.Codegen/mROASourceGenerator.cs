@@ -385,7 +385,7 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
                         parametersInsertList.Add("(CancellationToken)special[1]");
                         break;
                     case "RequestContext":
-                        parametersInsertList.Add("special[1] as RequestContext");
+                        parametersInsertList.Add("special[0] as RequestContext");
                         break;
                     default:
                         parametersInsertList.Add(Caster(parameter.Type,
