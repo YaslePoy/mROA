@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using Example.Backend;
-using Example.Shared;
 using mROA.Abstract;
 using mROA.Cbor;
 using mROA.Codegen;
@@ -38,7 +37,7 @@ class Program
             new IInjectableModule[] { builder.GetModule<ISerializationToolkit>()! },
             typeof(RepresentationModule)));
         builder.Modules.Add(new CancellationRepository());
-        
+
         builder.Build();
         new RemoteTypeBinder();
 
@@ -49,6 +48,5 @@ class Program
         var gateway = builder.GetModule<IGatewayModule>();
 
         gateway.Run();
-        
     }
 }

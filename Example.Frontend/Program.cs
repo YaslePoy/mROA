@@ -72,7 +72,8 @@ class Program
 
             Console.WriteLine(string.Join(", ", names));
 
-            var page = disposingPrinter.Print("Test Page", false, CancellationToken.None).GetAwaiter().GetResult();
+            var page = disposingPrinter.Print("Test Page", false, default, CancellationToken.None).GetAwaiter()
+                .GetResult();
             Console.WriteLine("Page printed");
             Console.WriteLine(page.ToString());
 
@@ -112,7 +113,5 @@ class Program
         // Console.WriteLine("X is {0}", x);
         // Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
         // Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
-
-
     }
 }

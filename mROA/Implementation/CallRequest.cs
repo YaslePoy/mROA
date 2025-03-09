@@ -1,5 +1,4 @@
 ﻿using System;
-using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -21,6 +20,7 @@ namespace mROA.Implementation
         public int ObjectId { get; set; } = -1;
 
         public object?[]? Parameters { get; set; }
+
         public override string ToString()
         {
             return $"Call request {{ Id : {Id}, CommandId : {CommandId}, ObjectId : {ObjectId} }}";
@@ -33,6 +33,7 @@ namespace mROA.Implementation
         public int CommandId { get; set; } = -2;
         public int ObjectId { get; set; } = -2;
         public object?[]? Parameters { get; set; } = null;
+
         public override string ToString()
         {
             return $"Cancel request {{ Id : {Id}, CommandId : {CommandId}, ObjectId : {ObjectId} }}";

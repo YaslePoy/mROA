@@ -3,7 +3,7 @@ using mROA.Implementation.Attributes;
 namespace Example.Shared
 {
     [SharedObjectInterface]
-    public interface IPagesList : IDataList<IPage>
+    public partial interface IPagesList : IDataList<IPage>
     {
     }
 }

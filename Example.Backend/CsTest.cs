@@ -1,4 +1,3 @@
-using System;
 using Example.Shared;
 
 namespace Example.Backend

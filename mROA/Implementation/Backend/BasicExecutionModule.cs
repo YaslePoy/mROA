@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.CommandExecution;
 
@@ -10,8 +7,8 @@ namespace mROA.Implementation.Backend
 {
     public class BasicExecutionModule : IExecuteModule
     {
-        private IMethodRepository? _methodRepo;
         private ICancellationRepository? _cancellationRepo;
+        private IMethodRepository? _methodRepo;
         private ISerializationToolkit? _serialization;
 
         public void Inject<T>(T dependency)
@@ -244,8 +241,7 @@ namespace mROA.Implementation.Backend
                         multiClientOwnershipRepository?.FreeOwnership();
                     });
 
-                
-                
+
                 // result.ContinueWith(t =>
                 // {
                 //     var finalResult = t.GetType().GetProperty("Result")?.GetValue(t);

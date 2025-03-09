@@ -8,27 +8,31 @@ namespace Example.Backend
 {
     public class PagesList : RemoteObjectBase, IPagesList
     {
+        public PagesList(int id, IRepresentationModule representationModule) : base(id, representationModule)
+        {
+        }
+
         public IReadOnlyList<IPage> Collection { get; }
 
-        public Example.Shared.IPage this[int index]
+        public IPage this[int index]
         {
-            get => GetResultAsync<Example.Shared.IPage>(3, new object[] { index }).GetAwaiter().GetResult();
+            get => GetResultAsync<IPage>(3, new object[] { index }).GetAwaiter().GetResult();
             set => CallAsync(5, new object[] { index, value }).Wait();
         }
 
         public IPage Get(int index)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public void Add(IPage item)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public void Remove(int index, IPage item)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public event Action<IPage>? OnAdd;
@@ -39,7 +43,11 @@ namespace Example.Backend
             // TODO release managed resources here
         }
 
-        public PagesList(int id, IRepresentationModule representationModule) : base(id, representationModule)
+        public void OnAddExternal(IPage p0)
+        {
+        }
+
+        public void OnRemoveExternal(IPage p0)
         {
         }
     }

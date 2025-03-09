@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.Attributes;
 
@@ -18,46 +17,21 @@ namespace mROA.Implementation
 
     public class SharedObjectShellShell<T> : ISharedObjectShell where T : notnull
     {
-        [SerializationIgnore]
-        [JsonIgnore]
-        public IEndPointContext EndPointContext { get; set; } = new EndPointContext
-        {
-            RealRepository = TransmissionConfig.RealContextRepository,
-            RemoteRepository = TransmissionConfig.RemoteEndpointContextRepository,
-            HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(),
-            OwnerFunc = TransmissionConfig.OwnershipRepository.GetOwnershipId
-        };
-
-        private IContextRepository GetDefaultContextRepository() =>
-            (_identifier.OwnerId == EndPointContext.HostId
-                ? EndPointContext.RealRepository
-                : EndPointContext.RemoteRepository) ??
-            throw new NullReferenceException(
-                "DefaultContextRepository was not defined");
-
         private UniversalObjectIdentifier _identifier = UniversalObjectIdentifier.Null;
 
-        public UniversalObjectIdentifier Identifier
-        {
-            get
-            {
-                _identifier.OwnerId = _identifier.OwnerId == -1 ? EndPointContext.OwnerId : _identifier.OwnerId;
-                return _identifier;
-            }
-            set
-            {
-                _identifier = value;
-                Value = GetDefaultContextRepository().GetObjectBySharedObject(this);
-            }
-        }
-
-        public object UniversalValue
-        {
-            get => _value;
-            set => _value = (T)value;
-        }
-
         private T _value;
+
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once UnusedMember.Global
+        public SharedObjectShellShell()
+        {
+        }
+
+        // ReSharper disable once UnusedMember.Global
+        public SharedObjectShellShell(T value)
+        {
+            Value = value;
+        }
 
         [JsonIgnore]
         [SerializationIgnore]
@@ -80,17 +54,42 @@ namespace mROA.Implementation
             }
         }
 
-        // ReSharper disable once MemberCanBePrivate.Global
-        // ReSharper disable once UnusedMember.Global
-        public SharedObjectShellShell()
+        [SerializationIgnore]
+        [JsonIgnore]
+        public IEndPointContext EndPointContext { get; set; } = new EndPointContext
         {
+            RealRepository = TransmissionConfig.RealContextRepository,
+            RemoteRepository = TransmissionConfig.RemoteEndpointContextRepository,
+            HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(),
+            OwnerFunc = TransmissionConfig.OwnershipRepository.GetOwnershipId
+        };
+
+        public UniversalObjectIdentifier Identifier
+        {
+            get
+            {
+                _identifier.OwnerId = _identifier.OwnerId == -1 ? EndPointContext.OwnerId : _identifier.OwnerId;
+                return _identifier;
+            }
+            set
+            {
+                _identifier = value;
+                Value = GetDefaultContextRepository().GetObjectBySharedObject(this);
+            }
         }
 
-        // ReSharper disable once UnusedMember.Global
-        public SharedObjectShellShell(T value)
+        public object UniversalValue
         {
-            Value = value;
+            get => _value;
+            set => _value = (T)value;
         }
+
+        private IContextRepository GetDefaultContextRepository() =>
+            (_identifier.OwnerId == EndPointContext.HostId
+                ? EndPointContext.RealRepository
+                : EndPointContext.RemoteRepository) ??
+            throw new NullReferenceException(
+                "DefaultContextRepository was not defined");
 
         public static implicit operator T(SharedObjectShellShell<T> value) => value.Value;
 

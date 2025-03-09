@@ -8,27 +8,31 @@ namespace Example.Frontend
 {
     public class ClientBasedPrinter : IPrinter
     {
+        public void OnPrintExternal(IPage p0, RequestContext p1)
+        {
+        }
+
         public double Resource { get; set; }
 
         public string GetName()
         {
             Console.WriteLine("ClientBasedPrinter called from server!!!!!!!!!!! Vova likes that:)");
-            
+
             return "ClientBasedPrinter from mroa";
         }
 
-        public async Task<IPage> Print(string text, bool some, CancellationToken cancellationToken)
+        public async Task<IPage> Print(string text, bool some, RequestContext context,
+            CancellationToken cancellationToken)
         {
             Console.WriteLine($"Printed: {text}");
             await Task.Yield();
             return new ClientBasedPage();
         }
 
-        public event Action<IPage>? OnPrint;
+        public event Action<IPage, RequestContext>? OnPrint;
 
         public void Dispose()
         {
-            
         }
     }
 

@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -12,10 +11,10 @@ namespace mROA.Implementation.Frontend
 {
     public class RequestExtractor : IRequestExtractor
     {
-        private IRepresentationModule? _representationModule;
         private IContextRepository? _contextRepository;
-        private IMethodRepository? _methodRepository;
         private IExecuteModule? _executeModule;
+        private IMethodRepository? _methodRepository;
+        private IRepresentationModule? _representationModule;
         private ISerializationToolkit? _serializationToolkit;
 
         public void Inject<T>(T dependency)
