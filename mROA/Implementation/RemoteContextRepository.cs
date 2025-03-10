@@ -21,19 +21,7 @@ namespace mROA.Implementation
             throw new NotSupportedException();
         }
 
-        public T GetObjectByShell<T>(SharedObjectShellShell<T> sharedObjectShellShell)
-        {
-            if (_representationProducer == null)
-                throw new NullReferenceException("representation producer is not initialized");
-
-            if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
-            var representationModule = _representationProducer.Produce(sharedObjectShellShell.Identifier.OwnerId);
-            var remote = (T)Activator.CreateInstance(remoteType, sharedObjectShellShell.Identifier.ContextId,
-                representationModule)!;
-            return remote;
-        }
-
-        public T? GetObject<T>(ComplexObjectIdentifier id)
+        public T GetObject<T>(ComplexObjectIdentifier id)
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
@@ -41,7 +29,7 @@ namespace mROA.Implementation
             if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
             var representationModule =
                 _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            var remote = (T)Activator.CreateInstance(remoteType, id,
+            var remote = (T)Activator.CreateInstance(remoteType, id.ContextId,
                 representationModule)!;
             return remote;
         }

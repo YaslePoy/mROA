@@ -10,6 +10,24 @@ namespace mROA.Implementation
 {
     public abstract class RemoteObjectBase : IDisposable
     {
+        protected bool Equals(RemoteObjectBase other)
+        {
+            return _identifier.Equals(other._identifier);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((RemoteObjectBase)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_identifier.GetHashCode(), _identifier.ContextId);
+        }
+
         private readonly ComplexObjectIdentifier _identifier;
         private readonly IRepresentationModule _representationModule;
 

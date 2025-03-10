@@ -12,6 +12,7 @@ namespace mROA.Implementation
         {
             ContextId = contextId;
             OwnerId = ownerId;
+            
         }
 
         public static ComplexObjectIdentifier Null = new ComplexObjectIdentifier { ContextId = -2, OwnerId = -1 };

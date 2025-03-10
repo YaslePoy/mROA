@@ -7,7 +7,7 @@ namespace mROA.Implementation.Backend
     public class MultiClientContextRepository : IContextRepository, IContextRepositoryHub
     {
         private readonly Func<int, IContextRepository> _produceRepository;
-        private Dictionary<int, IContextRepository> _repositories = new();
+        private readonly Dictionary<int, IContextRepository> _repositories = new();
 
         public MultiClientContextRepository(Func<int, IContextRepository> produceRepository)
         {
@@ -31,14 +31,8 @@ namespace mROA.Implementation.Backend
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             repository.ClearObject(id);
         }
-
-        public T GetObjectByShell<T>(SharedObjectShellShell<T> sharedObjectShellShell)
-        {
-            var repository = GetRepository(sharedObjectShellShell.Identifier.OwnerId);
-            return repository.GetObject<T>(sharedObjectShellShell.Identifier)!;
-        }
-
-        public T? GetObject<T>(ComplexObjectIdentifier id)
+        
+        public T GetObject<T>(ComplexObjectIdentifier id)
         {
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             return repository.GetObject<T>(id);

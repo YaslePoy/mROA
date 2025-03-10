@@ -28,6 +28,7 @@ namespace mROA.Implementation
         }
 
         // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once MemberCanBePrivate.Global
         public SharedObjectShellShell(T value)
         {
             Value = value;
@@ -35,6 +36,7 @@ namespace mROA.Implementation
 
         [JsonIgnore]
         [SerializationIgnore]
+        // ReSharper disable once MemberCanBePrivate.Global
         public T Value
         {
             get => _value;
@@ -74,7 +76,7 @@ namespace mROA.Implementation
             set
             {
                 _identifier = value;
-                Value = GetDefaultContextRepository().GetObjectByShell(this);
+                Value = GetDefaultContextRepository().GetObject<T>(Identifier);
             }
         }
 

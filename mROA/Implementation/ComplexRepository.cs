@@ -21,12 +21,7 @@ namespace mROA.Implementation
             throw new NotImplementedException();
         }
 
-        public T GetObjectByShell<T>(SharedObjectShellShell<T> sharedObjectShellShell)
-        {
-            throw new NotImplementedException();
-        }
-
-        public T? GetObject<T>(ComplexObjectIdentifier id)
+        public T GetObject<T>(ComplexObjectIdentifier id)
         {
             throw new NotImplementedException();
         }
