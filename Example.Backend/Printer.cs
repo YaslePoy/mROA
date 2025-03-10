@@ -10,7 +10,7 @@ namespace Example.Backend
     {
         public string Name;
 
-        public void OnPrintExternal(IPage p0, RequestContext p1)
+        public void OnPrintExternal(IPage p0)
         {
         }
 
@@ -27,12 +27,12 @@ namespace Example.Backend
             // throw new Exception("The method or operation is not implemented.");
             var page = new Page { Text = text };
             Console.WriteLine($"Request id : :{context.RequestId}");
-            OnPrint?.Invoke(page, context);
+            OnPrint?.Invoke(page);
             Resource /= 1.5;
             return page;
         }
 
-        public event Action<IPage, RequestContext>? OnPrint;
+        public event Action<IPage>? OnPrint;
 
         public void Dispose()
         {

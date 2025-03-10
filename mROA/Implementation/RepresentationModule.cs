@@ -7,8 +7,8 @@ namespace mROA.Implementation
 {
     public class RepresentationModule : IRepresentationModule
     {
-        private ISerializationToolkit? _serialization;
         private INextGenerationInteractionModule? _interaction;
+        private ISerializationToolkit? _serialization;
 
         public void Inject<T>(T dependency)
         {
@@ -68,6 +68,11 @@ namespace mROA.Implementation
                     _interaction.HandleMessage(message);
                     return message.Data;
                 }
+            }
+
+            if (fromBuffer == null)
+            {
+                return Array.Empty<byte>();
             }
 
             _interaction.HandleMessage(fromBuffer);

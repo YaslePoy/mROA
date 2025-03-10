@@ -463,7 +463,8 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
                 JoinWithComa(Enumerable.Range(0, parameters.Count).Select(i => "p" + i++)));
 
             var transferParameters =
-                JoinWithComa(parameters.Where(i => ParameterFilterForType(i)).Select(i => "p" + parameters.IndexOf(i)));
+                JoinWithComa(parameters.Where(i => !ParameterFilterForType(i))
+                    .Select(i => "p" + parameters.IndexOf(i)));
 
             var callFilter = "";
 
@@ -475,11 +476,13 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
 
             var eventBinderCode =
                 $@"                (instance as {baseType.ToDisplayString()}).{eventSymbol.Name} += ({parametersDeclaration}) => 
-                    {{ {callFilter}
-                            var request = new DefaultCallRequest
-                            {{ 
-                                CommandId = {index}, ObjectId = index, Parameters = new object[] {{ {transferParameters} }}
-                            }};
+                    {{
+                        Console.WriteLine(""Sending event..."");
+{callFilter}
+                        var request = new DefaultCallRequest
+                        {{ 
+                            CommandId = {index}, ObjectId = index, Parameters = new object[] {{ {transferParameters} }}
+                        }};
                         module.PostCallMessageAsync(request.Id, MessageType.EventRequest, request);
                     }};
 ";

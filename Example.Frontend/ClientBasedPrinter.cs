@@ -8,7 +8,7 @@ namespace Example.Frontend
 {
     public class ClientBasedPrinter : IPrinter
     {
-        public void OnPrintExternal(IPage p0, RequestContext p1)
+        public void OnPrintExternal(IPage p0)
         {
         }
 
@@ -29,7 +29,7 @@ namespace Example.Frontend
             return new ClientBasedPage();
         }
 
-        public event Action<IPage, RequestContext>? OnPrint;
+        public event Action<IPage>? OnPrint;
 
         public void Dispose()
         {

@@ -48,6 +48,7 @@ class Program
 //правильный порядок команд 8-5-10-7
         using (var disposingPrinter = factory.Create("Test"))
         {
+            disposingPrinter.OnPrint += page1 => { Console.WriteLine("New page creater. Called from event!!!"); };
             Console.WriteLine("Printer created");
             Thread.Sleep(100);
 
