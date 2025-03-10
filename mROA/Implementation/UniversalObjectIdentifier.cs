@@ -8,6 +8,12 @@ namespace mROA.Implementation
         public int ContextId;
         public int OwnerId;
 
+        public UniversalObjectIdentifier(int contextId, int ownerId)
+        {
+            ContextId = contextId;
+            OwnerId = ownerId;
+        }
+
         public static UniversalObjectIdentifier Null = new UniversalObjectIdentifier { ContextId = -2, OwnerId = -1 };
         public static UniversalObjectIdentifier FromFlat(ulong flat) => new() { Flat = flat };
 
