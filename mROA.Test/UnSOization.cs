@@ -4,12 +4,12 @@ namespace mROA.Test;
 
 public class UnSOization
 {
-    private UniversalObjectIdentifier _uoi;
-    
+    private ComplexObjectIdentifier _uoi;
+
     [SetUp]
     public void Setup()
     {
-        _uoi = new UniversalObjectIdentifier
+        _uoi = new ComplexObjectIdentifier
         {
             ContextId = -123, OwnerId = 123
         };
@@ -19,8 +19,8 @@ public class UnSOization
     public void FlatTest()
     {
         var flat = _uoi.Flat;
-        var next = new UniversalObjectIdentifier { Flat = flat };
-        
+        var next = new ComplexObjectIdentifier { Flat = flat };
+
         Assert.That(_uoi, Is.EqualTo(next));
     }
 }

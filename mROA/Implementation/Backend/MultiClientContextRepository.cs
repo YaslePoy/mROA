@@ -6,23 +6,14 @@ namespace mROA.Implementation.Backend
 {
     public class MultiClientContextRepository : IContextRepository, IContextRepositoryHub
     {
-        private Dictionary<int, IContextRepository> _repositories = new();
         private readonly Func<int, IContextRepository> _produceRepository;
+        private Dictionary<int, IContextRepository> _repositories = new();
 
         public MultiClientContextRepository(Func<int, IContextRepository> produceRepository)
         {
             _produceRepository = produceRepository;
         }
 
-        private IContextRepository GetRepositoryByClientId(int clientId)
-        {
-            if (_repositories.TryGetValue(clientId, out var repository))
-                return repository;
-        
-            var created = _produceRepository(clientId);
-            _repositories.Add(clientId, created);
-            return created;
-        }
         public void Inject<T>(T dependency)
         {
         }
@@ -39,16 +30,10 @@ namespace mROA.Implementation.Backend
             repository.ClearObject(id);
         }
 
-        public T GetObjectBySharedObject<T>(SharedObjectShellShell<T> sharedObjectShellShell)
+        public T GetObjectByShell<T>(SharedObjectShellShell<T> sharedObjectShellShell)
         {
             var repository = GetRepository(sharedObjectShellShell.Identifier.OwnerId);
             return repository.GetObject<T>(sharedObjectShellShell.Identifier.ContextId);
-        }
-
-        public object GetObject(int id)
-        {
-            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            return repository.GetObject<object>(id);
         }
 
         public T? GetObject<T>(int id)
@@ -73,6 +58,22 @@ namespace mROA.Implementation.Backend
         {
             var repository = GetRepositoryByClientId(clientId);
             return repository;
+        }
+
+        private IContextRepository GetRepositoryByClientId(int clientId)
+        {
+            if (_repositories.TryGetValue(clientId, out var repository))
+                return repository;
+
+            var created = _produceRepository(clientId);
+            _repositories.Add(clientId, created);
+            return created;
+        }
+
+        public object GetObject(int id)
+        {
+            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            return repository.GetObject<object>(id);
         }
     }
 }

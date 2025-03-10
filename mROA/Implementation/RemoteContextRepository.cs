@@ -6,8 +6,8 @@ namespace mROA.Implementation
 {
     public class RemoteContextRepository : IContextRepository
     {
-        private IRepresentationModuleProducer? _representationProducer;
         public static Dictionary<Type, Type> RemoteTypes = new();
+        private IRepresentationModuleProducer? _representationProducer;
 
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
@@ -19,7 +19,7 @@ namespace mROA.Implementation
             throw new NotSupportedException();
         }
 
-        public T GetObjectBySharedObject<T>(SharedObjectShellShell<T> sharedObjectShellShell)
+        public T GetObjectByShell<T>(SharedObjectShellShell<T> sharedObjectShellShell)
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
@@ -31,18 +31,14 @@ namespace mROA.Implementation
             return remote;
         }
 
-        public object GetObject(int id)
-        {
-            throw new NotSupportedException();
-        }
-
         public T GetObject<T>(int id)
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
 
             if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
-            var representationModule = _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            var representationModule =
+                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             var remote = (T)Activator.CreateInstance(remoteType, id,
                 representationModule)!;
             return remote;
@@ -53,7 +49,8 @@ namespace mROA.Implementation
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
 
-            var representationModule = _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            var representationModule =
+                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             return Activator.CreateInstance(RemoteTypes[type], -1,
                 representationModule)!;
         }
@@ -72,6 +69,11 @@ namespace mROA.Implementation
         {
             if (dependency is IRepresentationModuleProducer serialisationModule)
                 _representationProducer = serialisationModule;
+        }
+
+        public object GetObject(int id)
+        {
+            throw new NotSupportedException();
         }
     }
 }

@@ -10,25 +10,34 @@ namespace mROA.Implementation
 {
     public abstract class RemoteObjectBase : IDisposable
     {
-        private readonly UniversalObjectIdentifier _identifier;
+        private readonly ComplexObjectIdentifier _identifier;
         private readonly IRepresentationModule _representationModule;
 
         protected RemoteObjectBase(int id, IRepresentationModule representationModule)
         {
-            _identifier = new UniversalObjectIdentifier { ContextId = id, OwnerId = representationModule.Id };
+            _identifier = new ComplexObjectIdentifier { ContextId = id, OwnerId = representationModule.Id };
             _representationModule = representationModule;
         }
 
         public int Id => _identifier.ContextId;
         public int OwnerId => _identifier.OwnerId;
-        public UniversalObjectIdentifier Identifier => _identifier;
+        public ComplexObjectIdentifier Identifier => _identifier;
+
+        public void Dispose()
+        {
+            if (_identifier.IsStatic)
+                return;
+            CallAsync(-1).Wait();
+        }
+
         protected async Task<T> GetResultAsync<T>(int methodId, object?[]? parameters = null,
             CancellationToken cancellationToken = default)
         {
             var request = new DefaultCallRequest
-                { CommandId = methodId, ObjectId = _identifier, Parameters = parameters
-                };
-            
+            {
+                CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+            };
+
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
             var localTokenSource = new CancellationTokenSource();
@@ -53,7 +62,7 @@ namespace mROA.Implementation
                     });
                 localTokenSource.Cancel();
             });
-            
+
             Task.WaitAny(new Task[]
             {
                 successResponse, errorResponse
@@ -80,8 +89,9 @@ namespace mROA.Implementation
             CancellationToken cancellationToken = default)
         {
             var request = new DefaultCallRequest
-                { CommandId = methodId, ObjectId = _identifier, Parameters = parameters
-                };
+            {
+                CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+            };
             await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
 
             var localTokenSource = new CancellationTokenSource();
@@ -120,13 +130,6 @@ namespace mROA.Implementation
 
             if (errorResponse.IsCompletedSuccessfully)
                 throw errorResponse.Result.GetException();
-        }
-
-        public void Dispose()
-        {
-            if (_identifier.IsStatic)
-                return;
-            CallAsync(-1).Wait();
         }
 
         public override string ToString()

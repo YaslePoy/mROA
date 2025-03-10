@@ -3,19 +3,19 @@ using System;
 namespace mROA.Implementation
 {
 #pragma warning disable CS8618, CS9264
-    public struct UniversalObjectIdentifier : IEquatable<UniversalObjectIdentifier>
+    public struct ComplexObjectIdentifier : IEquatable<ComplexObjectIdentifier>
     {
         public int ContextId;
         public int OwnerId;
 
-        public UniversalObjectIdentifier(int contextId, int ownerId)
+        public ComplexObjectIdentifier(int contextId, int ownerId)
         {
             ContextId = contextId;
             OwnerId = ownerId;
         }
 
-        public static UniversalObjectIdentifier Null = new UniversalObjectIdentifier { ContextId = -2, OwnerId = -1 };
-        public static UniversalObjectIdentifier FromFlat(ulong flat) => new() { Flat = flat };
+        public static ComplexObjectIdentifier Null = new ComplexObjectIdentifier { ContextId = -2, OwnerId = -1 };
+        public static ComplexObjectIdentifier FromFlat(ulong flat) => new() { Flat = flat };
 
         public override string ToString()
         {
@@ -34,14 +34,14 @@ namespace mROA.Implementation
             }
         }
 
-        public bool Equals(UniversalObjectIdentifier other)
+        public bool Equals(ComplexObjectIdentifier other)
         {
             return ContextId == other.ContextId && OwnerId == other.OwnerId;
         }
 
         public override bool Equals(object? obj)
         {
-            return obj is UniversalObjectIdentifier other && Equals(other);
+            return obj is ComplexObjectIdentifier other && Equals(other);
         }
 
         public override int GetHashCode()

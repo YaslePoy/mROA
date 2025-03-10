@@ -65,6 +65,50 @@ namespace mROA.Cbor
             return Convert.ChangeType(nonCasted, type);
         }
 
+        public void Inject<T>(T dependency)
+        {
+        }
+
+        public byte[] Serialize<T>(T objectToSerialize)
+        {
+            return Serialize(objectToSerialize, typeof(T));
+        }
+
+        public byte[] Serialize(object objectToSerialize, Type type)
+        {
+            return Serialize(objectToSerialize, context: null);
+        }
+
+        public T Deserialize<T>(byte[] rawData)
+        {
+            return Deserialize<T>(rawData: rawData, context: null);
+        }
+
+        public object? Deserialize(byte[] rawData, Type type)
+        {
+            return Deserialize(rawData: rawData, type, context: null);
+        }
+
+        public T Deserialize<T>(Span<byte> rawData)
+        {
+            return Deserialize<T>(rawData.ToArray().AsMemory(), context: null);
+        }
+
+        public object? Deserialize(Span<byte> rawData, Type type)
+        {
+            return Deserialize(rawData: rawData.ToArray(), type: type);
+        }
+
+        public T Cast<T>(object nonCasted)
+        {
+            return Cast<T>(nonCasted: nonCasted, context: null);
+        }
+
+        public object Cast(object nonCasted, Type type)
+        {
+            return Cast(nonCasted: nonCasted, type: type, context: null);
+        }
+
         private void WriteData(object? obj, CborWriter writer, IEndPointContext? context)
         {
             switch (obj)
@@ -322,7 +366,7 @@ namespace mROA.Cbor
                 var identifier = reader.ReadUInt64();
                 reader.ReadEndArray();
 
-                so.Identifier = UniversalObjectIdentifier.FromFlat(identifier);
+                so.Identifier = ComplexObjectIdentifier.FromFlat(identifier);
                 return so.UniversalValue;
             }
 
@@ -386,50 +430,6 @@ namespace mROA.Cbor
             }
 
             return finalProperties;
-        }
-
-        public void Inject<T>(T dependency)
-        {
-        }
-
-        public byte[] Serialize<T>(T objectToSerialize)
-        {
-            return Serialize(objectToSerialize, typeof(T));
-        }
-
-        public byte[] Serialize(object objectToSerialize, Type type)
-        {
-            return Serialize(objectToSerialize, context: null);
-        }
-
-        public T Deserialize<T>(byte[] rawData)
-        {
-            return Deserialize<T>(rawData: rawData, context: null);
-        }
-
-        public object? Deserialize(byte[] rawData, Type type)
-        {
-            return Deserialize(rawData: rawData, type, context: null);
-        }
-
-        public T Deserialize<T>(Span<byte> rawData)
-        {
-            return Deserialize<T>(rawData.ToArray().AsMemory(), context: null);
-        }
-
-        public object? Deserialize(Span<byte> rawData, Type type)
-        {
-            return Deserialize(rawData: rawData.ToArray(), type: type);
-        }
-
-        public T Cast<T>(object nonCasted)
-        {
-            return Cast<T>(nonCasted: nonCasted, context: null);
-        }
-
-        public object Cast(object nonCasted, Type type)
-        {
-            return Cast(nonCasted: nonCasted, type: type, context: null);
         }
     }
 }

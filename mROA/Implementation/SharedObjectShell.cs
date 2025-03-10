@@ -11,13 +11,13 @@ namespace mROA.Implementation
     public interface ISharedObjectShell
     {
         IEndPointContext EndPointContext { get; set; }
-        UniversalObjectIdentifier Identifier { get; set; }
+        ComplexObjectIdentifier Identifier { get; set; }
         object UniversalValue { get; set; }
     }
 
     public class SharedObjectShellShell<T> : ISharedObjectShell where T : notnull
     {
-        private UniversalObjectIdentifier _identifier = UniversalObjectIdentifier.Null;
+        private ComplexObjectIdentifier _identifier = ComplexObjectIdentifier.Null;
 
         private T _value;
 
@@ -64,7 +64,7 @@ namespace mROA.Implementation
             OwnerFunc = TransmissionConfig.OwnershipRepository.GetOwnershipId
         };
 
-        public UniversalObjectIdentifier Identifier
+        public ComplexObjectIdentifier Identifier
         {
             get
             {
@@ -74,7 +74,7 @@ namespace mROA.Implementation
             set
             {
                 _identifier = value;
-                Value = GetDefaultContextRepository().GetObjectBySharedObject(this);
+                Value = GetDefaultContextRepository().GetObjectByShell(this);
             }
         }
 
