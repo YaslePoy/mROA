@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Linq;
+using System.Net;
 using Example.Backend;
 using mROA.Abstract;
 using mROA.Cbor;
@@ -23,19 +24,20 @@ class Program
         builder.Modules.Add(new HubRequestExtractor(typeof(RequestExtractor)));
 
         builder.UseBasicExecution();
-
+        builder.Modules.Add(new CreativeRepresentationModuleProducer(
+            new IInjectableModule[] { builder.GetModule<ISerializationToolkit>()! },
+            typeof(RepresentationModule)));
         builder.Modules.Add(new RemoteContextRepository());
 // builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
         builder.Modules.Add(new MultiClientContextRepository(i =>
         {
             var repo = new ContextRepository();
             repo.FillSingletons(typeof(PrinterFactory).Assembly);
+            repo.Inject(builder.Modules.OfType<CreativeRepresentationModuleProducer>().First());
             return repo;
         }));
         builder.SetupMethodsRepository(new CoCodegenMethodRepository());
-        builder.Modules.Add(new CreativeRepresentationModuleProducer(
-            new IInjectableModule[] { builder.GetModule<ISerializationToolkit>()! },
-            typeof(RepresentationModule)));
+
         builder.Modules.Add(new CancellationRepository());
 
         builder.Build();

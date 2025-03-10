@@ -75,8 +75,10 @@ namespace mROA.Implementation.Frontend
                         var cancelRequest =
                             _representationModule!.GetMessageAsync<CancelRequest>(
                                 messageType: MessageType.CancelRequest, token: token);
-
-                        Task.WaitAny(defaultRequest, cancelRequest);
+                        var eventRequest =
+                            _representationModule!.GetMessageAsync<DefaultCallRequest>(
+                                messageType: MessageType.EventRequest, token: token);
+                        Task.WaitAny(defaultRequest, cancelRequest, eventRequest);
 #if TRACE
                     Console.WriteLine("Request received");
 #endif
@@ -89,7 +91,7 @@ namespace mROA.Implementation.Frontend
                             tokenSource.Cancel();
                             _executeModule.Execute(req, _contextRepository, _representationModule);
                         }
-                        else
+                        else if (defaultRequest.IsCompleted)
                         {
                             tokenSource.Cancel();
                             var request = defaultRequest.Result;
@@ -97,7 +99,7 @@ namespace mROA.Implementation.Frontend
                             var result = _executeModule.Execute(request, _contextRepository, _representationModule);
 
                             var resultType = MessageType.Unknown;
-                            
+
                             switch (result)
                             {
                                 case FinalCommandExecution:
@@ -112,6 +114,12 @@ namespace mROA.Implementation.Frontend
                             }
 
                             _representationModule.PostCallMessage(request.Id, resultType, result, result.GetType());
+                        }
+                        else
+                        {
+                            tokenSource.Cancel();
+                            var request = defaultRequest.Result;
+                            _executeModule.Execute(request, _contextRepository, _representationModule);
                         }
                     }
                 }

@@ -10,36 +10,25 @@ namespace mROA.Implementation.Backend
 {
     public class ContextRepository : IContextRepository
     {
-        public static object[] EventBinders = new object[]{};
-        private int _debugId = -1;
+        private const int StartupSize = 1024;
+        private const int GrowSize = 128;
+        public static object[] EventBinders = new object[] { };
 
         private static int LastDebugId = -1;
+        private int _debugId = -1;
+
+        private Task<int> _lastIndexFinder = Task.FromResult(0);
+
+        private IRepresentationModuleProducer? _representationModuleProducer;
 
         // [CanBeNull]
         private Dictionary<int, object?> _singletons;
         private object?[] _storage;
 
-        private Task<int> _lastIndexFinder = Task.FromResult(0);
-
-        private const int StartupSize = 1024;
-        private const int GrowSize = 128;
-
 
         public ContextRepository()
         {
             _storage = new object[StartupSize];
-        }
-
-        public void FillSingletons(params Assembly[] assembly)
-        {
-            var types = assembly.SelectMany(x => x.GetTypes()).Where(type =>
-                type is { IsClass: true, IsAbstract: false, IsGenericType: false } &&
-                type.GetCustomAttributes(typeof(SharedObjectSingletonAttribute), true).Length > 0);
-            _singletons =
-                types.ToDictionary(
-                    t => t.GetInterfaces().FirstOrDefault(i =>
-                        i.GetCustomAttributes(typeof(SharedObjectInterfaceAttribute), true).Length > 0)!.GetHashCode(),
-                    Activator.CreateInstance);
         }
 
         public int ResisterObject<T>(object o, IEndPointContext context)
@@ -49,10 +38,11 @@ namespace mROA.Implementation.Backend
 
             _storage[_lastIndexFinder.Result] = o;
 
-            EventBinders.OfType<IEventBinder<T>>().FirstOrDefault()?.BindEvents((T)o, context);
 
             var last = _lastIndexFinder.Result;
             _lastIndexFinder = Task.Run(FindLastIndex);
+            EventBinders.OfType<IEventBinder<T>>().FirstOrDefault()
+                ?.BindEvents((T)o, context, _representationModuleProducer!, last);
 
             return last;
         }
@@ -66,12 +56,6 @@ namespace mROA.Implementation.Backend
         public T GetObjectBySharedObject<T>(SharedObjectShellShell<T> sharedObjectShellShell)
         {
             return (T)GetObject(sharedObjectShellShell.Identifier.ContextId);
-        }
-
-        public object GetObject(int id)
-        {
-            // Debug.Log($"Reading object {id} from repository with debug ID {_debugId}");
-            return (id == -1 || _storage.Length <= id ? null : _storage[id]) ?? throw new NullReferenceException();
         }
 
         public T GetObject<T>(int id)
@@ -93,6 +77,32 @@ namespace mROA.Implementation.Backend
             return index == -1 ? ResisterObject<T>(o, context) : index;
         }
 
+        public void Inject<T>(T dependency)
+        {
+            if (dependency is IRepresentationModuleProducer moduleProducer)
+            {
+                _representationModuleProducer = moduleProducer;
+            }
+        }
+
+        public void FillSingletons(params Assembly[] assembly)
+        {
+            var types = assembly.SelectMany(x => x.GetTypes()).Where(type =>
+                type is { IsClass: true, IsAbstract: false, IsGenericType: false } &&
+                type.GetCustomAttributes(typeof(SharedObjectSingletonAttribute), true).Length > 0);
+            _singletons =
+                types.ToDictionary(
+                    t => t.GetInterfaces().FirstOrDefault(i =>
+                        i.GetCustomAttributes(typeof(SharedObjectInterfaceAttribute), true).Length > 0)!.GetHashCode(),
+                    Activator.CreateInstance);
+        }
+
+        public object GetObject(int id)
+        {
+            // Debug.Log($"Reading object {id} from repository with debug ID {_debugId}");
+            return (id == -1 || _storage.Length <= id ? null : _storage[id]) ?? throw new NullReferenceException();
+        }
+
         private int FindLastIndex()
         {
             for (var i = 0; i < _storage.Length; i++)
@@ -105,10 +115,6 @@ namespace mROA.Implementation.Backend
             Array.Copy(_storage, nextStorage, _storage.Length);
             _storage = nextStorage;
             return _storage.Length;
-        }
-
-        public void Inject<T>(T dependency)
-        {
         }
     }
 }

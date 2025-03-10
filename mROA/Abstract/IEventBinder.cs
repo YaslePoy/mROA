@@ -2,6 +2,7 @@
 {
     public interface IEventBinder<T>
     {
-        public void BindEvents(T source, IEndPointContext context);
+        public void BindEvents(T source, IEndPointContext context,
+            IRepresentationModuleProducer representationModuleProducer, int index);
     }
 }
