@@ -18,13 +18,15 @@ namespace mROA.Implementation.Backend
         {
         }
 
+        public int HostId { get; set; }
+
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             return repository.ResisterObject<T>(o, context);
         }
 
-        public void ClearObject(int id)
+        public void ClearObject(ComplexObjectIdentifier id)
         {
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             repository.ClearObject(id);
@@ -33,10 +35,10 @@ namespace mROA.Implementation.Backend
         public T GetObjectByShell<T>(SharedObjectShellShell<T> sharedObjectShellShell)
         {
             var repository = GetRepository(sharedObjectShellShell.Identifier.OwnerId);
-            return repository.GetObject<T>(sharedObjectShellShell.Identifier.ContextId);
+            return repository.GetObject<T>(sharedObjectShellShell.Identifier)!;
         }
 
-        public T? GetObject<T>(int id)
+        public T? GetObject<T>(ComplexObjectIdentifier id)
         {
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             return repository.GetObject<T>(id);
@@ -68,12 +70,6 @@ namespace mROA.Implementation.Backend
             var created = _produceRepository(clientId);
             _repositories.Add(clientId, created);
             return created;
-        }
-
-        public object GetObject(int id)
-        {
-            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            return repository.GetObject<object>(id);
         }
     }
 }

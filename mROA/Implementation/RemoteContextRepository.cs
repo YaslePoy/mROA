@@ -9,12 +9,14 @@ namespace mROA.Implementation
         public static Dictionary<Type, Type> RemoteTypes = new();
         private IRepresentationModuleProducer? _representationProducer;
 
+        public int HostId { get; set; }
+
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
             throw new NotSupportedException();
         }
 
-        public void ClearObject(int id)
+        public void ClearObject(ComplexObjectIdentifier id)
         {
             throw new NotSupportedException();
         }
@@ -31,7 +33,7 @@ namespace mROA.Implementation
             return remote;
         }
 
-        public T GetObject<T>(int id)
+        public T? GetObject<T>(ComplexObjectIdentifier id)
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");

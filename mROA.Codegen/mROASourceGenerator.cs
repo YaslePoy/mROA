@@ -481,7 +481,7 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
 {callFilter}
                         var request = new DefaultCallRequest
                         {{ 
-                            CommandId = {index}, ObjectId = new UniversalObjectIdentifier(index, context.OwnerId), Parameters = new object[] {{ {transferParameters} }}
+                            CommandId = {index}, ObjectId = new ComplexObjectIdentifier(index, context.OwnerId), Parameters = new object[] {{ {transferParameters} }}
                         }};
                         module.PostCallMessageAsync(request.Id, MessageType.EventRequest, request);
                     }};

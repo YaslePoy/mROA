@@ -31,6 +31,8 @@ namespace mROA.Implementation.Backend
             _storage = new object[StartupSize];
         }
 
+        public int HostId { get; set; }
+
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
             if (!_lastIndexFinder.IsCompleted)
@@ -47,10 +49,10 @@ namespace mROA.Implementation.Backend
             return last;
         }
 
-        public void ClearObject(int id)
+        public void ClearObject(ComplexObjectIdentifier id)
         {
-            _storage[id] = null;
-            _lastIndexFinder = Task.FromResult(id);
+            _storage[id.ContextId] = null;
+            _lastIndexFinder = Task.FromResult(id.ContextId);
         }
 
         public T GetObjectByShell<T>(SharedObjectShellShell<T> sharedObjectShellShell)
@@ -58,11 +60,11 @@ namespace mROA.Implementation.Backend
             return (T)GetObject(sharedObjectShellShell.Identifier.ContextId);
         }
 
-        public T GetObject<T>(int id)
+        public T? GetObject<T>(ComplexObjectIdentifier id)
         {
-            return id == -1 || _storage.Length <= id
+            return id.ContextId == -1 || _storage.Length <= id.ContextId
                 ? throw new NullReferenceException("Cannot find that object. It is null")
-                : (T)_storage[id]!;
+                : (T)_storage[id.ContextId]!;
         }
 
         public object GetSingleObject(Type type)

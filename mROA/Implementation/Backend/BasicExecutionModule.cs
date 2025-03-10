@@ -69,7 +69,7 @@ namespace mROA.Implementation.Backend
                 IContextRepository repository;
 
                 var context = command.ObjectId.ContextId != -1
-                    ? contextRepository.GetObject<object>(command.ObjectId.ContextId)
+                    ? contextRepository.GetObject<object>(command.ObjectId)
                     : contextRepository.GetSingleObject(invoker.SuitableType);
 
                 if (context == null)
@@ -104,7 +104,7 @@ namespace mROA.Implementation.Backend
 #if TRACE
                     Console.WriteLine("Disposing object");
 #endif
-                    contextRepository.ClearObject(command.ObjectId.ContextId);
+                    contextRepository.ClearObject(command.ObjectId);
                 }
 
                 return result;
