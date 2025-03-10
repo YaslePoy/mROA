@@ -39,7 +39,7 @@ namespace mROA.Implementation.Backend
                     Activator.CreateInstance);
         }
 
-        public int ResisterObject(object o)
+        public int ResisterObject(object o, IEndPointContext context)
         {
             if (!_lastIndexFinder.IsCompleted)
                 _lastIndexFinder.Wait();
@@ -79,10 +79,10 @@ namespace mROA.Implementation.Backend
             return _singletons.GetValueOrDefault(type.GetHashCode()) ?? throw new ArgumentException("Unregistered singleton type");
         }
 
-        public int GetObjectIndex(object o)
+        public int GetObjectIndex(object o, IEndPointContext context)
         {
             var index = Array.IndexOf(_storage, o);
-            return index == -1 ? ResisterObject(o) : index;
+            return index == -1 ? ResisterObject(o, context) : index;
         }
 
         private int FindLastIndex()
