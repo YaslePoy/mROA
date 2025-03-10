@@ -66,8 +66,10 @@ namespace mROA.Implementation.Backend
                 if (invoker == null)
                     throw new Exception($"Command {command.CommandId} not found");
 
-                var context = command.ObjectId != -1
-                    ? contextRepository.GetObject<object>(command.ObjectId)
+                IContextRepository repository;
+
+                var context = command.ObjectId.ContextId != -1
+                    ? contextRepository.GetObject<object>(command.ObjectId.ContextId)
                     : contextRepository.GetSingleObject(invoker.SuitableType);
 
                 if (context == null)
@@ -102,7 +104,7 @@ namespace mROA.Implementation.Backend
 #if TRACE
                     Console.WriteLine("Disposing object");
 #endif
-                    contextRepository.ClearObject(command.ObjectId);
+                    contextRepository.ClearObject(command.ObjectId.ContextId);
                 }
 
                 return result;

@@ -9,7 +9,7 @@ namespace mROA.Implementation
     {
         Guid Id { get; }
         int CommandId { get; }
-        int ObjectId { get; }
+        UniversalObjectIdentifier ObjectId { get; }
         object?[]? Parameters { get; }
     }
 
@@ -17,7 +17,7 @@ namespace mROA.Implementation
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public int CommandId { get; set; }
-        public int ObjectId { get; set; } = -1;
+        public UniversalObjectIdentifier ObjectId { get; set; } = UniversalObjectIdentifier.Null;
 
         public object?[]? Parameters { get; set; }
 
@@ -31,7 +31,7 @@ namespace mROA.Implementation
     {
         public Guid Id { get; set; }
         public int CommandId { get; set; } = -2;
-        public int ObjectId { get; set; } = -2;
+        public UniversalObjectIdentifier ObjectId { get; set; } = UniversalObjectIdentifier.Null;
         public object?[]? Parameters { get; set; } = null;
 
         public override string ToString()
