@@ -91,7 +91,7 @@ namespace mROA.Implementation
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
 #if TRACE
-            Console.WriteLine($"Posting message: {id} - {messageType}");
+            Console.WriteLine($"Posting message: {id} - {messageType} to {Id}");
 #endif
 
             var serialized = _serialization.Serialize(payload, payloadType);

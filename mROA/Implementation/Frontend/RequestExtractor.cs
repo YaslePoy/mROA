@@ -65,7 +65,7 @@ namespace mROA.Implementation.Frontend
                     while (true)
                     {
 #if TRACE
-                    Console.WriteLine("Waiting for request...");
+                        Console.WriteLine("Waiting for request...");
 #endif
                         var tokenSource = new CancellationTokenSource();
                         var token = tokenSource.Token;
@@ -80,12 +80,12 @@ namespace mROA.Implementation.Frontend
                                 messageType: MessageType.EventRequest, token: token);
                         Task.WaitAny(defaultRequest, cancelRequest, eventRequest);
 #if TRACE
-                    Console.WriteLine("Request received");
+                        Console.WriteLine("Request received");
 #endif
                         if (cancelRequest.IsCompleted)
                         {
 #if TRACE
-                        Console.WriteLine("Cancelling request");
+                            Console.WriteLine("Cancelling request");
 #endif
                             var req = cancelRequest.Result;
                             tokenSource.Cancel();
@@ -118,7 +118,7 @@ namespace mROA.Implementation.Frontend
                         else
                         {
                             tokenSource.Cancel();
-                            var request = defaultRequest.Result;
+                            var request = eventRequest.Result;
                             _executeModule.Execute(request, _contextRepository, _representationModule);
                         }
                     }

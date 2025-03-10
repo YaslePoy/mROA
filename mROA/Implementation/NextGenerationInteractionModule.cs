@@ -9,13 +9,13 @@ namespace mROA.Implementation
 {
     public class NextGenerationInteractionModule : INextGenerationInteractionModule
     {
+        private const int BufferSize = ushort.MaxValue;
+        private readonly Memory<byte> _buffer = new byte[BufferSize];
+        private readonly List<NetworkMessage> _messageBuffer = new(128);
+        private Task<NetworkMessage>? _currentReceiving;
         private ISerializationToolkit? _serialization;
         public int ConnectionId { get; private set; }
         public Stream? BaseStream { get; set; }
-        private Task<NetworkMessage>? _currentReceiving;
-        private const int BufferSize = ushort.MaxValue;
-        private readonly Memory<byte> _buffer = new byte[BufferSize];
-        private readonly List<NetworkMessage> _messageBuffer = new (128);
 
 
         public void Inject<T>(T dependency)
@@ -36,7 +36,6 @@ namespace mROA.Implementation
             if (_currentReceiving != null) return _currentReceiving;
             _currentReceiving = Task.Run(async () => await GetNextMessage());
             return _currentReceiving;
-
         }
 
         public async Task PostMessage(NetworkMessage message)
@@ -46,7 +45,7 @@ namespace mROA.Implementation
 
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
-        
+
             // Console.WriteLine("Sending {0}", JsonSerializer.Serialize(message));
 
 
@@ -62,6 +61,7 @@ namespace mROA.Implementation
         }
 
         public NetworkMessage[] UnhandledMessages => _messageBuffer.ToArray();
+
         public NetworkMessage? FirstByFilter(Predicate<NetworkMessage> predicate)
         {
             return _messageBuffer.FirstOrDefault(m => predicate(m));
@@ -79,23 +79,23 @@ namespace mROA.Implementation
             // Console.WriteLine("Receiving message");
             var firstBit = (byte)BaseStream.ReadByte();
             var secondBit = (byte)BaseStream.ReadByte();
-            
-            var len = BitConverter.ToUInt16(new[] { firstBit, secondBit});
+
+            var len = BitConverter.ToUInt16(new[] { firstBit, secondBit });
             var localSpan = _buffer.Slice(0, len);
-            
+
             await BaseStream.ReadExactlyAsync(localSpan);
 
             // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
 
             var message = _serialization.Deserialize<NetworkMessage>(localSpan.Span);
 #if TRACE
-            Console.WriteLine($"Received Message {message.SchemaId} - {message.Id}");
+            Console.WriteLine($"Received Message {message.Id} - {message.SchemaId}");
             TransmissionConfig.TotalTransmittedBytes += len;
             Console.WriteLine($"Total recieced bytes are {TransmissionConfig.TotalTransmittedBytes}");
 #endif
             _messageBuffer.Add(message);
             _currentReceiving = Task.Run(async () => await GetNextMessage());
-        
+
             return message;
         }
     }
