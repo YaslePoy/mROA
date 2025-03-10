@@ -10,8 +10,11 @@ namespace mROA.Implementation.Backend
 {
     public class ContextRepository : IContextRepository
     {
+        public static object[] EventBinders = new object[]{};
         private int _debugId = -1;
+
         private static int LastDebugId = -1;
+
         // [CanBeNull]
         private Dictionary<int, object?> _singletons;
         private object?[] _storage;
@@ -39,12 +42,14 @@ namespace mROA.Implementation.Backend
                     Activator.CreateInstance);
         }
 
-        public int ResisterObject(object o, IEndPointContext context)
+        public int ResisterObject<T>(object o, IEndPointContext context)
         {
             if (!_lastIndexFinder.IsCompleted)
                 _lastIndexFinder.Wait();
 
             _storage[_lastIndexFinder.Result] = o;
+
+            EventBinders.OfType<IEventBinder<T>>().FirstOrDefault()?.BindEvents((T)o, context);
 
             var last = _lastIndexFinder.Result;
             _lastIndexFinder = Task.Run(FindLastIndex);
@@ -71,18 +76,21 @@ namespace mROA.Implementation.Backend
 
         public T GetObject<T>(int id)
         {
-            return id == -1 || _storage.Length <= id ? throw new NullReferenceException("Cannot find that object. It is null"): (T)_storage[id]!;
+            return id == -1 || _storage.Length <= id
+                ? throw new NullReferenceException("Cannot find that object. It is null")
+                : (T)_storage[id]!;
         }
 
         public object GetSingleObject(Type type)
         {
-            return _singletons.GetValueOrDefault(type.GetHashCode()) ?? throw new ArgumentException("Unregistered singleton type");
+            return _singletons.GetValueOrDefault(type.GetHashCode()) ??
+                   throw new ArgumentException("Unregistered singleton type");
         }
 
-        public int GetObjectIndex(object o, IEndPointContext context)
+        public int GetObjectIndex<T>(object o, IEndPointContext context)
         {
             var index = Array.IndexOf(_storage, o);
-            return index == -1 ? ResisterObject(o, context) : index;
+            return index == -1 ? ResisterObject<T>(o, context) : index;
         }
 
         private int FindLastIndex()
@@ -98,9 +106,9 @@ namespace mROA.Implementation.Backend
             _storage = nextStorage;
             return _storage.Length;
         }
+
         public void Inject<T>(T dependency)
         {
         }
-
     }
 }

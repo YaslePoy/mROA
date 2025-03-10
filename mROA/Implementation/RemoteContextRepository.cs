@@ -9,7 +9,7 @@ namespace mROA.Implementation
         private IRepresentationModuleProducer? _representationProducer;
         public static Dictionary<Type, Type> RemoteTypes = new();
 
-        public int ResisterObject(object o, IEndPointContext context)
+        public int ResisterObject<T>(object o, IEndPointContext context)
         {
             throw new NotSupportedException();
         }
@@ -58,7 +58,7 @@ namespace mROA.Implementation
                 representationModule)!;
         }
 
-        public int GetObjectIndex(object o, IEndPointContext context)
+        public int GetObjectIndex<T>(object o, IEndPointContext context)
         {
             if (o is RemoteObjectBase remote)
             {

@@ -49,7 +49,7 @@ namespace mROA.Implementation
                 else
                 {
                     _identifier.OwnerId = EndPointContext.HostId;
-                    _identifier.ContextId = EndPointContext.RealRepository.GetObjectIndex(Value, EndPointContext);
+                    _identifier.ContextId = EndPointContext.RealRepository.GetObjectIndex<T>(Value, EndPointContext);
                 }
             }
         }

@@ -27,10 +27,10 @@ namespace mROA.Implementation.Backend
         {
         }
 
-        public int ResisterObject(object o, IEndPointContext context)
+        public int ResisterObject<T>(object o, IEndPointContext context)
         {
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            return repository.ResisterObject(o, context);
+            return repository.ResisterObject<T>(o, context);
         }
 
         public void ClearObject(int id)
@@ -63,10 +63,10 @@ namespace mROA.Implementation.Backend
             return repository.GetSingleObject(type);
         }
 
-        public int GetObjectIndex(object o, IEndPointContext context)
+        public int GetObjectIndex<T>(object o, IEndPointContext context)
         {
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            return repository.GetObjectIndex(o, context);
+            return repository.GetObjectIndex<T>(o, context);
         }
 
         public IContextRepository GetRepository(int clientId)
