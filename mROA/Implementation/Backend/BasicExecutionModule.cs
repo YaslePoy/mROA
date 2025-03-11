@@ -70,7 +70,7 @@ namespace mROA.Implementation.Backend
 
                 var context = command.ObjectId.ContextId != -1
                     ? contextRepository.GetObject<object>(command.ObjectId)
-                    : contextRepository.GetSingleObject(invoker.SuitableType);
+                    : contextRepository.GetSingleObject(invoker.SuitableType, command.ObjectId.OwnerId);
 
                 if (context == null)
                     throw new NullReferenceException("Instance can't be null");

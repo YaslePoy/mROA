@@ -8,6 +8,7 @@ namespace mROA.Implementation.Backend
         private IConnectionHub? _hub;
 
         private IContextRepository? _contextRepository;
+        private IContextRepository? _remoteContextRepository;
         private IMethodRepository? _methodRepository;
         private ISerializationToolkit? _serializationToolkit;
         private IExecuteModule? _executeModule;
@@ -26,8 +27,12 @@ namespace mROA.Implementation.Backend
                     _hub = connectionHub;
                     _hub.OnConnected += HubOnOnConnected;
                     break;
-                case IContextRepository contextRepository:
-                    _contextRepository = contextRepository;
+                case MultiClientContextRepository:
+                case ContextRepository:
+                    _contextRepository = dependency as IContextRepository;
+                    break;
+                case RemoteContextRepository remoteContextRepository:
+                    _remoteContextRepository = remoteContextRepository;
                     break;
                 case IMethodRepository methodRepository:
                     _methodRepository = methodRepository;
@@ -52,6 +57,7 @@ namespace mROA.Implementation.Backend
             extractor.Inject(_methodRepository);
             extractor.Inject(_serializationToolkit);
             extractor.Inject(_executeModule);
+            extractor.Inject(_remoteContextRepository);
             _ = extractor.StartExtraction();
         }
     }

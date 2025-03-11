@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using mROA.Abstract;
 
 namespace mROA.Implementation
 {
     public class RemoteContextRepository : IContextRepository
     {
+        private List<RemoteObjectBase> _producedRemoteEndpoints = new();
         public static Dictionary<Type, Type> RemoteTypes = new();
         private IRepresentationModuleProducer? _representationProducer;
 
@@ -23,6 +25,9 @@ namespace mROA.Implementation
 
         public T GetObject<T>(ComplexObjectIdentifier id)
         {
+            var index = _producedRemoteEndpoints.Find(i => i.Identifier.Equals(id));
+            if (index is not null)
+                return (T)(index as object);
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
 
@@ -31,18 +36,24 @@ namespace mROA.Implementation
                 _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             var remote = (T)Activator.CreateInstance(remoteType, id.ContextId,
                 representationModule)!;
+
+            _producedRemoteEndpoints.Add((remote as RemoteObjectBase)!);
+
             return remote;
         }
 
-        public object GetSingleObject(Type type)
+        public object GetSingleObject(Type type, int ownerId)
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
-
+            
             var representationModule =
                 _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            return Activator.CreateInstance(RemoteTypes[type], -1,
-                representationModule)!;
+
+            _producedRemoteEndpoints.Add((Activator.CreateInstance(RemoteTypes[type], -1,
+                representationModule) as RemoteObjectBase)!);
+
+            return _producedRemoteEndpoints.Last();
         }
 
         public int GetObjectIndex<T>(object o, IEndPointContext context)

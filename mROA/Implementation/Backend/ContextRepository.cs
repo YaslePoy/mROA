@@ -23,26 +23,20 @@ namespace mROA.Implementation.Backend
 
         // [CanBeNull]
         private Dictionary<int, object?> _singletons;
-        private object?[] _storage;
+        private IStorage<object> _storage;
 
 
         public ContextRepository()
         {
-            _storage = new object[StartupSize];
+            _storage = new ExtensibleStorage<object>();
         }
 
         public int HostId { get; set; }
 
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
-            if (!_lastIndexFinder.IsCompleted)
-                _lastIndexFinder.Wait();
+            var last = _storage.Place(o);
 
-            _storage[_lastIndexFinder.Result] = o;
-
-
-            var last = _lastIndexFinder.Result;
-            _lastIndexFinder = Task.Run(FindLastIndex);
             EventBinders.OfType<IEventBinder<T>>().FirstOrDefault()
                 ?.BindEvents((T)o, context, _representationModuleProducer!, last);
 
@@ -51,18 +45,22 @@ namespace mROA.Implementation.Backend
 
         public void ClearObject(ComplexObjectIdentifier id)
         {
-            _storage[id.ContextId] = null;
-            _lastIndexFinder = Task.FromResult(id.ContextId);
+            _storage.Free(id.ContextId);
         }
 
         public T GetObject<T>(ComplexObjectIdentifier id)
         {
-            return id.ContextId == -1 || _storage.Length <= id.ContextId
-                ? throw new NullReferenceException("Cannot find that object. It is null")
-                : (T)_storage[id.ContextId]!;
+            var value = _storage.GetValue(id.ContextId);
+            
+            if (value == null)
+            {
+                throw new NullReferenceException("Cannot find that object. It is null");
+            }
+
+            return (T)value;
         }
 
-        public object GetSingleObject(Type type)
+        public object GetSingleObject(Type type, int ownerId)
         {
             return _singletons.GetValueOrDefault(type.GetHashCode()) ??
                    throw new ArgumentException("Unregistered singleton type");
@@ -70,7 +68,7 @@ namespace mROA.Implementation.Backend
 
         public int GetObjectIndex<T>(object o, IEndPointContext context)
         {
-            var index = Array.IndexOf(_storage, o);
+            var index = _storage.GetIndex(o);
             return index == -1 ? ResisterObject<T>(o, context) : index;
         }
 
@@ -92,20 +90,6 @@ namespace mROA.Implementation.Backend
                     t => t.GetInterfaces().FirstOrDefault(i =>
                         i.GetCustomAttributes(typeof(SharedObjectInterfaceAttribute), true).Length > 0)!.GetHashCode(),
                     Activator.CreateInstance);
-        }
-
-        private int FindLastIndex()
-        {
-            for (var i = 0; i < _storage.Length; i++)
-            {
-                if (_storage[i] is null)
-                    return i;
-            }
-
-            var nextStorage = new object[_storage.Length + GrowSize];
-            Array.Copy(_storage, nextStorage, _storage.Length);
-            _storage = nextStorage;
-            return _storage.Length;
         }
     }
 }

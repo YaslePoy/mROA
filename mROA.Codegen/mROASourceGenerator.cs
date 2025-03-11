@@ -481,7 +481,7 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
 {callFilter}
                         var request = new DefaultCallRequest
                         {{ 
-                            CommandId = {index}, ObjectId = new ComplexObjectIdentifier(index, context.OwnerId), Parameters = new object[] {{ {transferParameters} }}
+                            CommandId = {index}, ObjectId = new ComplexObjectIdentifier(index, context.HostId), Parameters = new object[] {{ {transferParameters} }}
                         }};
                         module.PostCallMessageAsync(request.Id, MessageType.EventRequest, request);
                     }};
@@ -511,7 +511,7 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
                         parametersInsertList.Add("(CancellationToken)special[1]");
                         break;
                     case "RequestContext":
-                        parametersInsertList.Add("special[1] as RequestContext");
+                        parametersInsertList.Add("special[0] as RequestContext");
                         break;
                     default:
                         parametersInsertList.Add(Caster(parameter,

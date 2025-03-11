@@ -11,7 +11,8 @@ namespace mROA.Implementation.Frontend
 {
     public class RequestExtractor : IRequestExtractor
     {
-        private IContextRepository? _contextRepository;
+        private IContextRepository? _realContextRepository;
+        private IContextRepository? _remoteContextRepository;
         private IExecuteModule? _executeModule;
         private IMethodRepository? _methodRepository;
         private IRepresentationModule? _representationModule;
@@ -24,8 +25,12 @@ namespace mROA.Implementation.Frontend
                 case IExecuteModule executeModule:
                     _executeModule = executeModule;
                     break;
-                case IContextRepository contextRepository:
-                    _contextRepository = contextRepository;
+                case MultiClientContextRepository :
+                case ContextRepository:
+                    _realContextRepository = dependency as IContextRepository;
+                    break;
+                case RemoteContextRepository remoteContextRepository:
+                    _remoteContextRepository = remoteContextRepository;
                     break;
                 case IMethodRepository methodRepository:
                     _methodRepository = methodRepository;
@@ -47,7 +52,7 @@ namespace mROA.Implementation.Frontend
                     throw new NullReferenceException("Serializing toolkit is null.");
                 if (_executeModule == null)
                     throw new NullReferenceException("Execute module is null.");
-                if (_contextRepository == null)
+                if (_realContextRepository == null)
                     throw new NullReferenceException("Context repository is null.");
                 if (_representationModule == null)
                     throw new NullReferenceException("Representation module is null.");
@@ -89,14 +94,14 @@ namespace mROA.Implementation.Frontend
 #endif
                             var req = cancelRequest.Result;
                             tokenSource.Cancel();
-                            _executeModule.Execute(req, _contextRepository, _representationModule);
+                            _executeModule.Execute(req, _realContextRepository, _representationModule);
                         }
                         else if (defaultRequest.IsCompleted)
                         {
                             tokenSource.Cancel();
                             var request = defaultRequest.Result;
 
-                            var result = _executeModule.Execute(request, _contextRepository, _representationModule);
+                            var result = _executeModule.Execute(request, _realContextRepository, _representationModule);
 
                             var resultType = result switch
                             {
@@ -112,7 +117,7 @@ namespace mROA.Implementation.Frontend
                         {
                             tokenSource.Cancel();
                             var request = eventRequest.Result;
-                            _executeModule.Execute(request, _contextRepository, _representationModule);
+                            _executeModule.Execute(request, _remoteContextRepository!, _representationModule);
                         }
                     }
                 }

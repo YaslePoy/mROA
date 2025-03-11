@@ -38,10 +38,10 @@ namespace mROA.Implementation.Backend
             return repository.GetObject<T>(id);
         }
 
-        public object GetSingleObject(Type type)
+        public object GetSingleObject(Type type, int ownerId)
         {
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            return repository.GetSingleObject(type);
+            return repository.GetSingleObject(type, ownerId);
         }
 
         public int GetObjectIndex<T>(object o, IEndPointContext context)

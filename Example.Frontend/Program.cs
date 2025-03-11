@@ -43,12 +43,12 @@ class Program
         Console.WriteLine(TransmissionConfig.OwnershipRepository.GetOwnershipId());
         var context = builder.GetModule<RemoteContextRepository>();
 
-        var factory = context.GetSingleObject(typeof(IPrinterFactory)) as IPrinterFactory;
+        var factory = context.GetSingleObject(typeof(IPrinterFactory), 0) as IPrinterFactory;
 
 //правильный порядок команд 8-5-10-7
         using (var disposingPrinter = factory.Create("Test"))
         {
-            disposingPrinter.OnPrint += page1 => { Console.WriteLine("New page creater. Called from event!!!"); };
+            disposingPrinter.OnPrint += (_, _) => { Console.WriteLine("New page creater. Called from event!!!"); };
             Console.WriteLine("Printer created");
             Thread.Sleep(100);
 
@@ -90,7 +90,7 @@ class Program
         }
 
 
-        var loadSingleton = context.GetSingleObject(typeof(ILoadTest)) as ILoadTest;
+        var loadSingleton = context.GetSingleObject(typeof(ILoadTest), 0) as ILoadTest;
 
 
         var cts = new CancellationTokenSource();

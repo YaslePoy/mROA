@@ -9,7 +9,7 @@ namespace mROA.Abstract
         int ResisterObject<T>(object o, IEndPointContext context);
         void ClearObject(ComplexObjectIdentifier id);
         T GetObject<T>(ComplexObjectIdentifier id);
-        object GetSingleObject(Type type);
+        object GetSingleObject(Type type, int ownerId);
         int GetObjectIndex<T>(object o, IEndPointContext context);
     }
 }
