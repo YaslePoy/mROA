@@ -10,6 +10,7 @@ namespace mROA.Implementation
 {
     public interface ISharedObjectShell
     {
+        // ReSharper disable once UnusedMemberInSuper.Global
         IEndPointContext EndPointContext { get; set; }
         ComplexObjectIdentifier Identifier { get; set; }
         object UniversalValue { get; set; }

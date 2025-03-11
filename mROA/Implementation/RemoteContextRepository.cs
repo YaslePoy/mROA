@@ -60,10 +60,5 @@ namespace mROA.Implementation
             if (dependency is IRepresentationModuleProducer serialisationModule)
                 _representationProducer = serialisationModule;
         }
-
-        public object GetObject(int id)
-        {
-            throw new NotSupportedException();
-        }
     }
 }

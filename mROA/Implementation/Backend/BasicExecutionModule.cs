@@ -81,7 +81,7 @@ namespace mROA.Implementation.Backend
                 if (invoker.ParameterTypes.Length != 0)
                 {
                     castedParams = new object[invoker.ParameterTypes.Length];
-                    for (int i = 0; i < castedParams.Length; i++)
+                    for (var i = 0; i < castedParams.Length; i++)
                     {
                         castedParams[i] = _serialization.Cast(command.Parameters![i], invoker.ParameterTypes[i]);
                     }
@@ -89,25 +89,27 @@ namespace mROA.Implementation.Backend
 
                 var execContext = new RequestContext(command.Id, representationModule.Id);
 
-                if (invoker is AsyncMethodInvoker { IsVoid: false } asyncNonVoidMethodInvoker)
-                    return TypedExecuteAsync(asyncNonVoidMethodInvoker, context, castedParams, command,
-                        _cancellationRepo,
-                        representationModule, execContext);
-
-                if (invoker is AsyncMethodInvoker asyncMethodInvoker)
-                    return ExecuteAsync(asyncMethodInvoker, context, castedParams, command, _cancellationRepo,
-                        representationModule, execContext);
-
-                var result = Execute((invoker as MethodInvoker)!, context, castedParams!, command, execContext);
-                if (command.CommandId == -1)
+                switch (invoker)
                 {
+                    case AsyncMethodInvoker { IsVoid: false } asyncNonVoidMethodInvoker:
+                        return TypedExecuteAsync(asyncNonVoidMethodInvoker, context, castedParams, command,
+                            _cancellationRepo,
+                            representationModule, execContext);
+                    case AsyncMethodInvoker asyncMethodInvoker:
+                        return ExecuteAsync(asyncMethodInvoker, context, castedParams, command, _cancellationRepo,
+                            representationModule, execContext);
+                    default:
+                        var result = Execute((invoker as MethodInvoker)!, context, castedParams!, command, execContext);
+                        if (command.CommandId == -1)
+                        {
 #if TRACE
                     Console.WriteLine("Disposing object");
 #endif
-                    contextRepository.ClearObject(command.ObjectId);
-                }
+                            contextRepository.ClearObject(command.ObjectId);
+                        }
 
-                return result;
+                        return result;
+                }
             }
             catch (Exception e)
             {

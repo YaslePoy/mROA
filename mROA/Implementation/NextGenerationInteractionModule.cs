@@ -81,7 +81,7 @@ namespace mROA.Implementation
             var secondBit = (byte)BaseStream.ReadByte();
 
             var len = BitConverter.ToUInt16(new[] { firstBit, secondBit });
-            var localSpan = _buffer.Slice(0, len);
+            var localSpan = _buffer[..len];
 
             await BaseStream.ReadExactlyAsync(localSpan);
 

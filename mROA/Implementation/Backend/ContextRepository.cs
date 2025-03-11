@@ -12,7 +12,7 @@ namespace mROA.Implementation.Backend
     {
         private const int StartupSize = 1024;
         private const int GrowSize = 128;
-        public static object[] EventBinders = new object[] { };
+        public static object[] EventBinders = { };
 
         private static int LastDebugId = -1;
         private int _debugId = -1;
@@ -55,12 +55,7 @@ namespace mROA.Implementation.Backend
             _lastIndexFinder = Task.FromResult(id.ContextId);
         }
 
-        public T GetObjectByShell<T>(SharedObjectShellShell<T> sharedObjectShellShell)
-        {
-            return (T)GetObject(sharedObjectShellShell.Identifier.ContextId);
-        }
-
-        public T? GetObject<T>(ComplexObjectIdentifier id)
+        public T GetObject<T>(ComplexObjectIdentifier id)
         {
             return id.ContextId == -1 || _storage.Length <= id.ContextId
                 ? throw new NullReferenceException("Cannot find that object. It is null")
@@ -97,12 +92,6 @@ namespace mROA.Implementation.Backend
                     t => t.GetInterfaces().FirstOrDefault(i =>
                         i.GetCustomAttributes(typeof(SharedObjectInterfaceAttribute), true).Length > 0)!.GetHashCode(),
                     Activator.CreateInstance);
-        }
-
-        public object GetObject(int id)
-        {
-            // Debug.Log($"Reading object {id} from repository with debug ID {_debugId}");
-            return (id == -1 || _storage.Length <= id ? null : _storage[id]) ?? throw new NullReferenceException();
         }
 
         private int FindLastIndex()

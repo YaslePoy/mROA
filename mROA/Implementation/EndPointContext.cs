@@ -13,6 +13,7 @@ namespace mROA.Implementation
         public int OwnerId
         {
             get => OwnerFunc();
+            // ReSharper disable once UnusedMember.Global
             set { OwnerFunc = () => value; }
         }
     }

@@ -8,13 +8,14 @@ namespace mROA.Implementation.Backend
 {
     public class NetworkGatewayModule : IGatewayModule
     {
-        private readonly Type? _interactionModuleType;
         private readonly IInjectableModule[]? _injectableModules;
+        private readonly Type? _interactionModuleType;
         private readonly TcpListener _tcpListener;
         private IConnectionHub? _hub;
         private ISerializationToolkit? _serialization;
 
-        public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType, IInjectableModule[] injectableModules)
+        public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType,
+            IInjectableModule[] injectableModules)
         {
             _tcpListener = new(endpoint);
             _interactionModuleType = interactionModuleType;
@@ -44,6 +45,19 @@ namespace mROA.Implementation.Backend
             _tcpListener.Stop();
         }
 
+        public void Inject<T>(T dependency)
+        {
+            switch (dependency)
+            {
+                case IConnectionHub interactionModule:
+                    _hub = interactionModule;
+                    break;
+                case ISerializationToolkit serializationToolkit:
+                    _serialization = serializationToolkit;
+                    break;
+            }
+        }
+
         private void HandleIncomingConnections()
         {
             if (_hub is null)
@@ -56,7 +70,7 @@ namespace mROA.Implementation.Backend
                 throw new NullReferenceException("InteractionModuleType is null");
             if (_serialization is null)
                 throw new NullReferenceException("Serialization is null");
-        
+
             while (true)
             {
                 var client = _tcpListener.AcceptTcpClient();
@@ -67,9 +81,9 @@ namespace mROA.Implementation.Backend
                     interaction!.Inject(injectableModule);
 
                 interaction!.Inject(_serialization);
-            
+
                 interaction.BaseStream = client.GetStream();
-            
+
                 interaction.PostMessage(new NetworkMessage
                 {
                     Id = Guid.NewGuid(), SchemaId = MessageType.IdAssigning,
@@ -78,14 +92,6 @@ namespace mROA.Implementation.Backend
                 _hub.RegisterInteraction(interaction);
                 Console.WriteLine("Client registered");
             }
-        }
-
-        public void Inject<T>(T dependency)
-        {
-            if (dependency is IConnectionHub interactionModule)
-                _hub = interactionModule;
-            if (dependency is ISerializationToolkit serializationToolkit)
-                _serialization = serializationToolkit;
         }
     }
 }

@@ -98,20 +98,13 @@ namespace mROA.Implementation.Frontend
 
                             var result = _executeModule.Execute(request, _contextRepository, _representationModule);
 
-                            var resultType = MessageType.Unknown;
-
-                            switch (result)
+                            var resultType = result switch
                             {
-                                case FinalCommandExecution:
-                                    resultType = MessageType.FinishedCommandExecution;
-                                    break;
-                                case AsyncCommandExecution:
-                                    resultType = MessageType.AsyncCommandExecution;
-                                    break;
-                                case ExceptionCommandExecution:
-                                    resultType = MessageType.ExceptionCommandExecution;
-                                    break;
-                            }
+                                FinalCommandExecution => MessageType.FinishedCommandExecution,
+                                AsyncCommandExecution => MessageType.AsyncCommandExecution,
+                                ExceptionCommandExecution => MessageType.ExceptionCommandExecution,
+                                _ => MessageType.Unknown
+                            };
 
                             _representationModule.PostCallMessage(request.Id, resultType, result, result.GetType());
                         }
