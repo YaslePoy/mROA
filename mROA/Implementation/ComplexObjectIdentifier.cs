@@ -12,8 +12,9 @@ namespace mROA.Implementation
         {
             ContextId = contextId;
             OwnerId = ownerId;
-            
         }
+
+        public static ComplexObjectIdentifier Singleton(int ownerId) => new() { ContextId = -1, OwnerId = ownerId };
 
         public static ComplexObjectIdentifier Null = new ComplexObjectIdentifier { ContextId = -2, OwnerId = -1 };
         public static ComplexObjectIdentifier FromFlat(ulong flat) => new() { Flat = flat };
