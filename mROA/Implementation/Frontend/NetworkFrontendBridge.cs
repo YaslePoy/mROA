@@ -46,7 +46,7 @@ namespace mROA.Implementation.Frontend
             }
 
 
-            var assignment = _serialization.Deserialize<IdAssingnment>(welcomeMessage.Data)!;
+            var assignment = _serialization.Deserialize<IdAssignment>(welcomeMessage.Data)!;
             TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);
         }
     }

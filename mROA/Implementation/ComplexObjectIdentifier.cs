@@ -7,18 +7,19 @@ namespace mROA.Implementation
     {
         public int ContextId;
         public int OwnerId;
-
         public ComplexObjectIdentifier(int contextId, int ownerId)
         {
             ContextId = contextId;
             OwnerId = ownerId;
         }
-
         public static ComplexObjectIdentifier Singleton(int ownerId) => new() { ContextId = -1, OwnerId = ownerId };
 
-        public static ComplexObjectIdentifier Null = new ComplexObjectIdentifier { ContextId = -2, OwnerId = -1 };
+        public static ComplexObjectIdentifier Null = new ComplexObjectIdentifier { ContextId = -2, OwnerId = 0 };
         public static ComplexObjectIdentifier FromFlat(ulong flat) => new() { Flat = flat };
 
+        public int ClientId => Math.Abs(OwnerId);
+        public bool IsSererStored => OwnerId > 0;
+        public bool IsClientStored => OwnerId < 0;
         public override string ToString()
         {
             return $"{{ {nameof(ContextId)}: {ContextId}, {nameof(OwnerId)}: {OwnerId} }}";

@@ -51,7 +51,7 @@ namespace mROA.Implementation
                 }
                 else
                 {
-                    _identifier.OwnerId = EndPointContext.HostId;
+                    _identifier.OwnerId = EndPointContext.OwnerId;
                     _identifier.ContextId = EndPointContext.RealRepository.GetObjectIndex<T>(Value, EndPointContext);
                 }
             }
@@ -71,7 +71,7 @@ namespace mROA.Implementation
         {
             get
             {
-                _identifier.OwnerId = _identifier.OwnerId == -1 ? EndPointContext.OwnerId : _identifier.OwnerId;
+                _identifier.OwnerId = _identifier.OwnerId == 0 ? EndPointContext.OwnerId : _identifier.OwnerId;
                 return _identifier;
             }
             set

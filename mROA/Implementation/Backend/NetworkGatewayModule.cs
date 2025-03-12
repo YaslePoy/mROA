@@ -87,7 +87,7 @@ namespace mROA.Implementation.Backend
                 interaction.PostMessage(new NetworkMessage
                 {
                     Id = Guid.NewGuid(), SchemaId = MessageType.IdAssigning,
-                    Data = _serialization.Serialize(new IdAssingnment { Id = interaction.ConnectionId })
+                    Data = _serialization.Serialize(new IdAssignment { Id = -interaction.ConnectionId })
                 });
                 _hub.RegisterInteraction(interaction);
                 Console.WriteLine("Client registered");

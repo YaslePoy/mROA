@@ -48,25 +48,32 @@ class Program
 //правильный порядок команд 8-5-10-7
         using (var disposingPrinter = factory.Create("Test"))
         {
-            disposingPrinter.OnPrint += (_, _) => { Console.WriteLine("New page creater. Called from event!!!"); };
+            DemoCheck.CreatingPrinter = true;
+            disposingPrinter.OnPrint += (_, _) =>
+            {
+                Console.WriteLine("New page creater. Called from event!!!");
+                DemoCheck.EventCallback = true;
+            };
             Console.WriteLine("Printer created");
             Thread.Sleep(100);
 
             var name = disposingPrinter.GetName();
+            DemoCheck.BasicNonParamsCall = true;
             Console.WriteLine("Printer name : {0}", name);
 
             Thread.Sleep(100);
 
             factory.Register(new ClientBasedPrinter());
+            DemoCheck.ClientBasedImplementation = true;
             Console.WriteLine("Registered printer");
             Thread.Sleep(100);
 
 
-            var registred = factory.GetFirstPrinter();
+            var registered = factory.GetFirstPrinter();
             Console.WriteLine("First printer");
             Thread.Sleep(100);
 
-            Console.WriteLine(registred);
+            Console.WriteLine(registered);
             Console.WriteLine("Collecting all printers");
             var names = factory.CollectAllNames();
             Thread.Sleep(100);
@@ -76,11 +83,15 @@ class Program
             var page = disposingPrinter.Print("Test Page", false, default, CancellationToken.None).GetAwaiter()
                 .GetResult();
             Console.WriteLine("Page printed");
+            DemoCheck.TaskExecution = true;
             Console.WriteLine(page.ToString());
 
             Console.WriteLine($"Printer resource : {disposingPrinter.Resource}");
+            DemoCheck.PropertyGet = true;
+
             Console.WriteLine("Restoring resource");
             disposingPrinter.Resource = 100;
+            DemoCheck.PropertySet = true;
             Console.WriteLine($"Printer resource again : {disposingPrinter.Resource}");
 
             var data = page.GetData();
@@ -88,6 +99,7 @@ class Program
 
             Console.WriteLine("Dispose printer");
         }
+        DemoCheck.Dispose = true;
 
 
         var loadSingleton = context.GetSingleObject(typeof(ILoadTest), 0) as ILoadTest;
@@ -100,6 +112,8 @@ class Program
         Thread.Sleep(5000);
         cts.Cancel();
         Console.WriteLine($"Token state {cts.Token.IsCancellationRequested}");
+        DemoCheck.TaskCancelation = true;
+        DemoCheck.Show();
         Console.ReadKey();
         //
         // const int iterations = 10000;
