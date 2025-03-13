@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -59,9 +58,7 @@ namespace mROA.Implementation.Frontend
                     throw new NullReferenceException("Representation module is null.");
                 if (_methodRepository == null)
                     throw new NullReferenceException("Method repository is null.");
-
-                // await Task.Yield();
-
+                
                 var multiClientOwnershipRepository =
                     TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
                 multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
@@ -120,7 +117,6 @@ namespace mROA.Implementation.Frontend
                                 ExceptionCommandExecution => MessageType.ExceptionCommandExecution,
                                 _ => MessageType.Unknown
                             };
-
                             _representationModule.PostCallMessage(request.Id, resultType, result, result.GetType());
                         }
                         else

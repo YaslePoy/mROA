@@ -62,10 +62,6 @@ namespace mROA.Implementation
             throw new NotImplementedException();
         }
 
-        // public object GetSingleObject(Type type, int ownerId)
-        // {
-        // }
-
         public int GetObjectIndex<T>(object o, IEndPointContext context)
         {
             throw new NotImplementedException();

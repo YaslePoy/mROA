@@ -14,7 +14,6 @@ class Program
     static void Main(string[] args)
     {
         var builder = new FullMixBuilder();
-        // builder.UseJsonSerialisation();
         builder.Modules.Add(new CborSerializationToolkit());
         builder.Modules.Add(new BackendIdentityGenerator());
         builder.UseNetworkGateway(IPEndPoint.Parse("192.168.1.101:6000"), typeof(NextGenerationInteractionModule),

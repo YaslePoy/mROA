@@ -86,13 +86,6 @@ namespace mROA.Implementation
                 successResponse, errorResponse
             }, cancellationToken);
 
-            // if (cancellationToken.IsCancellationRequested)
-            // {
-            //     await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest, request.Id);
-            //     localTokenSource.Cancel();
-            //     cancellationToken.ThrowIfCancellationRequested();
-            // }
-
             if (successResponse.IsCompletedSuccessfully)
             {
                 localTokenSource.Cancel();

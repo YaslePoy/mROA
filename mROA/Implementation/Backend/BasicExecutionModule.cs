@@ -183,25 +183,6 @@ namespace mROA.Implementation.Backend
                     multiClientOwnershipRepository?.FreeOwnership();
                 });
 
-                // result.ContinueWith(_ =>
-                // {
-                //     if (token.IsCancellationRequested)
-                //         return;
-                //
-                //     var payload = new FinalCommandExecution
-                //     {
-                //         Id = command.Id
-                //     };
-                //     _cancellationRepo?.FreeCancelation(command.Id);
-                //
-                //     var multiClientOwnershipRepository =
-                //         TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
-                //
-                //     multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
-                //     representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution, payload);
-                //     multiClientOwnershipRepository?.FreeOwnership();
-                // }, token);
-
                 return new AsyncCommandExecution
                 {
                     Id = command.Id
@@ -244,24 +225,6 @@ namespace mROA.Implementation.Backend
                             payload);
                         multiClientOwnershipRepository?.FreeOwnership();
                     });
-
-
-                // result.ContinueWith(t =>
-                // {
-                //     var finalResult = t.GetType().GetProperty("Result")?.GetValue(t);
-                //     var payload = new FinalCommandExecution<object>
-                //     {
-                //         Id = command.Id,
-                //         Result = finalResult
-                //     };
-                //     _cancellationRepo!.FreeCancelation(command.Id);
-                //
-                //     var multiClientOwnershipRepository =
-                //         TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
-                //     multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
-                //     representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution, payload);
-                //     multiClientOwnershipRepository?.FreeOwnership();
-                // }, token);
 
                 return new AsyncCommandExecution
                 {
