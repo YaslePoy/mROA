@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using Example.Events.Shared;
 using mROA.Cbor;
 using mROA.Codegen;
@@ -56,9 +57,16 @@ class Program
             }
             else
                 symb = input.KeyChar.ToString();
-
+#if TRACE
+            Console.Write(symb);
+            var sw = Stopwatch.StartNew();
+            chat.PostSymbol(symb);
+            sw.Stop();
+            Console.WriteLine($"{sw.ElapsedMilliseconds}ms");
+#else
             Console.Write(symb);
             chat.PostSymbol(symb);
+#endif
         }
     }
 }

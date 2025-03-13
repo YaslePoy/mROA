@@ -7,6 +7,10 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants />
+    </PropertyGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\Example.Events.Shared\Example.Events.Shared.csproj"/>
     </ItemGroup>

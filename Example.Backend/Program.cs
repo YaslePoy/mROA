@@ -17,6 +17,8 @@ class Program
         // builder.UseJsonSerialisation();
         builder.Modules.Add(new CborSerializationToolkit());
         builder.Modules.Add(new BackendIdentityGenerator());
+        // builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567), typeof(NextGenerationInteractionModule),
+        //     builder.GetModule<IIdentityGenerator>()!);
         builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567), typeof(NextGenerationInteractionModule),
             builder.GetModule<IIdentityGenerator>()!);
 

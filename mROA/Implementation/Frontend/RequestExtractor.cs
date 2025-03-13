@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -25,7 +26,7 @@ namespace mROA.Implementation.Frontend
                 case IExecuteModule executeModule:
                     _executeModule = executeModule;
                     break;
-                case MultiClientContextRepository :
+                case MultiClientContextRepository:
                 case ContextRepository:
                     _realContextRepository = dependency as IContextRepository;
                     break;
@@ -67,10 +68,18 @@ namespace mROA.Implementation.Frontend
 
                 try
                 {
+#if TRACE
+                    var sw = new Stopwatch();
+#endif
                     while (true)
                     {
 #if TRACE
                         Console.WriteLine("Waiting for request...");
+                        if (sw.IsRunning)
+                        {
+                            sw.Stop();
+                            Console.WriteLine($"Request handling took {sw.ElapsedMilliseconds} milliseconds.");
+                        }
 #endif
                         var tokenSource = new CancellationTokenSource();
                         var token = tokenSource.Token;
@@ -86,6 +95,7 @@ namespace mROA.Implementation.Frontend
                         Task.WaitAny(defaultRequest, cancelRequest, eventRequest);
 #if TRACE
                         Console.WriteLine("Request received");
+                        sw.Restart();
 #endif
                         if (cancelRequest.IsCompleted)
                         {

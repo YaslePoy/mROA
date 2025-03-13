@@ -51,6 +51,7 @@ namespace mROA.Implementation
 
             var rawMessage = _serialization.Serialize(message);
             var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
+            
             await BaseStream.WriteAsync(header);
             await BaseStream.WriteAsync(rawMessage);
         }
@@ -89,7 +90,7 @@ namespace mROA.Implementation
 
             var message = _serialization.Deserialize<NetworkMessage>(localSpan.Span);
 #if TRACE
-            Console.WriteLine($"Received Message {message.Id} - {message.SchemaId}");
+            Console.WriteLine($"{DateTime.Now.TimeOfDay} Received Message {message.Id} - {message.SchemaId}");
             TransmissionConfig.TotalTransmittedBytes += len;
             Console.WriteLine($"Total recieced bytes are {TransmissionConfig.TotalTransmittedBytes}");
 #endif
