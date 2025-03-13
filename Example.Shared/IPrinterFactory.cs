@@ -4,7 +4,7 @@ using mROA.Implementation.Attributes;
 namespace Example.Shared
 {
     [SharedObjectInterface]
-    public interface IPrinterFactory  : IShared
+    public interface IPrinterFactory : IShared
     {
         IPrinter Create(string printerName);
         void Register(IPrinter printer);

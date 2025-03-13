@@ -283,8 +283,8 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
         {{
             BindAction = (instance, context, representationProducer, index) =>
             {{
-                var module = representationProducer.Produce(context.OwnerId);
-
+                var ownerId = context.OwnerId;
+                var module = representationProducer.Produce(ownerId);
 {string.Join("\r\n", singleEventBinder)}
             }}
 }}";
@@ -471,14 +471,15 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
             var requestIndex = parameters.FindIndex(i => i.Name == "RequestContext");
             if (requestIndex != -1)
             {
-                callFilter = $"\n\r\t\t\tif(context.OwnerId == p{requestIndex}.OwnerId) return;";
+                callFilter = $"\n\r\t\t\tif(ownerId == p{requestIndex}.OwnerId) return;";
             }
 
             var eventBinderCode =
                 $@"                (instance as {baseType.ToDisplayString()}).{eventSymbol.Name} += ({parametersDeclaration}) => 
                     {{
+                        Console.WriteLine($""Try to send to {{ownerId}} with hash code {{context.GetHashCode()}}"");
+    {callFilter}
                         Console.WriteLine(""Sending event..."");
-{callFilter}
                         var request = new DefaultCallRequest
                         {{ 
                             CommandId = {index}, ObjectId = new ComplexObjectIdentifier(index, context.HostId), Parameters = new object[] {{ {transferParameters} }}

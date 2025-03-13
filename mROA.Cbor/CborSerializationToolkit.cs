@@ -62,6 +62,13 @@ namespace mROA.Cbor
 
             if (nonCasted is PreParsedValue preParsed)
                 return preParsed.ToObject(type, context);
+
+
+            if (type == typeof(Guid))
+            {
+                return new Guid((byte[])nonCasted);
+            }
+
             return Convert.ChangeType(nonCasted, type);
         }
 

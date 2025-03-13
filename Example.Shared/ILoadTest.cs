@@ -16,4 +16,3 @@ namespace Example.Shared
         Task AsyncTest(CancellationToken token = default);
     }
 }
-
