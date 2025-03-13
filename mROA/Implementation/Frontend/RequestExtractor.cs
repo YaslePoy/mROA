@@ -48,17 +48,7 @@ namespace mROA.Implementation.Frontend
         {
             return Task.Run(() =>
             {
-                if (_serializationToolkit == null)
-                    throw new NullReferenceException("Serializing toolkit is null.");
-                if (_executeModule == null)
-                    throw new NullReferenceException("Execute module is null.");
-                if (_realContextRepository == null)
-                    throw new NullReferenceException("Context repository is null.");
-                if (_representationModule == null)
-                    throw new NullReferenceException("Representation module is null.");
-                if (_methodRepository == null)
-                    throw new NullReferenceException("Method repository is null.");
-
+                ThrowIfNotInjected();
                 var multiClientOwnershipRepository =
                     TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
                 multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
@@ -99,31 +89,15 @@ namespace mROA.Implementation.Frontend
 #if TRACE
                             Console.WriteLine("Cancelling request");
 #endif
-                            var req = cancelRequest.Result;
-                            tokenSource.Cancel();
-                            _executeModule.Execute(req, _realContextRepository, _representationModule);
+                            HandleCancelRequest(tokenSource, cancelRequest.Result);
                         }
                         else if (defaultRequest.IsCompleted)
                         {
-                            tokenSource.Cancel();
-                            var request = defaultRequest.Result;
-
-                            var result = _executeModule.Execute(request, _realContextRepository, _representationModule);
-
-                            var resultType = result switch
-                            {
-                                FinalCommandExecution => MessageType.FinishedCommandExecution,
-                                AsyncCommandExecution => MessageType.AsyncCommandExecution,
-                                ExceptionCommandExecution => MessageType.ExceptionCommandExecution,
-                                _ => MessageType.Unknown
-                            };
-                            _representationModule.PostCallMessage(request.Id, resultType, result, result.GetType());
+                            HandleCallRequest(tokenSource, defaultRequest.Result);
                         }
                         else
                         {
-                            tokenSource.Cancel();
-                            var request = eventRequest.Result;
-                            _executeModule.Execute(request, _remoteContextRepository!, _representationModule);
+                            HandleEventRequest(tokenSource, eventRequest.Result);
                         }
                     }
                 }
@@ -132,6 +106,49 @@ namespace mROA.Implementation.Frontend
                     multiClientOwnershipRepository?.FreeOwnership();
                 }
             });
+        }
+
+        private void ThrowIfNotInjected()
+        {
+            if (_serializationToolkit == null)
+                throw new NullReferenceException("Serializing toolkit is null.");
+            if (_executeModule == null)
+                throw new NullReferenceException("Execute module is null.");
+            if (_realContextRepository == null)
+                throw new NullReferenceException("Context repository is null.");
+            if (_representationModule == null)
+                throw new NullReferenceException("Representation module is null.");
+            if (_methodRepository == null)
+                throw new NullReferenceException("Method repository is null.");
+        }
+        
+        private void HandleCancelRequest(CancellationTokenSource tokenSource, CancelRequest req)
+        {
+            tokenSource.Cancel();
+            _executeModule!.Execute(req, _realContextRepository!, _representationModule!);
+        }
+
+        private void HandleCallRequest(CancellationTokenSource tokenSource, DefaultCallRequest request)
+        {
+            tokenSource.Cancel();
+
+            var result = _executeModule!.Execute(request, _realContextRepository!, _representationModule!);
+
+            var resultType = result switch
+            {
+                FinalCommandExecution => MessageType.FinishedCommandExecution,
+                AsyncCommandExecution => MessageType.AsyncCommandExecution,
+                ExceptionCommandExecution => MessageType.ExceptionCommandExecution,
+                _ => MessageType.Unknown
+            };
+            
+            _representationModule!.PostCallMessage(request.Id, resultType, result, result.GetType());
+        }
+
+        private void HandleEventRequest(CancellationTokenSource tokenSource, DefaultCallRequest request)
+        {
+            tokenSource.Cancel();
+            _executeModule!.Execute(request, _remoteContextRepository!, _representationModule!);
         }
     }
 }

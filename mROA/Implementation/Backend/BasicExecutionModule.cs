@@ -36,37 +36,18 @@ namespace mROA.Implementation.Backend
 
             try
             {
-                if (_cancellationRepo is null)
-                    throw new NullReferenceException("Method repository was not defined");
-
-                if (_methodRepo is null)
-                    throw new NullReferenceException("Method repository was not defined");
-
-                if (contextRepository is null)
-                    throw new NullReferenceException("Context repository was not defined");
-
+                ThrowIfNotInjected(contextRepository);
                 if (command is CancelRequest)
                 {
 #if TRACE
                 Console.WriteLine("Final cancelling request");
 #endif
-                    var cts = _cancellationRepo.GetCancellation(command.Id);
-                    if (cts == null)
-                        throw new NullReferenceException("Can't find cancellation for this request");
-                    cts.Cancel();
-                    _cancellationRepo.FreeCancelation(command.Id);
-
-                    return new FinalCommandExecution
-                    {
-                        Id = command.Id
-                    };
+                    CancelExecution(command);
                 }
 
-                var invoker = _methodRepo.GetMethod(command.CommandId);
+                var invoker = _methodRepo!.GetMethod(command.CommandId);
                 if (invoker == null)
                     throw new Exception($"Command {command.CommandId} not found");
-
-                IContextRepository repository;
 
                 var context = command.ObjectId.ContextId != -1
                     ? contextRepository.GetObject<object>(command.ObjectId)
@@ -83,7 +64,7 @@ namespace mROA.Implementation.Backend
                     castedParams = new object[invoker.ParameterTypes.Length];
                     for (var i = 0; i < castedParams.Length; i++)
                     {
-                        castedParams[i] = _serialization.Cast(command.Parameters![i], invoker.ParameterTypes[i]);
+                        castedParams[i] = _serialization!.Cast(command.Parameters![i], invoker.ParameterTypes[i]);
                     }
                 }
 
@@ -93,10 +74,10 @@ namespace mROA.Implementation.Backend
                 {
                     case AsyncMethodInvoker { IsVoid: false } asyncNonVoidMethodInvoker:
                         return TypedExecuteAsync(asyncNonVoidMethodInvoker, context, castedParams, command,
-                            _cancellationRepo,
+                            _cancellationRepo!,
                             representationModule, execContext);
                     case AsyncMethodInvoker asyncMethodInvoker:
-                        return ExecuteAsync(asyncMethodInvoker, context, castedParams, command, _cancellationRepo,
+                        return ExecuteAsync(asyncMethodInvoker, context, castedParams, command, _cancellationRepo!,
                             representationModule, execContext);
                     default:
                         var result = Execute((invoker as MethodInvoker)!, context, castedParams!, command, execContext);
@@ -121,6 +102,32 @@ namespace mROA.Implementation.Backend
             }
         }
 
+        private void ThrowIfNotInjected(IContextRepository contextRepository)
+        {
+            if (_cancellationRepo is null)
+                throw new NullReferenceException("Method repository was not defined");
+
+            if (_methodRepo is null)
+                throw new NullReferenceException("Method repository was not defined");
+
+            if (contextRepository is null)
+                throw new NullReferenceException("Context repository was not defined");
+        }
+
+        private FinalCommandExecution CancelExecution(ICallRequest command)
+        {
+            var cts = _cancellationRepo!.GetCancellation(command.Id);
+            if (cts == null)
+                throw new NullReferenceException("Can't find cancellation for this request");
+            cts.Cancel();
+            _cancellationRepo.FreeCancelation(command.Id);
+
+            return new FinalCommandExecution
+            {
+                Id = command.Id
+            };
+        }
+        
         private static ICommandExecution Execute(MethodInvoker invoker, object instance, object?[] parameter,
             ICallRequest command, RequestContext executionContext)
         {
