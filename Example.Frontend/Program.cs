@@ -24,7 +24,7 @@ class Program
         builder.Modules.Add(new RemoteContextRepository());
         builder.Modules.Add(new NextGenerationInteractionModule());
         builder.Modules.Add(new RepresentationModule());
-        builder.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
+        builder.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Parse("95.105.78.72"), 4567)));
         builder.Modules.Add(new StaticRepresentationModuleProducer());
         builder.Modules.Add(new RequestExtractor());
         builder.Modules.Add(new BasicExecutionModule());
