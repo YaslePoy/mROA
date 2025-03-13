@@ -36,6 +36,7 @@ namespace mROA
                     return totalRead;
                 }
             }
+
             return totalRead;
         }
     }

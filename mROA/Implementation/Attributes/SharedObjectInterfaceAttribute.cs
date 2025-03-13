@@ -2,5 +2,7 @@
 
 namespace mROA.Implementation.Attributes
 {
-    public class SharedObjectInterfaceAttribute : Attribute { }
+    public class SharedObjectInterfaceAttribute : Attribute
+    {
+    }
 }

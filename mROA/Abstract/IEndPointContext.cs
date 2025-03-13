@@ -4,7 +4,7 @@
     {
         IContextRepository RealRepository { get; }
         IContextRepository RemoteRepository { get; }
-        int HostId { get; } 
+        int HostId { get; }
         int OwnerId { get; }
     }
 }

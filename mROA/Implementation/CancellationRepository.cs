@@ -7,7 +7,8 @@ namespace mROA.Implementation
 {
     public class CancellationRepository : ICancellationRepository
     {
-        private Dictionary<Guid, CancellationTokenSource> _cancellations = new(); 
+        private Dictionary<Guid, CancellationTokenSource> _cancellations = new();
+
         public void RegisterCancellation(Guid id, CancellationTokenSource cts)
         {
             _cancellations.TryAdd(id, cts);
@@ -25,7 +26,6 @@ namespace mROA.Implementation
 
         public void Inject<T>(T dependency)
         {
-            
         }
     }
 }

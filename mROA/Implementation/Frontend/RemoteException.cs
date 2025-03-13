@@ -2,7 +2,7 @@
 
 namespace mROA.Implementation.Frontend
 {
-  public class RemoteException : Exception
+    public class RemoteException : Exception
     {
         public Guid CallRequestId;
         private readonly string _error;

@@ -46,7 +46,7 @@ namespace mROA.Implementation
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
-            
+
             var representationModule =
                 _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
 

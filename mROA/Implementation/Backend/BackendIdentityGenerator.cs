@@ -7,7 +7,7 @@ namespace mROA.Implementation.Backend
         private int _currentId;
 
         public int GetNextIdentity()
-        { 
+        {
             return ++_currentId;
         }
 

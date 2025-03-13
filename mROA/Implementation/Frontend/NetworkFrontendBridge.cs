@@ -36,13 +36,14 @@ namespace mROA.Implementation.Frontend
                 throw new Exception("Interaction module was not injected");
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
-        
+
             _tcpClient.Connect(_ipEndPoint);
             _interactionModule.BaseStream = _tcpClient.GetStream();
             var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
             if (welcomeMessage.SchemaId != MessageType.IdAssigning)
             {
-                throw new Exception($"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.SchemaId.ToString()}");
+                throw new Exception(
+                    $"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.SchemaId.ToString()}");
             }
 
 

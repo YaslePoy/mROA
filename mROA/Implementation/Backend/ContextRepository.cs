@@ -51,7 +51,7 @@ namespace mROA.Implementation.Backend
         public T GetObject<T>(ComplexObjectIdentifier id)
         {
             var value = _storage.GetValue(id.ContextId);
-            
+
             if (value == null)
             {
                 throw new NullReferenceException("Cannot find that object. It is null");

@@ -31,7 +31,7 @@ namespace mROA.Implementation.Backend
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             repository.ClearObject(id);
         }
-        
+
         public T GetObject<T>(ComplexObjectIdentifier id)
         {
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());

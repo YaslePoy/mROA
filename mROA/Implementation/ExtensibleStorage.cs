@@ -18,6 +18,7 @@ namespace mROA.Implementation
             {
                 return null;
             }
+
             return _array[index];
         }
 

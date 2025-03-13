@@ -58,7 +58,7 @@ namespace mROA.Implementation.Frontend
                     throw new NullReferenceException("Representation module is null.");
                 if (_methodRepository == null)
                     throw new NullReferenceException("Method repository is null.");
-                
+
                 var multiClientOwnershipRepository =
                     TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
                 multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);

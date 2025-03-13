@@ -36,7 +36,7 @@ namespace mROA.Implementation
 
             var interaction = _hub.GetInteracion(id);
             produced.Inject(interaction);
-        
+
             return produced;
         }
     }

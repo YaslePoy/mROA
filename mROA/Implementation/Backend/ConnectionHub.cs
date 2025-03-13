@@ -8,12 +8,12 @@ namespace mROA.Implementation.Backend
     {
         private readonly Dictionary<int, INextGenerationInteractionModule> _connections = new();
         private ISerializationToolkit? _serializationToolkit;
-    
+
         public void RegisterInteraction(INextGenerationInteractionModule interaction)
         {
             if (_serializationToolkit is null)
                 throw new NullReferenceException("Serialization toolkit is null");
-        
+
             _connections.Add(interaction.ConnectionId, interaction);
             var module = new RepresentationModule();
             module.Inject(_serializationToolkit);
@@ -28,11 +28,11 @@ namespace mROA.Implementation.Backend
 
         public event ConnectionHandler? OnConnected;
         public event DisconnectionHandler? OnDisconnected;
+
         public void Inject<T>(T dependency)
         {
-            if (dependency is ISerializationToolkit serializationToolkit) 
+            if (dependency is ISerializationToolkit serializationToolkit)
                 _serializationToolkit = serializationToolkit;
-        
         }
     }
 }
