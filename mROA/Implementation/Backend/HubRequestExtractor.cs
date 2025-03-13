@@ -48,6 +48,12 @@ namespace mROA.Implementation.Backend
 
         private void HubOnOnConnected(IRepresentationModule interaction)
         {
+            var extractor = CreateExtractor(interaction);
+            _ = extractor.StartExtraction();
+        }
+
+        private IRequestExtractor CreateExtractor(IRepresentationModule interaction)
+        {
             var extractor = (IRequestExtractor)Activator.CreateInstance(_extractorType)!;
             extractor.Inject(interaction);
             if (_contextRepository is IContextRepositoryHub contextHub)
@@ -58,7 +64,7 @@ namespace mROA.Implementation.Backend
             extractor.Inject(_serializationToolkit);
             extractor.Inject(_executeModule);
             extractor.Inject(_remoteContextRepository);
-            _ = extractor.StartExtraction();
+            return extractor;
         }
     }
 }

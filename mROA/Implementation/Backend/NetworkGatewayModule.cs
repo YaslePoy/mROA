@@ -60,6 +60,33 @@ namespace mROA.Implementation.Backend
 
         private void HandleIncomingConnections()
         {
+            ThrowIfNotInjected();
+
+            while (true)
+            {
+                var client = _tcpListener.AcceptTcpClient();
+                Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
+                var interaction = Activator.CreateInstance(_interactionModuleType!) as INextGenerationInteractionModule;
+
+                foreach (var injectableModule in _injectableModules!)
+                    interaction!.Inject(injectableModule);
+
+                interaction!.Inject(_serialization);
+
+                interaction.BaseStream = client.GetStream();
+
+                interaction.PostMessage(new NetworkMessage
+                {
+                    Id = Guid.NewGuid(), SchemaId = MessageType.IdAssigning,
+                    Data = _serialization!.Serialize(new IdAssignment { Id = -interaction.ConnectionId })
+                });
+                _hub!.RegisterInteraction(interaction);
+                Console.WriteLine("Client registered");
+            }
+        }
+
+        private void ThrowIfNotInjected()
+        {
             if (_hub is null)
                 throw new NullReferenceException("Hub module is null");
             if (_tcpListener == null)
@@ -70,28 +97,6 @@ namespace mROA.Implementation.Backend
                 throw new NullReferenceException("InteractionModuleType is null");
             if (_serialization is null)
                 throw new NullReferenceException("Serialization is null");
-
-            while (true)
-            {
-                var client = _tcpListener.AcceptTcpClient();
-                Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
-                var interaction = Activator.CreateInstance(_interactionModuleType) as INextGenerationInteractionModule;
-
-                foreach (var injectableModule in _injectableModules)
-                    interaction!.Inject(injectableModule);
-
-                interaction!.Inject(_serialization);
-
-                interaction.BaseStream = client.GetStream();
-
-                interaction.PostMessage(new NetworkMessage
-                {
-                    Id = Guid.NewGuid(), SchemaId = MessageType.IdAssigning,
-                    Data = _serialization.Serialize(new IdAssignment { Id = -interaction.ConnectionId })
-                });
-                _hub.RegisterInteraction(interaction);
-                Console.WriteLine("Client registered");
-            }
         }
     }
 }
