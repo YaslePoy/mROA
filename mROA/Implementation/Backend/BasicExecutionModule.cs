@@ -42,16 +42,14 @@ namespace mROA.Implementation.Backend
 #if TRACE
                 Console.WriteLine("Final cancelling request");
 #endif
-                    CancelExecution(command);
+                    return CancelExecution(command);
                 }
 
                 var invoker = _methodRepo!.GetMethod(command.CommandId);
                 if (invoker == null)
                     throw new Exception($"Command {command.CommandId} not found");
 
-                var context = command.ObjectId.ContextId != -1
-                    ? contextRepository.GetObject<object>(command.ObjectId)
-                    : contextRepository.GetSingleObject(invoker.SuitableType, command.ObjectId.OwnerId);
+                var context = GetContext(command, contextRepository, invoker);
 
                 if (context == null)
                     throw new NullReferenceException("Instance can't be null");
@@ -60,13 +58,8 @@ namespace mROA.Implementation.Backend
                 object?[]? castedParams = null;
 
                 if (invoker.ParameterTypes.Length != 0)
-                {
-                    castedParams = new object[invoker.ParameterTypes.Length];
-                    for (var i = 0; i < castedParams.Length; i++)
-                    {
-                        castedParams[i] = _serialization!.Cast(command.Parameters![i], invoker.ParameterTypes[i]);
-                    }
-                }
+                    castedParams = CastedParams(command, invoker);
+
 
                 var execContext = new RequestContext(command.Id, representationModule.Id);
 
@@ -102,6 +95,25 @@ namespace mROA.Implementation.Backend
             }
         }
 
+        private static object GetContext(ICallRequest command, IContextRepository contextRepository, IMethodInvoker invoker)
+        {
+            var context = command.ObjectId.ContextId != -1
+                ? contextRepository.GetObject<object>(command.ObjectId)
+                : contextRepository.GetSingleObject(invoker.SuitableType, command.ObjectId.OwnerId);
+            return context;
+        }
+
+        private object?[] CastedParams(ICallRequest command, IMethodInvoker invoker)
+        {
+            object?[] castedParams = new object[invoker.ParameterTypes.Length];
+            for (var i = 0; i < castedParams.Length; i++)
+            {
+                castedParams[i] = _serialization!.Cast(command.Parameters![i], invoker.ParameterTypes[i]);
+            }
+
+            return castedParams;
+        }
+
         private void ThrowIfNotInjected(IContextRepository contextRepository)
         {
             if (_cancellationRepo is null)
@@ -127,7 +139,7 @@ namespace mROA.Implementation.Backend
                 Id = command.Id
             };
         }
-        
+
         private static ICommandExecution Execute(MethodInvoker invoker, object instance, object?[] parameter,
             ICallRequest command, RequestContext executionContext)
         {
