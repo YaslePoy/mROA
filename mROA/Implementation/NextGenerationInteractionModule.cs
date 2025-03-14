@@ -14,7 +14,7 @@ namespace mROA.Implementation
         private readonly List<NetworkMessage> _messageBuffer = new(128);
         private Task<NetworkMessage>? _currentReceiving;
         private ISerializationToolkit? _serialization;
-        public int ConnectionId { get; private set; }
+        public int ConnectionId { get; set; }
         public Stream? BaseStream { get; set; }
 
 

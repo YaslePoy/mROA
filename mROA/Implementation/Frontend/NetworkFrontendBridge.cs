@@ -7,10 +7,10 @@ namespace mROA.Implementation.Frontend
 {
     public class NetworkFrontendBridge : IFrontendBridge
     {
+        private readonly IPEndPoint _ipEndPoint;
         private readonly TcpClient _tcpClient = new();
         private NextGenerationInteractionModule? _interactionModule;
         private ISerializationToolkit? _serialization;
-        private readonly IPEndPoint _ipEndPoint;
 
         public NetworkFrontendBridge(IPEndPoint ipEndPoint)
         {
@@ -48,6 +48,7 @@ namespace mROA.Implementation.Frontend
 
 
             var assignment = _serialization.Deserialize<IdAssignment>(welcomeMessage.Data)!;
+            _interactionModule.ConnectionId = -assignment.Id;
             TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);
         }
     }
