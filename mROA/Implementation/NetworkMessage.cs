@@ -20,7 +20,6 @@ namespace mROA.Implementation
         Unknown,
         FinishedCommandExecution,
         ExceptionCommandExecution,
-        AsyncCommandExecution,
         CallRequest,
         IdAssigning,
         CancelRequest,

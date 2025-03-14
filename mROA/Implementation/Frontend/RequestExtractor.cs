@@ -137,10 +137,13 @@ namespace mROA.Implementation.Frontend
             var resultType = result switch
             {
                 FinalCommandExecution => MessageType.FinishedCommandExecution,
-                AsyncCommandExecution => MessageType.AsyncCommandExecution,
                 ExceptionCommandExecution => MessageType.ExceptionCommandExecution,
                 _ => MessageType.Unknown
             };
+            if (resultType == MessageType.Unknown)
+            {
+                return;
+            }
 
             _representationModule!.PostCallMessage(request.Id, resultType, result, result.GetType());
         }
