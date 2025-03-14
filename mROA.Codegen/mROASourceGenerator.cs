@@ -482,7 +482,7 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
                         Console.WriteLine(""Sending event..."");
                         var request = new DefaultCallRequest
                         {{ 
-                            CommandId = {index}, ObjectId = new ComplexObjectIdentifier(index, context.HostId), Parameters = new object[] {{ {transferParameters} }}
+                            CommandId = {index}, ObjectId = new ComplexObjectIdentifier(index, ownerId), Parameters = new object[] {{ {transferParameters} }}
                         }};
                         module.PostCallMessageAsync(request.Id, MessageType.EventRequest, request);
                     }};

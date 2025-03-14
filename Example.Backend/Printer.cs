@@ -27,7 +27,7 @@ namespace Example.Backend
             // throw new Exception("The method or operation is not implemented.");
             var page = new Page { Text = text };
             Console.WriteLine($"Request id : :{context.RequestId}");
-            OnPrint?.Invoke(page, context);
+            OnPrint?.Invoke(page, new RequestContext(Guid.NewGuid(), 132));
             Resource /= 1.5;
             return page;
         }
