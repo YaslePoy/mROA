@@ -11,10 +11,10 @@ namespace mROA.Implementation.Frontend
 {
     public class RequestExtractor : IRequestExtractor
     {
-        private IContextRepository? _realContextRepository;
-        private IContextRepository? _remoteContextRepository;
         private IExecuteModule? _executeModule;
         private IMethodRepository? _methodRepository;
+        private IContextRepository? _realContextRepository;
+        private IContextRepository? _remoteContextRepository;
         private IRepresentationModule? _representationModule;
         private ISerializationToolkit? _serializationToolkit;
 
@@ -65,7 +65,7 @@ namespace mROA.Implementation.Frontend
                         if (sw.IsRunning)
                         {
                             sw.Stop();
-                            Console.WriteLine($"Request handling took {sw.ElapsedMilliseconds} milliseconds.");
+                            Console.WriteLine($"Request handling took {Math.Round(sw.Elapsed.TotalMilliseconds * 1000.0)} microseconds.");
                         }
 #endif
                         var tokenSource = new CancellationTokenSource();
@@ -121,7 +121,7 @@ namespace mROA.Implementation.Frontend
             if (_methodRepository == null)
                 throw new NullReferenceException("Method repository is null.");
         }
-        
+
         private void HandleCancelRequest(CancellationTokenSource tokenSource, CancelRequest req)
         {
             tokenSource.Cancel();
@@ -141,7 +141,7 @@ namespace mROA.Implementation.Frontend
                 ExceptionCommandExecution => MessageType.ExceptionCommandExecution,
                 _ => MessageType.Unknown
             };
-            
+
             _representationModule!.PostCallMessage(request.Id, resultType, result, result.GetType());
         }
 
