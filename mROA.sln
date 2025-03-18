@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Events.Backend", "E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Events.Client", "Example.Events.Client\Example.Events.Client.csproj", "{98451C0E-E179-4F5F-9F1A-8B353EDE2EBC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA.CodegenTools", "mROA.CodegenTools\mROA.CodegenTools.csproj", "{2A2821B7-E5C5-443A-9801-9622493594A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,10 @@ Global
 		{98451C0E-E179-4F5F-9F1A-8B353EDE2EBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98451C0E-E179-4F5F-9F1A-8B353EDE2EBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98451C0E-E179-4F5F-9F1A-8B353EDE2EBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A2821B7-E5C5-443A-9801-9622493594A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A2821B7-E5C5-443A-9801-9622493594A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A2821B7-E5C5-443A-9801-9622493594A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A2821B7-E5C5-443A-9801-9622493594A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

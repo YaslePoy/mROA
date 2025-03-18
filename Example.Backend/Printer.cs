@@ -12,6 +12,7 @@ namespace Example.Backend
 
         public void OnPrintExternal(IPage p0, RequestContext ro)
         {
+            OnPrint?.Invoke(p0, ro);
         }
 
         public double Resource { get; set; } = 100d;
@@ -27,7 +28,7 @@ namespace Example.Backend
             // throw new Exception("The method or operation is not implemented.");
             var page = new Page { Text = text };
             Console.WriteLine($"Request id : :{context.RequestId}");
-            OnPrint?.Invoke(page, new RequestContext(Guid.NewGuid(), 132));
+            OnPrint?.Invoke(page, context);
             Resource /= 1.5;
             return page;
         }
