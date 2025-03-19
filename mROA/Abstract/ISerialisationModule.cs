@@ -1,33 +1,25 @@
-using System.Windows.Input;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using mROA.Implementation;
-using mROA.Implementation.CommandExecution;
 
-namespace mROA.Abstract;
-
-public interface ISerialisationModule : IInjectableModule
+namespace mROA.Abstract
 {
-    void HandleIncomingRequest(int clientId, byte[] message);
-    void PostResponse(NetworkMessage message, int clientId);
-    void SendWelcomeMessage(int clientId);
-    public interface IFrontendSerialisationModule : IInjectableModule
+    public interface IRepresentationModule : IInjectableModule
     {
-        int ClientId { get; }
-        Task<T> GetNextCommandExecution<T>(Guid requestId) where T : ICommandExecution;
-        Task<FinalCommandExecution<T>> GetFinalCommandExecution<T>(Guid requestId);
-        void PostCallRequest(ICallRequest callRequest);
-    }
-}
+        int Id { get; }
 
-public interface IRepresentationModule : IInjectableModule
-{
-    int Id { get; }
-    Task<T> GetMessageAsync<T>(Guid? requestId = null, EMessageType? messageType = null, CancellationToken token = default);
-    T GetMessage<T>(Guid? requestId = null, EMessageType? messageType = null);
-    T GetMessage<T>(Predicate<NetworkMessage> filter);
-    Task<byte[]> GetRawMessage(Predicate<NetworkMessage> filter, CancellationToken token = default);
-    
-    Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
-    Task PostCallMessageAsync(Guid id, EMessageType eMessageType, object payload, Type payloadType);
-    void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
-    void PostCallMessage(Guid id, EMessageType eMessageType, object payload, Type payloadType); 
+        Task<T> GetMessageAsync<T>(Guid? requestId = null, MessageType? messageType = null,
+            CancellationToken token = default);
+
+        T GetMessage<T>(Guid? requestId = null, MessageType? messageType = null);
+
+        Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null,
+            CancellationToken token = default);
+
+        Task PostCallMessageAsync<T>(Guid id, MessageType messageType, T payload) where T : notnull;
+        Task PostCallMessageAsync(Guid id, MessageType messageType, object payload, Type payloadType);
+        void PostCallMessage<T>(Guid id, MessageType messageType, T payload) where T : notnull;
+        void PostCallMessage(Guid id, MessageType messageType, object payload, Type payloadType);
+    }
 }

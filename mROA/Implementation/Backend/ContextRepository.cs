@@ -1,97 +1,95 @@
-﻿using System.Collections.Frozen;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.Attributes;
 
-namespace mROA.Implementation.Backend;
-
-public class ContextRepository : IContextRepository
+namespace mROA.Implementation.Backend
 {
-    private FrozenDictionary<int, object?>? _singletons;
-    private object?[] _storage = new object[StartupSize];
-
-    private Task<int> _lastIndexFinder = Task.FromResult(0);
-
-    private const int StartupSize = 1024;
-    private const int GrowSize = 128;
-
-
-    public void FillSingletons(params Assembly[] assembly)
+    public class ContextRepository : IContextRepository
     {
-        var types = assembly.SelectMany(x => x.GetTypes()).Where(type =>
-            type is { IsClass: true, IsAbstract: false, IsGenericType: false } &&
-            type.GetCustomAttributes(typeof(SharedObjectSingletonAttribute), true).Length > 0);
-        _singletons =
-            types.ToFrozenDictionary(
-                t => t.GetInterfaces().FirstOrDefault(i =>
-                    i.GetCustomAttributes(typeof(SharedObjectInterfaceAttribute), true).Length > 0)!.GetHashCode(),
-                Activator.CreateInstance);
-    }
+        private const int StartupSize = 1024;
+        private const int GrowSize = 128;
+        public static object[] EventBinders = { };
 
-    public int ResisterObject(object o)
-    {
-        if (!_lastIndexFinder.IsCompleted)
-            _lastIndexFinder.Wait();
+        private static int LastDebugId = -1;
+        private int _debugId = -1;
 
-        _storage[_lastIndexFinder.Result] = o;
+        private Task<int> _lastIndexFinder = Task.FromResult(0);
 
-        var last = _lastIndexFinder.Result;
-        _lastIndexFinder = Task.Run(FindLastIndex);
+        private IRepresentationModuleProducer? _representationModuleProducer;
 
-        return last;
-    }
+        // [CanBeNull]
+        private Dictionary<int, object?> _singletons;
+        private IStorage<object> _storage;
 
-    public void ClearObject(int id)
-    {
-        _storage[id] = null;
-        _lastIndexFinder = Task.FromResult(id);
-    }
 
-    public object GetObject(int id)
-    {
-        return (id == -1 || _storage.Length <= id ? null : _storage[id]) ?? throw new NullReferenceException();
-    }
-
-    public T GetObject<T>(int id)
-    {
-        return id == -1 || _storage.Length <= id
-            ? throw new NullReferenceException("Cannot find that object. It is null")
-            : (T)_storage[id]!;
-    }
-
-    public T GetSingleObject<T>()
-    {
-        var result = GetSingleObject(typeof(T));
-        return (T)result;
-    }
-
-    public object GetSingleObject(Type type)
-    {
-        return _singletons!.GetValueOrDefault(type.GetHashCode()) ??
-               throw new ArgumentException("Unregistered singleton type");
-    }
-
-    public int GetObjectIndex(object o)
-    {
-        var index = Array.IndexOf(_storage, o);
-        return index == -1 ? ResisterObject(o) : index;
-    }
-
-    private int FindLastIndex()
-    {
-        for (var i = 0; i < _storage.Length; i++)
+        public ContextRepository()
         {
-            if (_storage[i] is null)
-                return i;
+            _storage = new ExtensibleStorage<object>();
         }
 
-        var nextStorage = new object[_storage.Length + GrowSize];
-        Array.Copy(_storage, nextStorage, _storage.Length);
-        _storage = nextStorage;
-        return _storage.Length;
-    }
+        public int HostId { get; set; }
 
-    public void Inject<T>(T dependency)
-    {
+        public int ResisterObject<T>(object o, IEndPointContext context)
+        {
+            var last = _storage.Place(o);
+
+            EventBinders.OfType<IEventBinder<T>>().FirstOrDefault()
+                ?.BindEvents((T)o, context, _representationModuleProducer!, last);
+
+            return last;
+        }
+
+        public void ClearObject(ComplexObjectIdentifier id)
+        {
+            _storage.Free(id.ContextId);
+        }
+
+        public T GetObject<T>(ComplexObjectIdentifier id)
+        {
+            var value = _storage.GetValue(id.ContextId);
+
+            if (value == null)
+            {
+                throw new NullReferenceException("Cannot find that object. It is null");
+            }
+
+            return (T)value;
+        }
+
+        public object GetSingleObject(Type type, int ownerId)
+        {
+            return _singletons.GetValueOrDefault(type.GetHashCode()) ??
+                   throw new ArgumentException("Unregistered singleton type");
+        }
+
+        public int GetObjectIndex<T>(object o, IEndPointContext context)
+        {
+            var index = _storage.GetIndex(o);
+            return index == -1 ? ResisterObject<T>(o, context) : index;
+        }
+
+        public void Inject<T>(T dependency)
+        {
+            if (dependency is IRepresentationModuleProducer moduleProducer)
+            {
+                _representationModuleProducer = moduleProducer;
+            }
+        }
+
+        public void FillSingletons(params Assembly[] assembly)
+        {
+            var types = assembly.SelectMany(x => x.GetTypes()).Where(type =>
+                type is { IsClass: true, IsAbstract: false, IsGenericType: false } &&
+                type.GetCustomAttributes(typeof(SharedObjectSingletonAttribute), true).Length > 0);
+            _singletons =
+                types.ToDictionary(
+                    t => t.GetInterfaces().FirstOrDefault(i =>
+                        i.GetCustomAttributes(typeof(SharedObjectInterfaceAttribute), true).Length > 0)!.GetHashCode(),
+                    Activator.CreateInstance);
+        }
     }
 }

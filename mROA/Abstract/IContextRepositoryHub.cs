@@ -1,6 +1,7 @@
-namespace mROA.Abstract;
-
-public interface IContextRepositoryHub
+namespace mROA.Abstract
 {
-    IContextRepository GetRepository(int clientId);
+    public interface IContextRepositoryHub
+    {
+        IContextRepository GetRepository(int clientId);
+    }
 }

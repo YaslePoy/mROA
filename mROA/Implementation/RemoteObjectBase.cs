@@ -1,61 +1,151 @@
-﻿using mROA.Abstract;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using mROA.Abstract;
 using mROA.Implementation.CommandExecution;
 
 // ReSharper disable UnusedMember.Global
 
-namespace mROA.Implementation;
-
-public abstract class RemoteObjectBase(int id, IRepresentationModule representationModule)
+namespace mROA.Implementation
 {
-    public int Id => id;
-    public int OwnerId => representationModule.Id;
-
-    protected async Task<T> GetResultAsync<T>(int methodId, object? parameter = default)
+    public abstract class RemoteObjectBase : IDisposable
     {
-        var request = new DefaultCallRequest
-            { CommandId = methodId, ObjectId = id, Parameter = parameter, ParameterType = parameter?.GetType() };
-        await representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request);
-
-        var localTokenSource = new CancellationTokenSource();
-
-        var successResponse =
-            representationModule.GetMessageAsync<FinalCommandExecution<T>>(request.Id,
-                EMessageType.FinishedCommandExecution, localTokenSource.Token);
-        
-        var errorResponse =
-            representationModule.GetMessageAsync<ExceptionCommandExecution>(request.Id,
-                EMessageType.ExceptionCommandExecution, localTokenSource.Token);
-
-        Task.WaitAny(successResponse, errorResponse);
-        
-        if (successResponse.IsCompletedSuccessfully)
+        protected bool Equals(RemoteObjectBase other)
         {
-            await localTokenSource.CancelAsync();
-            return successResponse.Result.Result!;
+            return _identifier.Equals(other._identifier);
         }
 
-        await localTokenSource.CancelAsync();
-        throw errorResponse.Result.GetException();
-    }
+        public override bool Equals(object? obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((RemoteObjectBase)obj);
+        }
 
-    protected async Task CallAsync(int methodId, object? parameter = default)
-    {
-        var request = new DefaultCallRequest
-            { CommandId = methodId, ObjectId = id, Parameter = parameter, ParameterType = parameter?.GetType() };
-        await representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request);
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_identifier.GetHashCode(), _identifier.ContextId);
+        }
 
-        var successResponse =
-            representationModule.GetMessageAsync<FinalCommandExecution>(
-                messageType: EMessageType.FinishedCommandExecution, requestId: request.Id);
-        var errorResponse =
-            representationModule.GetMessageAsync<ExceptionCommandExecution>(
-                messageType: EMessageType.ExceptionCommandExecution, requestId: request.Id);
+        private readonly ComplexObjectIdentifier _identifier;
+        private readonly IRepresentationModule _representationModule;
 
-        Task.WaitAny(successResponse, errorResponse);
+        protected RemoteObjectBase(int id, IRepresentationModule representationModule)
+        {
+            _identifier = new ComplexObjectIdentifier { ContextId = id, OwnerId = representationModule.Id };
+            _representationModule = representationModule;
+        }
 
-        if (successResponse.IsCompletedSuccessfully)
-            return;
+        public int Id => _identifier.ContextId;
+        public int OwnerId => _identifier.OwnerId;
+        public ComplexObjectIdentifier Identifier => _identifier;
 
-        throw errorResponse.Result.GetException();
+        public void Dispose()
+        {
+            if (_identifier.IsStatic)
+                return;
+            CallAsync(-1).Wait();
+        }
+
+        protected async Task<T> GetResultAsync<T>(int methodId, object?[]? parameters = null,
+            CancellationToken cancellationToken = default)
+        {
+            var request = new DefaultCallRequest
+            {
+                CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+            };
+
+            await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
+
+            var localTokenSource = new CancellationTokenSource();
+
+            var successResponse =
+                _representationModule.GetMessageAsync<FinalCommandExecution<T>>(request.Id,
+                    MessageType.FinishedCommandExecution,
+                    localTokenSource.Token);
+            var errorResponse =
+                _representationModule.GetMessageAsync<ExceptionCommandExecution>(requestId: request.Id,
+                    MessageType.ExceptionCommandExecution, localTokenSource.Token);
+
+            cancellationToken.Register(async () =>
+            {
+#if TRACE
+                Console.WriteLine("Cancelling task");
+#endif
+                await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest,
+                    new CancelRequest
+                    {
+                        Id = request.Id
+                    });
+                localTokenSource.Cancel();
+            });
+
+            Task.WaitAny(new Task[]
+            {
+                successResponse, errorResponse
+            }, cancellationToken);
+
+            if (successResponse.IsCompletedSuccessfully)
+            {
+                localTokenSource.Cancel();
+                return successResponse.Result.Result!;
+            }
+
+            localTokenSource.Cancel();
+            throw errorResponse.Result.GetException();
+        }
+
+        protected async Task CallAsync(int methodId, object?[]? parameters = null,
+            CancellationToken cancellationToken = default)
+        {
+            var request = new DefaultCallRequest
+            {
+                CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+            };
+            await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
+
+            var localTokenSource = new CancellationTokenSource();
+
+            var successResponse =
+                _representationModule.GetMessageAsync<FinalCommandExecution>(request.Id,
+                    MessageType.FinishedCommandExecution,
+                    localTokenSource.Token);
+            var errorResponse =
+                _representationModule.GetMessageAsync<ExceptionCommandExecution>(requestId: request.Id,
+                    MessageType.ExceptionCommandExecution, localTokenSource.Token);
+
+            cancellationToken.Register(async () =>
+            {
+#if TRACE
+                Console.WriteLine("Cancelling task");
+#endif
+                await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest,
+                    new CancelRequest
+                    {
+                        Id = request.Id
+                    });
+                localTokenSource.Cancel();
+            });
+
+            Task.WaitAny(new Task[]
+            {
+                errorResponse, successResponse
+            }, cancellationToken);
+
+#if TRACE
+            Console.WriteLine($"Handling message");
+#endif
+            if (successResponse.IsCompletedSuccessfully)
+                return;
+
+            if (errorResponse.IsCompletedSuccessfully)
+                throw errorResponse.Result.GetException();
+        }
+
+        public override string ToString()
+        {
+            return _identifier.ToString();
+        }
     }
 }

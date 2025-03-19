@@ -1,17 +1,18 @@
 ﻿using mROA.Abstract;
 
-namespace mROA.Implementation.Backend;
-
-public class BackendIdentityGenerator : IIdentityGenerator
+namespace mROA.Implementation.Backend
 {
-    private int _currentId;
-
-    public int GetNextIdentity()
-    { 
-        return ++_currentId;
-    }
-
-    public void Inject<T>(T dependency)
+    public class BackendIdentityGenerator : IIdentityGenerator
     {
+        private int _currentId;
+
+        public int GetNextIdentity()
+        {
+            return ++_currentId;
+        }
+
+        public void Inject<T>(T dependency)
+        {
+        }
     }
 }

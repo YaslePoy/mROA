@@ -1,88 +1,158 @@
+using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.Backend;
 using mROA.Implementation.CommandExecution;
 
 // ReSharper disable MethodHasAsyncOverload
 
-namespace mROA.Implementation.Frontend;
-
-public class RequestExtractor : IRequestExtractor
+namespace mROA.Implementation.Frontend
 {
-    private IRepresentationModule? _representationModule;
-    private IContextRepository? _contextRepository;
-    private IMethodRepository? _methodRepository;
-    private IExecuteModule? _executeModule;
-    private ISerializationToolkit? _serializationToolkit;
-
-    public void Inject<T>(T dependency)
+    public class RequestExtractor : IRequestExtractor
     {
-        switch (dependency)
+        private IExecuteModule? _executeModule;
+        private IMethodRepository? _methodRepository;
+        private IContextRepository? _realContextRepository;
+        private IContextRepository? _remoteContextRepository;
+        private IRepresentationModule? _representationModule;
+        private ISerializationToolkit? _serializationToolkit;
+
+        public void Inject<T>(T dependency)
         {
-            case IExecuteModule executeModule:
-                _executeModule = executeModule;
-                break;
-            case IContextRepository contextRepository:
-                _contextRepository = contextRepository;
-                break;
-            case IMethodRepository methodRepository:
-                _methodRepository = methodRepository;
-                break;
-            case IRepresentationModule representationModule:
-                _representationModule = representationModule;
-                break;
-            case ISerializationToolkit serializationToolkit:
-                _serializationToolkit = serializationToolkit;
-                break;
-        }
-    }
-
-    public async Task StartExtraction()
-    {
-        if (_serializationToolkit == null)
-            throw new NullReferenceException("Serializing toolkit is null.");
-        if (_executeModule == null)
-            throw new NullReferenceException("Execute module is null.");
-        if (_contextRepository == null)
-            throw new NullReferenceException("Context repository is null.");
-        if (_representationModule == null)
-            throw new NullReferenceException("Representation module is null.");
-        if (_methodRepository == null)
-            throw new NullReferenceException("Method repository is null.");
-
-        await Task.Yield();
-        
-        var multiClientOwnershipRepository = TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
-        multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
-
-        try
-        {
-            var lastCommandId = Guid.Empty;
-            while (true)
+            switch (dependency)
             {
-                
-                var request = 
-                    _representationModule!.GetMessage<DefaultCallRequest>(m => m.Id != lastCommandId && m.MessageType == EMessageType.CallRequest);
-                lastCommandId = request.Id;
-                if (request.Parameter is not null)
-                {
-                    var parameterType = _methodRepository!.GetMethod(request.CommandId).GetParameters().First()
-                        .ParameterType;
-
-                    request.Parameter = _serializationToolkit.Cast(request.Parameter, parameterType);
-                }
-
-                var result = _executeModule.Execute(request, _contextRepository);
-
-                var resultType = result is FinalCommandExecution
-                    ? EMessageType.FinishedCommandExecution
-                    : EMessageType.ExceptionCommandExecution;
-
-                _representationModule.PostCallMessage(request.Id, resultType, result, result.GetType());
+                case IExecuteModule executeModule:
+                    _executeModule = executeModule;
+                    break;
+                case MultiClientContextRepository:
+                case ContextRepository:
+                    _realContextRepository = dependency as IContextRepository;
+                    break;
+                case RemoteContextRepository remoteContextRepository:
+                    _remoteContextRepository = remoteContextRepository;
+                    break;
+                case IMethodRepository methodRepository:
+                    _methodRepository = methodRepository;
+                    break;
+                case IRepresentationModule representationModule:
+                    _representationModule = representationModule;
+                    break;
+                case ISerializationToolkit serializationToolkit:
+                    _serializationToolkit = serializationToolkit;
+                    break;
             }
         }
-        catch
+
+        public Task StartExtraction()
         {
-            multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
+            return Task.Run(() =>
+            {
+                ThrowIfNotInjected();
+                var multiClientOwnershipRepository =
+                    TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
+                multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
+
+                try
+                {
+#if TRACE
+                    var sw = new Stopwatch();
+#endif
+                    while (true)
+                    {
+#if TRACE
+                        Console.WriteLine("Waiting for request...");
+                        if (sw.IsRunning)
+                        {
+                            sw.Stop();
+                            Console.WriteLine($"Request handling took {Math.Round(sw.Elapsed.TotalMilliseconds * 1000.0)} microseconds.");
+                        }
+#endif
+                        var tokenSource = new CancellationTokenSource();
+                        var token = tokenSource.Token;
+                        var defaultRequest =
+                            _representationModule!.GetMessageAsync<DefaultCallRequest>(
+                                messageType: MessageType.CallRequest, token: token);
+                        var cancelRequest =
+                            _representationModule!.GetMessageAsync<CancelRequest>(
+                                messageType: MessageType.CancelRequest, token: token);
+                        var eventRequest =
+                            _representationModule!.GetMessageAsync<DefaultCallRequest>(
+                                messageType: MessageType.EventRequest, token: token);
+                        Task.WaitAny(defaultRequest, cancelRequest, eventRequest);
+#if TRACE
+                        Console.WriteLine("Request received");
+                        sw.Restart();
+#endif
+                        if (cancelRequest.IsCompleted)
+                        {
+#if TRACE
+                            Console.WriteLine("Cancelling request");
+#endif
+                            HandleCancelRequest(tokenSource, cancelRequest.Result);
+                        }
+                        else if (defaultRequest.IsCompleted)
+                        {
+                            HandleCallRequest(tokenSource, defaultRequest.Result);
+                        }
+                        else
+                        {
+                            HandleEventRequest(tokenSource, eventRequest.Result);
+                        }
+                    }
+                }
+                catch
+                {
+                    multiClientOwnershipRepository?.FreeOwnership();
+                }
+            });
+        }
+
+        private void ThrowIfNotInjected()
+        {
+            if (_serializationToolkit == null)
+                throw new NullReferenceException("Serializing toolkit is null.");
+            if (_executeModule == null)
+                throw new NullReferenceException("Execute module is null.");
+            if (_realContextRepository == null)
+                throw new NullReferenceException("Context repository is null.");
+            if (_representationModule == null)
+                throw new NullReferenceException("Representation module is null.");
+            if (_methodRepository == null)
+                throw new NullReferenceException("Method repository is null.");
+        }
+
+        private void HandleCancelRequest(CancellationTokenSource tokenSource, CancelRequest req)
+        {
+            tokenSource.Cancel();
+            _executeModule!.Execute(req, _realContextRepository!, _representationModule!);
+        }
+
+        private void HandleCallRequest(CancellationTokenSource tokenSource, DefaultCallRequest request)
+        {
+            tokenSource.Cancel();
+
+            var result = _executeModule!.Execute(request, _realContextRepository!, _representationModule!);
+
+            var resultType = result switch
+            {
+                FinalCommandExecution => MessageType.FinishedCommandExecution,
+                ExceptionCommandExecution => MessageType.ExceptionCommandExecution,
+                _ => MessageType.Unknown
+            };
+            if (resultType == MessageType.Unknown)
+            {
+                return;
+            }
+
+            _representationModule!.PostCallMessage(request.Id, resultType, result, result.GetType());
+        }
+
+        private void HandleEventRequest(CancellationTokenSource tokenSource, DefaultCallRequest request)
+        {
+            tokenSource.Cancel();
+            _executeModule!.Execute(request, _remoteContextRepository!, _representationModule!);
         }
     }
 }

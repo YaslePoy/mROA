@@ -1,47 +1,55 @@
+using System;
 using System.Net;
 using System.Net.Sockets;
 using mROA.Abstract;
 
-namespace mROA.Implementation.Frontend;
-
-public class NetworkFrontendBridge(IPEndPoint ipEndPoint) : IFrontendBridge
+namespace mROA.Implementation.Frontend
 {
-    private readonly TcpClient _tcpClient = new();
-    private NextGenerationInteractionModule? _interactionModule;
-    private ISerializationToolkit? _serialization;
-
-    public void Inject<T>(T dependency)
+    public class NetworkFrontendBridge : IFrontendBridge
     {
-        switch (dependency)
-        {
-            case NextGenerationInteractionModule interactionModule:
-                _interactionModule = interactionModule;
-                break;
-            case ISerializationToolkit toolkit:
-                _serialization = toolkit;
-                break;
-        }
-    }
+        private readonly IPEndPoint _ipEndPoint;
+        private readonly TcpClient _tcpClient = new();
+        private NextGenerationInteractionModule? _interactionModule;
+        private ISerializationToolkit? _serialization;
 
-    public void Connect()
-    {
-        if (_interactionModule is null)
-            throw new Exception("Interaction module was not injected");
-        if (_serialization == null)
-            throw new NullReferenceException("Serialization toolkit is not initialized");
-        
-        _tcpClient.Connect(ipEndPoint);
-        _interactionModule.BaseStream = _tcpClient.GetStream();
-        _interactionModule.StartInfiniteReceiving();
-
-        var handle = _interactionModule.CurrentReceivingHandle;
-        handle.WaitOne();
-        var welcomeMessage = _interactionModule.LastMessage;
-        if (welcomeMessage.MessageType != EMessageType.IdAssigning)
+        public NetworkFrontendBridge(IPEndPoint ipEndPoint)
         {
-            throw new Exception($"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.MessageType.ToString()}");
+            _ipEndPoint = ipEndPoint;
         }
-        _interactionModule.HandleMessage(welcomeMessage);
-        TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(_serialization.Deserialize<IdAssingnment>(welcomeMessage.Data)!.Id);
+
+        public void Inject<T>(T dependency)
+        {
+            switch (dependency)
+            {
+                case NextGenerationInteractionModule interactionModule:
+                    _interactionModule = interactionModule;
+                    break;
+                case ISerializationToolkit toolkit:
+                    _serialization = toolkit;
+                    break;
+            }
+        }
+
+        public void Connect()
+        {
+            if (_interactionModule is null)
+                throw new Exception("Interaction module was not injected");
+            if (_serialization == null)
+                throw new NullReferenceException("Serialization toolkit is not initialized");
+
+            _tcpClient.Connect(_ipEndPoint);
+            _interactionModule.BaseStream = _tcpClient.GetStream();
+            var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
+            if (welcomeMessage.SchemaId != MessageType.IdAssigning)
+            {
+                throw new Exception(
+                    $"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.SchemaId.ToString()}");
+            }
+
+
+            var assignment = _serialization.Deserialize<IdAssignment>(welcomeMessage.Data)!;
+            _interactionModule.ConnectionId = -assignment.Id;
+            TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);
+        }
     }
 }

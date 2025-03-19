@@ -1,50 +1,51 @@
-﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Running;
+﻿using System.Collections.Generic;
+using System.Linq;
+using BenchmarkDotNet.Attributes;
 
-namespace mROA.Benchmark;
-
-class Program
+namespace mROA.Benchmark
 {
-    static void Main(string[] args)
+    class Program
     {
-        Console.WriteLine("Hello, World!");
-        var summary = BenchmarkRunner.Run<CollectionsSpeed>();
-
-    }
-}
-
-public class CollectionsSpeed
-{
-    private const int N = 1000;
-    
-    private readonly List<int> _immutable;
-    private readonly int[] _array;
-
-    public CollectionsSpeed()
-    {
-        _array = Enumerable.Range(0, N).ToArray();
-        _immutable = [.._array];
-    }
-
-    [Benchmark]
-    public int DefaultArray()
-    {
-        var sum = 0;
-        for (int i = 0; i < N; i++)
+        static void Main(string[] args)
         {
-            sum += _array[i];
+            // Console.WriteLine("Hello, World!");
+            // var summary = BenchmarkRunner.Run<CollectionsSpeed>();
         }
-        return sum;
     }
-    
-    [Benchmark]
-    public int ImmutableArray()
+
+    public class CollectionsSpeed
     {
-        var sum = 0;
-        for (int i = 0; i < N; i++)
+        private const int N = 1000;
+    
+        private readonly List<int> _immutable;
+        private readonly int[] _array;
+
+        public CollectionsSpeed()
         {
-            sum += _immutable[i];
+            _array = Enumerable.Range(0, N).ToArray();
+            // _immutable = [.._array];
         }
-        return sum;
+
+        [Benchmark]
+        public int DefaultArray()
+        {
+            var sum = 0;
+            for (int i = 0; i < N; i++)
+            {
+                sum += _array[i];
+            }
+            return sum;
+        }
+    
+        [Benchmark]
+        public int ImmutableArray()
+        {
+            var sum = 0;
+            for (int i = 0; i < N; i++)
+            {
+                sum += _immutable[i];
+            }
+            return sum;
+        }
     }
 }

@@ -1,24 +1,42 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
-namespace mROA.Implementation;
-
-public interface ICallRequest
+namespace mROA.Implementation
 {
-    Guid Id { get; }
-    int CommandId { get; }
-    int ObjectId { get; }
-    object? Parameter { get; }
-}
+    public interface ICallRequest
+    {
+        Guid Id { get; }
+        int CommandId { get; }
+        ComplexObjectIdentifier ObjectId { get; }
+        object?[]? Parameters { get; }
+    }
 
-public class DefaultCallRequest : ICallRequest
-{
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public int CommandId { get; init; }
-    public int ObjectId { get; init; } = -1;
-    
-    [JsonIgnore]
-    public Type? ParameterType { get; init; }
-    public object? Parameter { get; set; }
+    public class DefaultCallRequest : ICallRequest
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public int CommandId { get; set; }
+        public ComplexObjectIdentifier ObjectId { get; set; } = ComplexObjectIdentifier.Null;
+
+        public object?[]? Parameters { get; set; }
+
+        public override string ToString()
+        {
+            return $"Call request {{ Id : {Id}, CommandId : {CommandId}, ObjectId : {ObjectId} }}";
+        }
+    }
+
+    public class CancelRequest : ICallRequest
+    {
+        public Guid Id { get; set; }
+        public int CommandId { get; set; } = -2;
+        public ComplexObjectIdentifier ObjectId { get; set; } = ComplexObjectIdentifier.Null;
+        public object?[]? Parameters { get; set; } = null;
+
+        public override string ToString()
+        {
+            return $"Cancel request {{ Id : {Id}, CommandId : {CommandId}, ObjectId : {ObjectId} }}";
+        }
+    }
 }

@@ -1,15 +1,15 @@
 using mROA.Implementation;
 using mROA.Implementation.Attributes;
 
-namespace Example.Shared;
-
-[SharedObjectInterface]
-public interface IPrinterFactory
+namespace Example.Shared
 {
-    SharedObject<IPrinter> Create(string printerName);
-    void Register(SharedObject<IPrinter> printer);
-    SharedObject<IPrinter> GetPrinterByName(string printerName);
-    SharedObject<IPrinter> GetFirstPrinter();
-    string[] CollectAllNames();
-
+    [SharedObjectInterface]
+    public interface IPrinterFactory : IShared
+    {
+        IPrinter Create(string printerName);
+        void Register(IPrinter printer);
+        IPrinter GetPrinterByName(string printerName);
+        IPrinter GetFirstPrinter();
+        string[] CollectAllNames();
+    }
 }

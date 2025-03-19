@@ -1,89 +1,102 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using mROA.Abstract;
 
-namespace mROA.Implementation.Backend;
-
-public class NetworkGatewayModule : IGatewayModule
+namespace mROA.Implementation.Backend
 {
-    private readonly Type? _interactionModuleType;
-    private readonly IInjectableModule[]? _injectableModules;
-    private readonly TcpListener _tcpListener;
-    private IConnectionHub? _hub;
-    private ISerializationToolkit? _serialization;
-
-    public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType, IInjectableModule[] injectableModules)
+    public class NetworkGatewayModule : IGatewayModule
     {
-        _tcpListener = new(endpoint);
-        _interactionModuleType = interactionModuleType;
-        _injectableModules = injectableModules;
-    }
+        private readonly IInjectableModule[]? _injectableModules;
+        private readonly Type? _interactionModuleType;
+        private readonly TcpListener _tcpListener;
+        private IConnectionHub? _hub;
+        private ISerializationToolkit? _serialization;
 
-    public void Run()
-    {
-        _tcpListener.Start();
-        Console.WriteLine($"Listening on {_tcpListener.LocalEndpoint}");
-        Console.WriteLine("Enter Backspace to stop");
-
-        Task.Run(HandleIncomingConnections);
-
-        while (true)
+        public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType,
+            IInjectableModule[] injectableModules)
         {
-            var key = Console.ReadKey();
-            if (key.Key == ConsoleKey.Backspace)
-                break;
+            _tcpListener = new(endpoint);
+            _interactionModuleType = interactionModuleType;
+            _injectableModules = injectableModules;
         }
 
-        Console.WriteLine("Stopping");
-    }
-
-    public void Dispose()
-    {
-        _tcpListener.Stop();
-        _tcpListener.Dispose();
-    }
-
-    private void HandleIncomingConnections()
-    {
-        if (_hub is null)
-            throw new NullReferenceException("Hub module is null");
-        if (_tcpListener == null)
-            throw new NullReferenceException("TcpListener is null");
-        if (_injectableModules is null)
-            throw new NullReferenceException("InjectableModules is null");
-        if (_interactionModuleType is null)
-            throw new NullReferenceException("InteractionModuleType is null");
-        if (_serialization is null)
-            throw new NullReferenceException("Serialization is null");
-        
-        while (true)
+        public void Run()
         {
-            var client = _tcpListener.AcceptTcpClient();
-            Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
-            var interaction = Activator.CreateInstance(_interactionModuleType) as INextGenerationInteractionModule;
+            _tcpListener.Start();
+            Console.WriteLine($"Listening on {_tcpListener.LocalEndpoint}");
+            Console.WriteLine("Enter Backspace to stop");
 
-            foreach (var injectableModule in _injectableModules)
-                interaction!.Inject(injectableModule);
+            Task.Run(HandleIncomingConnections);
 
-            interaction!.Inject(_serialization);
-            
-            interaction.BaseStream = client.GetStream();
-            interaction.StartInfiniteReceiving();
-            interaction.PostMessage(new NetworkMessage
+            while (true)
             {
-                Id = Guid.NewGuid(), MessageType = EMessageType.IdAssigning,
-                Data = _serialization.Serialize(new IdAssingnment { Id = interaction.ConnectionId })
-            });
-            _hub.RegisterInteraction(interaction);
-            Console.WriteLine("Client registered");
-        }
-    }
+                var key = Console.ReadKey();
+                if (key.Key == ConsoleKey.Backspace)
+                    break;
+            }
 
-    public void Inject<T>(T dependency)
-    {
-        if (dependency is IConnectionHub interactionModule)
-            _hub = interactionModule;
-        if (dependency is ISerializationToolkit serializationToolkit)
-            _serialization = serializationToolkit;
+            Console.WriteLine("Stopping");
+        }
+
+        public void Dispose()
+        {
+            _tcpListener.Stop();
+        }
+
+        public void Inject<T>(T dependency)
+        {
+            switch (dependency)
+            {
+                case IConnectionHub interactionModule:
+                    _hub = interactionModule;
+                    break;
+                case ISerializationToolkit serializationToolkit:
+                    _serialization = serializationToolkit;
+                    break;
+            }
+        }
+
+        private void HandleIncomingConnections()
+        {
+            ThrowIfNotInjected();
+
+            while (true)
+            {
+                var client = _tcpListener.AcceptTcpClient();
+                Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
+                var interaction = Activator.CreateInstance(_interactionModuleType!) as INextGenerationInteractionModule;
+
+                foreach (var injectableModule in _injectableModules!)
+                    interaction!.Inject(injectableModule);
+
+                interaction!.Inject(_serialization);
+
+                interaction.BaseStream = client.GetStream();
+
+                interaction.PostMessage(new NetworkMessage
+                {
+                    Id = Guid.NewGuid(), SchemaId = MessageType.IdAssigning,
+                    Data = _serialization!.Serialize(new IdAssignment { Id = -interaction.ConnectionId })
+                });
+                _hub!.RegisterInteraction(interaction);
+                Console.WriteLine("Client registered");
+            }
+        }
+
+        private void ThrowIfNotInjected()
+        {
+            if (_hub is null)
+                throw new NullReferenceException("Hub module is null");
+            if (_tcpListener == null)
+                throw new NullReferenceException("TcpListener is null");
+            if (_injectableModules is null)
+                throw new NullReferenceException("InjectableModules is null");
+            if (_interactionModuleType is null)
+                throw new NullReferenceException("InteractionModuleType is null");
+            if (_serialization is null)
+                throw new NullReferenceException("Serialization is null");
+        }
     }
 }

@@ -1,28 +1,47 @@
-﻿using Example.Shared;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Example.Shared;
 using mROA.Implementation;
 
-namespace Example.Frontend;
-
-public class ClientBasedPrinter : IPrinter
+namespace Example.Frontend
 {
-    public string GetName()
+    public class ClientBasedPrinter : IPrinter
     {
-        Console.WriteLine("ClientBasedPrinter called from server!!!!!!!!!!! Vova likes that:)");
-        return "ClientBasedPrinter from mroa";
+        public void OnPrintExternal(IPage p0, RequestContext ro)
+        {
+        }
+
+        public double Resource { get; set; }
+
+        public string GetName()
+        {
+            Console.WriteLine("ClientBasedPrinter called from server!!!!!!!!!!! Vova likes that:)");
+            DemoCheck.BackwardCall = true;
+
+            return "ClientBasedPrinter from mroa";
+        }
+
+        public async Task<IPage> Print(string text, bool some, RequestContext context,
+            CancellationToken cancellationToken)
+        {
+            Console.WriteLine($"Printed: {text}");
+            await Task.Yield();
+            return new ClientBasedPage();
+        }
+
+        public event Action<IPage, RequestContext>? OnPrint;
+
+        public void Dispose()
+        {
+        }
     }
 
-    public async Task<SharedObject<IPage>> Print(string text, CancellationToken cancellationToken)
+    public class ClientBasedPage : IPage
     {
-        Console.WriteLine($"Printed: {text}");
-        await Task.Yield();
-        return new ClientBasedPage();
-    }
-}
-
-public class ClientBasedPage : IPage
-{
-    public byte[] GetData()
-    {
-        return [1, 2, 3];
+        public byte[] GetData()
+        {
+            return new byte[] { 1, 2, 3 };
+        }
     }
 }

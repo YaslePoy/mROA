@@ -1,62 +1,69 @@
+using System;
+using System.Collections.Generic;
 using mROA.Abstract;
 
-namespace mROA.Implementation.Backend;
-
-public class MultiClientContextRepository(Func<int, IContextRepository> produceRepository) : IContextRepository, IContextRepositoryHub
+namespace mROA.Implementation.Backend
 {
-    private Dictionary<int, IContextRepository> _repositories = new();
-
-    private IContextRepository GetRepositoryByClientId(int clientId)
+    public class MultiClientContextRepository : IContextRepository, IContextRepositoryHub
     {
-        if (_repositories.TryGetValue(clientId, out var repository))
+        private readonly Func<int, IContextRepository> _produceRepository;
+        private readonly Dictionary<int, IContextRepository> _repositories = new();
+
+        public MultiClientContextRepository(Func<int, IContextRepository> produceRepository)
+        {
+            _produceRepository = produceRepository;
+        }
+
+        public void Inject<T>(T dependency)
+        {
+        }
+
+        public int HostId { get; set; }
+
+        public int ResisterObject<T>(object o, IEndPointContext context)
+        {
+            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            return repository.ResisterObject<T>(o, context);
+        }
+
+        public void ClearObject(ComplexObjectIdentifier id)
+        {
+            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            repository.ClearObject(id);
+        }
+
+        public T GetObject<T>(ComplexObjectIdentifier id)
+        {
+            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            return repository.GetObject<T>(id);
+        }
+
+        public object GetSingleObject(Type type, int ownerId)
+        {
+            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            return repository.GetSingleObject(type, ownerId);
+        }
+
+        public int GetObjectIndex<T>(object o, IEndPointContext context)
+        {
+            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            return repository.GetObjectIndex<T>(o, context);
+        }
+
+        public IContextRepository GetRepository(int clientId)
+        {
+            var repository = GetRepositoryByClientId(clientId);
             return repository;
-        
-        var created = produceRepository(clientId);
-        _repositories.Add(clientId, created);
-        return created;
-    }
-    public void Inject<T>(T dependency)
-    {
-    }
+        }
 
-    public int ResisterObject(object o)
-    {
-        return GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).ResisterObject(o);
-    }
+        private IContextRepository GetRepositoryByClientId(int clientId)
+        {
+            if (_repositories.TryGetValue(clientId, out var repository))
+                return repository;
 
-    public void ClearObject(int id)
-    {
-        GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).ClearObject(id);
-    }
-
-    public object GetObject(int id)
-    {
-        return GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).GetObject(id);
-    }
-
-    public T? GetObject<T>(int id)
-    {
-        return GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).GetObject<T>(id);
-    }
-
-    public T GetSingleObject<T>()
-    {
-        var result = GetSingleObject(typeof(T));
-        return (T)result;
-    }
-
-    public object GetSingleObject(Type type)
-    {
-        return GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).GetSingleObject(type); 
-    }
-
-    public int GetObjectIndex(object o)
-    {
-        return GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId()).GetObjectIndex(o); 
-    }
-
-    public IContextRepository GetRepository(int clientId)
-    {
-        return GetRepositoryByClientId(clientId);
+            var created = _produceRepository(clientId);
+            _repositories.Add(clientId, created);
+            return created;
+        }
     }
 }

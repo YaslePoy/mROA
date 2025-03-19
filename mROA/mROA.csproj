@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
+        <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
         <Title>mROA</Title>
         <Version>2.0.0</Version>
@@ -12,6 +11,21 @@
         <PackageProjectUrl>https://github.com/YaslePoy/mROA</PackageProjectUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>RPC</PackageTags>
+        <LangVersion>9</LangVersion>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DefineConstants/>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DefineConstants></DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="System.Text.Json" Version="9.0.2"/>
+    </ItemGroup>
 
 </Project>

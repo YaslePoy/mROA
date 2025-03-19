@@ -1,20 +1,23 @@
+using System.Collections.Generic;
+using System.Linq;
 using mROA.Abstract;
 
-namespace mROA.Implementation.Bootstrap;
-
-public class FullMixBuilder
+namespace mROA.Implementation.Bootstrap
 {
-    public List<IInjectableModule> Modules { get; } = [];
-
-    public void Build()
+    public class FullMixBuilder
     {
-        foreach (var module in Modules)
-        foreach (var injection in Modules)
-            module.Inject(injection);
-    }
+        public List<IInjectableModule> Modules { get; } = new() { };
 
-    public T? GetModule<T>()
-    {
-        return Modules.OfType<T>().FirstOrDefault();
+        public void Build()
+        {
+            foreach (var module in Modules)
+            foreach (var injection in Modules)
+                module.Inject(injection);
+        }
+
+        public T? GetModule<T>()
+        {
+            return Modules.OfType<T>().FirstOrDefault();
+        }
     }
 }

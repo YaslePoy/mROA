@@ -1,62 +1,75 @@
-﻿using System.Collections.Frozen;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using mROA.Abstract;
 
-namespace mROA.Implementation;
-
-public class RemoteContextRepository : IContextRepository
+namespace mROA.Implementation
 {
-    private IRepresentationModuleProducer? _representationProducer;
-    public static FrozenDictionary<Type, Type> RemoteTypes = FrozenDictionary<Type, Type>.Empty;
-    public int ResisterObject(object o)
+    public class RemoteContextRepository : IContextRepository
     {
-        throw new NotSupportedException();
-    }
+        private List<RemoteObjectBase> _producedRemoteEndpoints = new();
+        public static Dictionary<Type, Type> RemoteTypes = new();
+        private IRepresentationModuleProducer? _representationProducer;
 
-    public void ClearObject(int id)
-    {
-        throw new NotSupportedException();
-    }
+        public int HostId { get; set; }
 
-    public object GetObject(int id)
-    {
-        throw new NotSupportedException();
-    }
-
-    public T GetObject<T>(int id)
-    {
-        if (_representationProducer == null)
-            throw new NullReferenceException("representation producer is not initialized");
-        
-        if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
-        var remote = (T)Activator.CreateInstance(remoteType, id, _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
-        return remote;
-    }
-    public T GetSingleObject<T>()
-    {
-        var obj = GetSingleObject(typeof(T));
-        return (T)obj;
-    }
-    
-    public object GetSingleObject(Type type)
-    {
-        if (_representationProducer == null)
-            throw new NullReferenceException("representation producer is not initialized");
-        
-        return Activator.CreateInstance(RemoteTypes[type], -1, _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId()))!;
-    }
-
-    public int GetObjectIndex(object o)
-    {
-        if (o is RemoteObjectBase remote)
+        public int ResisterObject<T>(object o, IEndPointContext context)
         {
-            return remote.Id;
+            throw new NotSupportedException();
         }
-        throw new NotSupportedException();
-    }
 
-    public void Inject<T>(T dependency)
-    {
-        if (dependency is IRepresentationModuleProducer serialisationModule)
-            _representationProducer = serialisationModule;
+        public void ClearObject(ComplexObjectIdentifier id)
+        {
+            throw new NotSupportedException();
+        }
+
+        public T GetObject<T>(ComplexObjectIdentifier id)
+        {
+            var index = _producedRemoteEndpoints.Find(i => i.Identifier.Equals(id));
+            if (index is not null)
+                return (T)(index as object);
+            if (_representationProducer == null)
+                throw new NullReferenceException("representation producer is not initialized");
+
+            if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
+            var representationModule =
+                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            var remote = (T)Activator.CreateInstance(remoteType, id.ContextId,
+                representationModule)!;
+
+            _producedRemoteEndpoints.Add((remote as RemoteObjectBase)!);
+
+            return remote;
+        }
+
+        public object GetSingleObject(Type type, int ownerId)
+        {
+            if (_representationProducer == null)
+                throw new NullReferenceException("representation producer is not initialized");
+
+            var representationModule =
+                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+
+            _producedRemoteEndpoints.Add((Activator.CreateInstance(RemoteTypes[type], -1,
+                representationModule) as RemoteObjectBase)!);
+
+            return _producedRemoteEndpoints.Last();
+        }
+
+        public int GetObjectIndex<T>(object o, IEndPointContext context)
+        {
+            if (o is RemoteObjectBase remote)
+            {
+                return remote.Id;
+            }
+
+            throw new NotSupportedException();
+        }
+
+        public void Inject<T>(T dependency)
+        {
+            if (dependency is IRepresentationModuleProducer serialisationModule)
+                _representationProducer = serialisationModule;
+        }
     }
 }

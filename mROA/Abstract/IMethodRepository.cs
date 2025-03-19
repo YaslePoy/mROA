@@ -1,11 +1,7 @@
-﻿using System.Reflection;
-
-namespace mROA.Abstract;
-
-public interface IMethodRepository : IInjectableModule
+﻿namespace mROA.Abstract
 {
-    MethodInfo GetMethod(int id);
-    int RegisterMethod(MethodInfo method);
-    
-    IEnumerable<MethodInfo> GetMethods();
+    public interface IMethodRepository : IInjectableModule
+    {
+        IMethodInvoker GetMethod(int id);
+    }
 }

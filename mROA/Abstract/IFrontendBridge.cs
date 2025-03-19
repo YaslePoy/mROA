@@ -1,3 +1,6 @@
-namespace mROA.Abstract;
-
-public interface IFrontendBridge : IInjectableModule;
+namespace mROA.Abstract
+{
+    public interface IFrontendBridge : IInjectableModule
+    {
+    }
+}
