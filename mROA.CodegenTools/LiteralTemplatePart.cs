@@ -11,6 +11,8 @@ namespace mROA.CodegenTools
         }
 
         public TemplateDocument Context { get; set; }
+        public int TargetLength { get; }
+
         public string Bake()
         {
             return _internalText;

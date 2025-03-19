@@ -16,9 +16,11 @@ namespace mROA.CodegenTools
 
         public string LinkedTag => _linkedTag;
 
+        public int TargetLength { get; }
+
         public string Bake()
         {
-            return Context.Parts.OfType<ITagged>().FirstOrDefault(i => i.Tag == _linkedTag)?.Bake();
+            return Context[_linkedTag]?.Bake();
         }
     }
 }

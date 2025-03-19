@@ -16,6 +16,8 @@ namespace mROA.CodegenTools
         }
 
         public string Tag => _tag;
+        public int TargetLength => StoredText.Length;
+
         public string Bake()
         {
             return String.Empty;
