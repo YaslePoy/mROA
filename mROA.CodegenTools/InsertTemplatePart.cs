@@ -5,12 +5,19 @@ namespace mROA.CodegenTools
 {
     public class InsertTemplatePart : ITemplatePart, ITagged
     {
-        private string _insertedText = null;
-        private ITemplatePart _insertedPart = null;
+        private string _insertedText;
+        private ITemplatePart _insertedPart;
         private string _tag;
         public string Tag => _tag;
         public TemplateDocument Context { get; set; }
-        public List<string> Parameters;
+        public readonly List<string> Parameters;
+
+        public InsertTemplatePart(string tag, List<string> parameters, TemplateDocument context)
+        {
+            _tag = tag;
+            Parameters = parameters;
+            Context = context;
+        }
 
         private bool IsInserted(object value)
         {

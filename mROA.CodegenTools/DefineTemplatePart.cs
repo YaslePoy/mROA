@@ -6,11 +6,13 @@ namespace mROA.CodegenTools
     {
         public TemplateDocument Context { get; set; }
         public string StoredText { get; }
-        private string _tag;
+        private readonly string _tag;
 
-        public DefineTemplatePart(string storedText)
+        public DefineTemplatePart(string storedText, string tag, TemplateDocument context)
         {
             StoredText = storedText;
+            _tag = tag;
+            Context = context;
         }
 
         public string Tag => _tag;

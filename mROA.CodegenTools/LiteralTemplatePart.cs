@@ -3,6 +3,13 @@ namespace mROA.CodegenTools
     public class LiteralTemplatePart : ITemplatePart
     {
         private string _internalText;
+
+        public LiteralTemplatePart(string internalText, TemplateDocument context)
+        {
+            _internalText = internalText;
+            Context = context;
+        }
+
         public TemplateDocument Context { get; set; }
         public string Bake()
         {
