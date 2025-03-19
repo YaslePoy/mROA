@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace mROA.CodegenTools
 {
-    public class InsertTemplatePart : ITemplatePart, ITagged
+    public class InsertTemplatePart : ITagged
     {
         private object _insertedValue;
         private string _tag;
