@@ -41,7 +41,7 @@ namespace mROA.CodegenTools
         
         public void Setup(object value)
         {
-            if (!(value is string) && !(value is ITemplatePart) )
+            if (!(value is string) && !(value is ITemplateSection) )
                 return;
             if (IsInserted(value))
                 return;
@@ -61,7 +61,7 @@ namespace mROA.CodegenTools
                 case string s:
                     return s;
                 default:
-                    return ((ITemplatePart)_insertedValue).Bake();
+                    return ((ITemplateSection)_insertedValue).Bake();
             }
         }
     }

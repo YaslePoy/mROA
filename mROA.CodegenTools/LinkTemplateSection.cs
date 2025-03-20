@@ -2,11 +2,11 @@ using System.Linq;
 
 namespace mROA.CodegenTools
 {
-    public class LinkTemplatePart : ITemplatePart
+    public class LinkTemplateSection : ITemplateSection
     {
         private readonly string _linkedTag;
 
-        public LinkTemplatePart(string linkedTag, TemplateDocument context)
+        public LinkTemplateSection(string linkedTag, TemplateDocument context)
         {
             _linkedTag = linkedTag;
             Context = context;

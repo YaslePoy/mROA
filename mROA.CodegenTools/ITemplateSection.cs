@@ -1,13 +1,13 @@
 namespace mROA.CodegenTools
 {
-    public interface ITemplatePart
+    public interface ITemplateSection
     {
         TemplateDocument Context { get; set; }
         int TargetLength { get; }
         string Bake();
     }
 
-    public interface ITagged : ITemplatePart
+    public interface ITagged : ITemplateSection
     {
         string Tag { get; }
     }

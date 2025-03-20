@@ -2,13 +2,13 @@ using System;
 
 namespace mROA.CodegenTools
 {
-    public class DefineTemplatePart : ITemplatePart, ITagged
+    public class DefineTemplateSection : ITemplateSection, ITagged
     {
         public TemplateDocument Context { get; set; }
         public string StoredText { get; }
         private readonly string _tag;
 
-        public DefineTemplatePart(string storedText, string tag, TemplateDocument context)
+        public DefineTemplateSection(string storedText, string tag, TemplateDocument context)
         {
             StoredText = storedText;
             _tag = tag;

@@ -1,10 +1,10 @@
 namespace mROA.CodegenTools
 {
-    public class LiteralTemplatePart : ITemplatePart
+    public class LiteralTemplateSection : ITemplateSection
     {
         private string _internalText;
 
-        public LiteralTemplatePart(string internalText, TemplateDocument context)
+        public LiteralTemplateSection(string internalText, TemplateDocument context)
         {
             _internalText = internalText;
             Context = context;
