@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace mROA.CodegenTools
 {
-    public class InsertTemplatePart : ITagged
+    public class InsertTemplatePart : ITagged, IBaking
     {
         private object _insertedValue;
         private string _tag;
@@ -11,10 +12,10 @@ namespace mROA.CodegenTools
         public TemplateDocument Context { get; set; }
         public readonly List<string> Parameters;
 
-        public InsertTemplatePart(string tag, List<string> parameters, TemplateDocument context)
+        public InsertTemplatePart(string tag, TemplateDocument context, params string[] parameters)
         {
             _tag = tag;
-            Parameters = parameters;
+            Parameters = parameters.ToList();
             Context = context;
         }
 
@@ -61,7 +62,7 @@ namespace mROA.CodegenTools
                 case string s:
                     return s;
                 default:
-                    return ((ITemplateSection)_insertedValue).Bake();
+                    return ((ITemplateSection)_insertedValue).ToString();
             }
         }
     }

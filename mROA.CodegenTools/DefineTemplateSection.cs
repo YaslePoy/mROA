@@ -2,7 +2,7 @@ using System;
 
 namespace mROA.CodegenTools
 {
-    public class DefineTemplateSection : ITemplateSection, ITagged
+    public class DefineTemplateSection : ITagged
     {
         public TemplateDocument Context { get; set; }
         public string StoredText { get; }
@@ -18,14 +18,10 @@ namespace mROA.CodegenTools
         public string Tag => _tag;
         public int TargetLength => StoredText.Length;
 
-        public string Bake()
-        {
-            return String.Empty;
-        }
 
         public override string ToString()
         {
-            return StoredText;
+            return $"{nameof(_tag)}: {_tag}, {nameof(StoredText)}: {StoredText}";
         }
     }
 }

@@ -1,6 +1,6 @@
 namespace mROA.CodegenTools
 {
-    public class LiteralTemplateSection : ITemplateSection
+    public class LiteralTemplateSection : ITemplateSection, IBaking
     {
         private string _internalText;
 
@@ -11,11 +11,11 @@ namespace mROA.CodegenTools
         }
 
         public TemplateDocument Context { get; set; }
-        public int TargetLength { get; }
+        public int TargetLength => _internalText.Length;
 
         public string Bake()
         {
-            return _internalText;
+            return ToString();
         }
 
         public override string ToString()

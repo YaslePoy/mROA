@@ -2,7 +2,7 @@ using System;
 
 namespace mROA.CodegenTools
 {
-    public class ProgrammableTextSection : ITemplateSection
+    public class ProgrammableTextSection : ITemplateSection, IBaking
     {
         public TemplateDocument Context { get; set; }
         public int TargetLength => 0;

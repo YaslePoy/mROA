@@ -6,7 +6,7 @@ namespace mROA.CodegenTools
 {
     public class TemplateDocument
     {
-        public List<ITemplateSection> Parts { get; }
+        public List<ITemplateSection> Parts { get; set; } = new List<ITemplateSection>();
         public object AdditionalContext { get; set; }
         public ITagged this[string tag] => Parts.OfType<ITagged>().FirstOrDefault(i => i.Tag == tag);
         public void Insert(string tag, object value)
@@ -22,10 +22,9 @@ namespace mROA.CodegenTools
         {
             var approximatelyLength = Parts.Sum(i => i.TargetLength);
             var stringBuilder = new StringBuilder(approximatelyLength);
-
-            for (int i = 0; i < Parts.Count; i++)
+            
+            foreach (var part in Parts.OfType<IBaking>())
             {
-                var part = Parts[i];
                 var baked = part.Bake();
                 stringBuilder.Append(baked);
             }
