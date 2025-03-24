@@ -5,6 +5,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>BasicDemo</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,9 +13,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="exampleTemplate.cstmpl">
+      <None Remove="exampleTemplate.cstmpl" />
+      <EmbeddedResource Include="exampleTemplate.cstmpl">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
+      </EmbeddedResource>
     </ItemGroup>
 
 </Project>

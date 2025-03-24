@@ -18,6 +18,8 @@ using mROA.CodegenTools;
 // doc.Insert("insert", "inserted text by insert template => ");
 // doc.Parts.Add(new DefineTemplateSection("post added", "post", doc));
 // Console.WriteLine(doc.Compile());
+var doc = TemplateReader.FromEmbeddedResource("exampleTemplate.cstmpl");
+doc.Insert("ctorInserting", "test inserting");
+Console.WriteLine(doc.Compile());
 
-var doc = TemplateReader.Parce(File.ReadAllText("exampleTemplate.cstmpl"));
 Console.WriteLine(doc.Parts.Count);

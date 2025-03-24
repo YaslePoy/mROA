@@ -21,7 +21,7 @@ namespace mROA.CodegenTools
 
         public override string ToString()
         {
-            return $"{nameof(_tag)}: {_tag}, {nameof(StoredText)}: {StoredText}";
+            return StoredText;
         }
     }
 }

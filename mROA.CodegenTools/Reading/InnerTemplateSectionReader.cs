@@ -4,7 +4,8 @@ namespace mROA.CodegenTools
 {
     public class InnerTemplateSectionReader : LeadingTextSectionReader
     {
-        public InnerTemplateSectionReader() : base("<!T")
+        public InnerTemplateSectionReader() 
+            : base("<!T")
         {
         }
 

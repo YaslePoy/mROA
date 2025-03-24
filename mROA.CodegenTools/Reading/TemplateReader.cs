@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace mROA.CodegenTools
 {
@@ -65,6 +67,15 @@ namespace mROA.CodegenTools
             }
 
             return doc;
+        }
+
+        public static TemplateDocument FromEmbeddedResource(string resourceName)
+        {
+            var fileName = Assembly.GetCallingAssembly().GetManifestResourceNames().First(n => n.EndsWith(resourceName));
+            var res = Assembly.GetCallingAssembly().GetManifestResourceStream(fileName);
+            var reader = new StreamReader(res);
+            var templateText = reader.ReadToEnd();
+            return Parce(templateText);
         }
     }
 }

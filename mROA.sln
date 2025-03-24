@@ -35,7 +35,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA.CodegenTools", "mROA.C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Codegen", "Codegen", "{3DB22457-E65B-426F-B3DD-08C615132B3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicDemo", "BasicDemo\BasicDemo.csproj", "{87396E86-D7ED-4556-AB50-F3696FEF9072}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codegen.Basic", "Codegen.Basic\Codegen.Basic.csproj", "{87396E86-D7ED-4556-AB50-F3696FEF9072}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

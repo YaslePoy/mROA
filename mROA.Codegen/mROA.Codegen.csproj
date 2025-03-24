@@ -34,7 +34,10 @@
 	
 	<ItemGroup>
 	  <None Remove="test.tpt" />
-	  <EmbeddedResource Include="test.tpt" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <ProjectReference Include="..\mROA.CodegenTools\mROA.CodegenTools.csproj" />
 	</ItemGroup>
 
 
