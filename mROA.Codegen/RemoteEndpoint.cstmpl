@@ -7,9 +7,11 @@ using mROA.Abstract;
 
 namespace <!L namespaceName>
 {
-    partial class <!L className> : RemoteObjectBase, <!L originalName>
+    partial class <!L className> 
+        : RemoteObjectBase, <!L originalName>
     {
-        public <!L className>(int id, IRepresentationModule representationModule) : base(id, representationModule)
+        public <!L className>(int id, IRepresentationModule representationModule) 
+            : base(id, representationModule)
         {
         }
 

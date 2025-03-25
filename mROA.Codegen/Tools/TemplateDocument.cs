@@ -9,7 +9,7 @@ namespace mROA.CodegenTools
     {
         public List<ITemplateSection> Parts { get; set; } = new List<ITemplateSection>();
         public object AdditionalContext { get; set; }
-        public ITagged this[string tag] => Parts.OfType<ITagged>().FirstOrDefault(i => i.Tag == tag);
+        public ITagged? this[string tag] => Parts.OfType<ITagged>().FirstOrDefault(i => i.Tag == tag);
 
         public void Insert(string tag, object value)
         {
