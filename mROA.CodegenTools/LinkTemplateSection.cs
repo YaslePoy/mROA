@@ -34,5 +34,10 @@ namespace mROA.CodegenTools
         {
             return $"{nameof(LinkedTag)}: {_linkedTag}";
         }
+
+        public object Clone()
+        {
+            return new LinkTemplateSection(_linkedTag, Context);
+        }
     }
 }

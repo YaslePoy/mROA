@@ -20,5 +20,10 @@ namespace mROA.CodegenTools
         {
             return _bakeFunc(Context.AdditionalContext);
         }
+
+        public object Clone()
+        {
+            return new ProgrammableTextSection(_bakeFunc, Context);
+        }
     }
 }

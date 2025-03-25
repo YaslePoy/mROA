@@ -65,5 +65,10 @@ namespace mROA.CodegenTools
                     return ((ITemplateSection)_insertedValue).ToString();
             }
         }
+
+        public object Clone()
+        {
+            return new InsertTemplatePart(_tag, Context, Parameters.ToArray());
+        }
     }
 }

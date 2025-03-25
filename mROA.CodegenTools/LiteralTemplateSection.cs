@@ -22,5 +22,10 @@ namespace mROA.CodegenTools
         {
             return _internalText;
         }
+
+        public object Clone()
+        {
+            return new LiteralTemplateSection(_internalText, Context);
+        }
     }
 }

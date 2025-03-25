@@ -1,14 +1,16 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace mROA.CodegenTools
 {
-    public class TemplateDocument
+    public class TemplateDocument : ICloneable
     {
         public List<ITemplateSection> Parts { get; set; } = new List<ITemplateSection>();
         public object AdditionalContext { get; set; }
         public ITagged this[string tag] => Parts.OfType<ITagged>().FirstOrDefault(i => i.Tag == tag);
+
         public void Insert(string tag, object value)
         {
             var selectedPart = this[tag];
@@ -22,7 +24,7 @@ namespace mROA.CodegenTools
         {
             var approximatelyLength = Parts.Sum(i => i.TargetLength);
             var stringBuilder = new StringBuilder(approximatelyLength);
-            
+
             foreach (var part in Parts.OfType<IBaking>())
             {
                 var baked = part.Bake();
@@ -30,6 +32,21 @@ namespace mROA.CodegenTools
             }
 
             return stringBuilder.ToString();
+        }
+
+        public object Clone()
+        {
+            var cloneDoc = new TemplateDocument();
+            cloneDoc.AdditionalContext = AdditionalContext is ICloneable c ? c.Clone() : AdditionalContext;
+            
+            cloneDoc.Parts = Parts.Select(i =>
+            {
+                var clone = i.Clone() as ITemplateSection;
+                clone.Context = cloneDoc;
+                return clone;
+            }).ToList();
+            
+            return cloneDoc;
         }
     }
 }

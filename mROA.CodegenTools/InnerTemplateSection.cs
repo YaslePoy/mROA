@@ -16,5 +16,10 @@ namespace mROA.CodegenTools
             Context = context;
             InnerTemplate = innerTemplate;
         }
+
+        public object Clone()
+        {
+            return new InnerTemplateSection(_tag, InnerTemplate, Context);
+        }
     }
 }

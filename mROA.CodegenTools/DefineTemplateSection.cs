@@ -23,5 +23,10 @@ namespace mROA.CodegenTools
         {
             return StoredText;
         }
+
+        public object Clone()
+        {
+            return new DefineTemplateSection(StoredText, _tag, Context);
+        }
     }
 }

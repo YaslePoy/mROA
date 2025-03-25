@@ -1,6 +1,8 @@
+using System;
+
 namespace mROA.CodegenTools
 {
-    public interface ITemplateSection
+    public interface ITemplateSection : ICloneable
     {
         TemplateDocument Context { get; set; }
         int TargetLength { get; }
