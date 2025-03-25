@@ -11,7 +11,8 @@ namespace mROA.Codegen
     public class CoCodegenMethodRepository : IMethodRepository
     {
         private readonly List<IMethodInvoker> _methods = new () {
-            <!I invoker>
+            <!I invoker r sep invokerSep><!D invokerSep>,
+            <!D>
         };
 
         public IMethodInvoker GetMethod(int id)

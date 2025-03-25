@@ -3,11 +3,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using mROA.CodegenTools;
 
 namespace mROA.Codegen
 {
@@ -18,6 +20,10 @@ namespace mROA.Codegen
     [Generator]
     public class mROASourceGenerator : ISourceGenerator
     {
+        private TemplateDocument MethodRepoTemplate;
+        private TemplateDocument ClassTemplateOriginal;
+        private TemplateDocument ClassTemplate;
+
         private static Predicate<IParameterSymbol> ParameterFilter =
             i => i.Type.Name is "CancellationToken" or "RequestContext";
 
@@ -26,35 +32,44 @@ namespace mROA.Codegen
 
         public void Initialize(GeneratorInitializationContext context)
         {
+            MethodRepoTemplate = TemplateReader.FromEmbeddedResource("MethodRepo.cstmpl");
+            ClassTemplateOriginal = TemplateReader.FromEmbeddedResource("RemoteEndpoint.cstmpl");
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
-            var trees = context.Compilation.SyntaxTrees;
-
-            var interfaces = new List<InterfaceDeclarationSyntax>();
-            foreach (var tree in trees)
+            try
             {
-                var node = tree.GetRoot() as CompilationUnitSyntax;
+                var trees = context.Compilation.SyntaxTrees;
 
-                foreach (var member in node.Members)
+                var interfaces = new List<InterfaceDeclarationSyntax>();
+                foreach (var tree in trees)
                 {
-                    if (member is InterfaceDeclarationSyntax ids)
-                    {
-                        interfaces.Add(ids);
-                    }
-                    else if (member is NamespaceDeclarationSyntax nds)
-                    {
-                        foreach (var inside in nds.Members)
+                    var node = tree.GetRoot() as CompilationUnitSyntax;
 
-                            if (inside is InterfaceDeclarationSyntax ids2)
-                                if (ContainsSOIAttribute(ids2.AttributeLists, context, ids2))
-                                    interfaces.Add(ids2);
+                    foreach (var member in node.Members)
+                    {
+                        if (member is InterfaceDeclarationSyntax ids)
+                        {
+                            interfaces.Add(ids);
+                        }
+                        else if (member is NamespaceDeclarationSyntax nds)
+                        {
+                            foreach (var inside in nds.Members)
+
+                                if (inside is InterfaceDeclarationSyntax ids2)
+                                    if (ContainsSOIAttribute(ids2.AttributeLists, context, ids2))
+                                        interfaces.Add(ids2);
+                        }
                     }
                 }
-            }
 
-            GenerateCode(context, context.Compilation, interfaces.ToImmutableArray());
+                GenerateCode(context, context.Compilation, interfaces.ToImmutableArray());
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("ERROR: Unable to load method repository");
+            }
         }
 
         private void GenerateCode(GeneratorExecutionContext context, Compilation compilation,
@@ -97,7 +112,7 @@ namespace mROA.Codegen
 
                 className = className.TrimStart('I') + "RemoteEndpoint";
 
-
+                ClassTemplate = (TemplateDocument)ClassTemplateOriginal.Clone();
                 var declaredMethods = new List<string>();
                 var propertiesAccessMethods = new List<(string, IMethodSymbol)>();
 
@@ -136,38 +151,24 @@ namespace mROA.Codegen
                                 impl =
                                     $"public {propertySymbol.Type.ToDisplayString()} {symbol.Name} {{ {getter.Item1} {setter.Item1} }}";
                             }
-
-                            declaredMethods.Add(impl);
+                            ClassTemplate.Insert("methods", impl);
+                            // declaredMethods.Add(impl);
                             break;
                         case IEventSymbol eventSymbol:
-                            declaredMethods.Add(
-                                $"public event {eventSymbol.Type.ToDisplayString()}? {eventSymbol.Name};");
+                            ClassTemplate.Insert("methods", $"public event {eventSymbol.Type.ToDisplayString()}? {eventSymbol.Name};");
+                            // declaredMethods.Add(
+                            //     $"public event {eventSymbol.Type.ToDisplayString()}? {eventSymbol.Name};");
                             break;
                     }
                 }
 
                 GenerateEventImplementation(classSymbol, invokers, declaredMethods, context, eventBinders);
 
-                var code = $@"// <auto-generated/>
-
-using mROA;
-using System;
-using mROA.Implementation;
-using System.Collections.Generic;
-using mROA.Abstract;
-
-namespace {namespaceName}
-{{
-    partial class {className} : RemoteObjectBase, {originalName}
-    {{
-        public {className}(int id, IRepresentationModule representationModule) : base(id, representationModule)
-        {{
-        }}
-
-        {string.Join("\r\n\t\t", declaredMethods)}
-    }}
-}}
-";
+                ClassTemplate.AddDefine("className", className);
+                ClassTemplate.AddDefine("originalName", originalName);
+                ClassTemplate.AddDefine("namespaceName", namespaceName);
+                
+                var code = ClassTemplate.Compile();
 
 
                 // Add the source code to the compilation.
@@ -182,39 +183,11 @@ namespace {namespaceName}
             {
                 var methodsStringed = invokers;
 
-                var coCodegenRepoCode = @$"// <auto-generated/>
-using System.Collections.Generic;
-using System.Reflection;
-using mROA.Abstract;
-using mROA.Implementation;
-using System;
-using System.Threading;
+                // var invokersJoin = string.Join(",\r\n\t\t\t", methodsStringed);
 
-namespace mROA.Codegen
-{{
-    public class CoCodegenMethodRepository : IMethodRepository
-    {{
-        private readonly List<IMethodInvoker> _methods = new () {{
-            {string.Join(",\r\n\t\t\t", methodsStringed)}
-        }};
+                // MethodRepoTemplate.Insert("invoker", invokersJoin);
 
-        public IMethodInvoker GetMethod(int id)
-        {{
-            if (id == -1)
-                return mROA.Implementation.MethodInvoker.Dispose;
-
-            if (_methods.Count <= id)
-                return null;
-            
-            return _methods[id];
-        }}
-
-        public void Inject<T>(T dependency)
-        {{
-        }}
-    }}
-}}
-";
+                var coCodegenRepoCode = MethodRepoTemplate.Compile();
 #if !DONT_ADD
                 context.AddSource("CoCodegenMethodRepository.g.cs", SourceText.From(coCodegenRepoCode, Encoding.UTF8));
 #endif
@@ -264,7 +237,9 @@ namespace mROA.Codegen
                 var currentEvent = events[i];
 
                 var additionalMethod = GenerateMethodExternalCaller(currentEvent, out var signature);
-                declaredMethods.Add(additionalMethod);
+                ClassTemplate.Insert("methods", additionalMethod);
+
+                // declaredMethods.Add(additionalMethod);
                 additionalSignatures.Add(signature);
                 GenerateEventCode(currentEvent, invokers, classSymbol);
                 GenerateBinderCode(currentEvent, invokers, classSymbol, singleEventBinder);
@@ -382,8 +357,9 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
             sb.AppendLine("\t\t\t" + prefix + caller + postfix + ";");
 
             sb.AppendLine("\t\t}");
+            ClassTemplate.Insert("methods", sb.ToString());
 
-            declaredMethods.Add(sb.ToString());
+            // declaredMethods.Add(sb.ToString());
             var parameterTypes = string.Join(", ",
                 $"{string.Join(", ", parameters.Select(p => $"typeof({p.Type.ToDisplayString()})"))}");
             var level = "\t\t\t";
@@ -449,6 +425,7 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
 {level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
 {level}    Invoking = (i, parameters, special) => {funcInvoking}
 {level}}}";
+            MethodRepoTemplate.Insert("invoker", backend);
 
             invokers.Add(backend);
         }
@@ -533,6 +510,8 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
 {level}        return null;
 {level}    }}
 {level}}}";
+            MethodRepoTemplate.Insert("invoker", backend);
+
             invokers.Add(backend);
         }
 
@@ -629,6 +608,7 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
             }
 
             propsCollection.Add((frontend, method));
+            MethodRepoTemplate.Insert("invoker", backend);
             invokers.Add(backend);
         }
 

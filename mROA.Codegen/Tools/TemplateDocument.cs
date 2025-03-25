@@ -50,5 +50,10 @@ namespace mROA.CodegenTools
             
             return cloneDoc;
         }
+
+        public void AddDefine(string tag, string text)
+        {
+            Parts.Add(new DefineTemplateSection(text, tag, this));
+        }
     }
 }

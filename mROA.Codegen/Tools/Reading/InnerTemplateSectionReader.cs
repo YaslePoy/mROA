@@ -14,8 +14,8 @@ namespace mROA.CodegenTools
         {
             var end = FindEnd(index + 4);
             var from = index;
-            var to = PassCaretToCloseSymbol();
-            index = to;
+            index = PassCaretToCloseSymbol();
+            var to  = index - 1;
 
             var tagName = GetTagValue(from, to);
             
