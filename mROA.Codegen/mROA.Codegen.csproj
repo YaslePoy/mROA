@@ -34,6 +34,7 @@
     
 
     <ItemGroup>
+        <EmbeddedResource Include="PartialInterface.cstmpl" />
         <EmbeddedResource Include="RemoteEndpoint.cstmpl" />
         <EmbeddedResource Include="RemoteTypeBinder.cstmpl" />
         <None Remove="MethodRepo.cstmpl"/>

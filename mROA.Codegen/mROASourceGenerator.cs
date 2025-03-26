@@ -23,6 +23,8 @@ namespace mROA.Codegen
         private TemplateDocument MethodRepoTemplate;
         private TemplateDocument ClassTemplateOriginal;
         private TemplateDocument ClassTemplate;
+        private TemplateDocument InterfaceTemplateOriginal;
+        private TemplateDocument InterfaceTemplate;
         private TemplateDocument BinderTemplate;
 
         private static Predicate<IParameterSymbol> ParameterFilter =
@@ -36,6 +38,7 @@ namespace mROA.Codegen
             MethodRepoTemplate = TemplateReader.FromEmbeddedResource("MethodRepo.cstmpl");
             ClassTemplateOriginal = TemplateReader.FromEmbeddedResource("RemoteEndpoint.cstmpl");
             BinderTemplate = TemplateReader.FromEmbeddedResource("RemoteTypeBinder.cstmpl");
+            InterfaceTemplateOriginal = TemplateReader.FromEmbeddedResource("PartialInterface.cstmpl");
         }
 
         public void Execute(GeneratorExecutionContext context)
@@ -209,8 +212,10 @@ namespace mROA.Codegen
                 .OfType<IEventSymbol>().ToList();
             if (events.Count == 0)
                 return;
-
-            var additionalSignatures = new List<string>(events.Count);
+            
+            InterfaceTemplate = (TemplateDocument)InterfaceTemplateOriginal.Clone();
+            InterfaceTemplate.AddDefine("name", classSymbol.Name);
+            InterfaceTemplate.AddDefine("namespace", classSymbol.ContainingNamespace.ToDisplayString());
             var singleEventBinder = new List<string>(events.Count);
             for (int i = 0; i < events.Count; i++)
             {
@@ -220,20 +225,12 @@ namespace mROA.Codegen
                 ClassTemplate.Insert("methods", additionalMethod);
 
                 // declaredMethods.Add(additionalMethod);
-                additionalSignatures.Add(signature);
+                InterfaceTemplate.Insert("signature", signature);
                 GenerateEventCode(currentEvent, invokers, classSymbol);
                 GenerateBinderCode(currentEvent, invokers, classSymbol, singleEventBinder);
             }
 
-            var partialInterface = $@"
-namespace {classSymbol.ContainingNamespace.ToDisplayString()}
-{{
-    public partial interface {classSymbol.Name}
-    {{
-{string.Join("\r\n", additionalSignatures)}
-    }}
-}}
-";
+            var partialInterface = InterfaceTemplate.Compile();
             var binder = $@"new EventBinder<{classSymbol.ToDisplayString()}>
         {{
             BindAction = (instance, context, representationProducer, index) =>
@@ -258,7 +255,7 @@ namespace {classSymbol.ContainingNamespace.ToDisplayString()}
             var parametersDeclaration =
                 string.Join(", ", parameters.Select(i => $"{i.ToDisplayString()} p{parameterIndex++}"));
             var signature = $@"public void {EventExternalName(eventSymbol)}({parametersDeclaration})";
-            interfaceSignature = level + signature + ";";
+            interfaceSignature = signature + ";";
             var caller = $@"{signature}
 {level}{{
 {level}    {eventSymbol.Name}?.Invoke({string.Join(", ", Enumerable.Range(0, parameterIndex).Select(i => "p" + i))});

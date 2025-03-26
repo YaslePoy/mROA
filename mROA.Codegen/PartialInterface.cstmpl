@@ -1,0 +1,8 @@
+﻿namespace <!L namespace>
+{
+    public partial interface <!L name>
+    {
+        <!I signature r sep signatureSep><!D signatureSep>
+        <!D>
+    }
+}
