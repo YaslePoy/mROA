@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace mROA.CodegenTools
 {
-    public class InsertTemplatePart : ITagged, IBaking
+    public class InsertTemplateSection : ITagged, IBaking
     {
         private object _insertedValue;
         private string _tag;
@@ -12,7 +12,7 @@ namespace mROA.CodegenTools
         public TemplateDocument Context { get; set; }
         public readonly List<string> Parameters;
 
-        public InsertTemplatePart(string tag, TemplateDocument context, params string[] parameters)
+        public InsertTemplateSection(string tag, TemplateDocument context, params string[] parameters)
         {
             _tag = tag;
             Parameters = parameters.ToList();
@@ -31,7 +31,7 @@ namespace mROA.CodegenTools
         private void ProduceInserted(object value)
         {
             var currentIndex = Context.Parts.IndexOf(this);
-            var clone = (InsertTemplatePart)MemberwiseClone();
+            var clone = (InsertTemplateSection)MemberwiseClone();
             clone._tag += "+";
 
             clone._insertedValue = value;
@@ -80,7 +80,7 @@ namespace mROA.CodegenTools
 
         public object Clone()
         {
-            return new InsertTemplatePart(_tag, Context, Parameters.ToArray());
+            return new InsertTemplateSection(_tag, Context, Parameters.ToArray());
         }
     }
 }

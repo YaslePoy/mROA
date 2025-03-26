@@ -14,7 +14,7 @@ namespace mROA.CodegenTools
         public void Insert(string tag, object value)
         {
             var selectedPart = this[tag];
-            if (selectedPart is InsertTemplatePart itp)
+            if (selectedPart is InsertTemplateSection itp)
             {
                 itp.Setup(value);
             }

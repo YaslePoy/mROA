@@ -18,7 +18,7 @@ namespace mROA.CodegenTools
             var tagText = GetTagValue(from, to);
             var parts = tagText.Split(' ');
             
-            return new InsertTemplatePart(parts[0], document, parts.Skip(1).ToArray());
+            return new InsertTemplateSection(parts[0], document, parts.Skip(1).ToArray());
         }
     }
 }

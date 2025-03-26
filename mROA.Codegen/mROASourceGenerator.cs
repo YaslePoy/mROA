@@ -80,13 +80,8 @@ namespace mROA.Codegen
         private void GenerateCode(GeneratorExecutionContext context, Compilation compilation,
             ImmutableArray<InterfaceDeclarationSyntax> classes)
         {
-            // For future 
-            // var asm = Assembly.GetAssembly(typeof(mROASourceGenerator));
-            // var files = asm.GetManifestResourceNames();
-            // var test = asm.GetManifestResourceStream("mROA.Codegen.test.tpt");
-            // var reader = new StreamReader(test);
-            // var allText = reader.ReadToEnd();
-            
+
+
             List<IMethodSymbol> totalMethods = new List<IMethodSymbol>();
 
 
@@ -155,11 +150,13 @@ namespace mROA.Codegen
                                 impl =
                                     $"public {propertySymbol.Type.ToDisplayString()} {symbol.Name} {{ {getter.Item1} {setter.Item1} }}";
                             }
+
                             ClassTemplate.Insert("methods", impl);
                             // declaredMethods.Add(impl);
                             break;
                         case IEventSymbol eventSymbol:
-                            ClassTemplate.Insert("methods", $"public event {eventSymbol.Type.ToDisplayString()}? {eventSymbol.Name};");
+                            ClassTemplate.Insert("methods",
+                                $"public event {eventSymbol.Type.ToDisplayString()}? {eventSymbol.Name};");
                             // declaredMethods.Add(
                             //     $"public event {eventSymbol.Type.ToDisplayString()}? {eventSymbol.Name};");
                             break;
@@ -171,7 +168,7 @@ namespace mROA.Codegen
                 ClassTemplate.AddDefine("className", className);
                 ClassTemplate.AddDefine("originalName", originalName);
                 ClassTemplate.AddDefine("namespaceName", namespaceName);
-                
+
                 var code = ClassTemplate.Compile();
 
 
@@ -206,17 +203,19 @@ namespace mROA.Codegen
             }
         }
 
-        private void GenerateEventImplementation(INamedTypeSymbol classSymbol, List<string> invokers, GeneratorExecutionContext context)
+        private void GenerateEventImplementation(INamedTypeSymbol classSymbol, List<string> invokers,
+            GeneratorExecutionContext context)
         {
             var events = classSymbol.AllInterfaces.Add(classSymbol).SelectMany(i => i.GetMembers())
                 .OfType<IEventSymbol>().ToList();
             if (events.Count == 0)
                 return;
-            
+
             InterfaceTemplate = (TemplateDocument)InterfaceTemplateOriginal.Clone();
             InterfaceTemplate.AddDefine("name", classSymbol.Name);
             InterfaceTemplate.AddDefine("namespace", classSymbol.ContainingNamespace.ToDisplayString());
             var singleEventBinder = new List<string>(events.Count);
+            var objectBinderTemplate = (TemplateDocument)((InnerTemplateSection)BinderTemplate["objectBinderTemplate"]).InnerTemplate.Clone();
             for (int i = 0; i < events.Count; i++)
             {
                 var currentEvent = events[i];
@@ -227,19 +226,11 @@ namespace mROA.Codegen
                 // declaredMethods.Add(additionalMethod);
                 InterfaceTemplate.Insert("signature", signature);
                 GenerateEventCode(currentEvent, invokers, classSymbol);
-                GenerateBinderCode(currentEvent, invokers, classSymbol, singleEventBinder);
+                GenerateBinderCode(currentEvent, invokers, classSymbol, objectBinderTemplate);
             }
-
+            objectBinderTemplate.AddDefine("type", classSymbol.ToDisplayString());
             var partialInterface = InterfaceTemplate.Compile();
-            var binder = $@"new EventBinder<{classSymbol.ToDisplayString()}>
-        {{
-            BindAction = (instance, context, representationProducer, index) =>
-            {{
-                var ownerId = context.OwnerId;
-                var module = representationProducer.Produce(ownerId);
-{string.Join("\r\n", singleEventBinder)}
-            }}
-}}";
+            var binder = objectBinderTemplate.Compile();
             BinderTemplate.Insert("eventBinder", binder);
 
 #if !DONT_ADD
@@ -409,10 +400,12 @@ namespace mROA.Codegen
         }
 
         private void GenerateBinderCode(IEventSymbol eventSymbol, List<string> invokers, INamedTypeSymbol baseType,
-            List<string> binders)
+            TemplateDocument document)
         {
+            var eventBinderTemplate = (TemplateDocument)((InnerTemplateSection)document["eventBinderTemplate"]!).InnerTemplate.Clone();
+            
             var index = invokers.Count - 1;
-            var parameters = (eventSymbol.Type as INamedTypeSymbol).TypeArguments.ToList();
+            var parameters = (eventSymbol.Type as INamedTypeSymbol)!.TypeArguments.ToList();
             int parameterIndex = 0;
             var parametersDeclaration = string.Join(", ",
                 JoinWithComa(Enumerable.Range(0, parameters.Count).Select(i => "p" + i++)));
@@ -421,28 +414,23 @@ namespace mROA.Codegen
                 JoinWithComa(parameters.Where(i => !ParameterFilterForType(i))
                     .Select(i => "p" + parameters.IndexOf(i)));
 
-            var callFilter = "";
+            string callFilter;
 
             var requestIndex = parameters.FindIndex(i => i.Name == "RequestContext");
             if (requestIndex != -1)
             {
                 callFilter = $"\n\r\t\t\tif(ownerId == p{requestIndex}.OwnerId) return;";
+                eventBinderTemplate.AddDefine("callFilter", callFilter);
+
             }
 
-            var eventBinderCode =
-                $@"                (instance as {baseType.ToDisplayString()}).{eventSymbol.Name} += ({parametersDeclaration}) => 
-                    {{
-                        Console.WriteLine($""Try to send to {{ownerId}} with hash code {{context.GetHashCode()}}"");
-    {callFilter}
-                        Console.WriteLine(""Sending event..."");
-                        var request = new DefaultCallRequest
-                        {{ 
-                            CommandId = {index}, ObjectId = new ComplexObjectIdentifier(index, ownerId), Parameters = new object[] {{ {transferParameters} }}
-                        }};
-                        module.PostCallMessageAsync(request.Id, MessageType.EventRequest, request);
-                    }};
-";
-            binders.Add(eventBinderCode);
+            eventBinderTemplate.AddDefine("type", baseType.ToDisplayString());
+            eventBinderTemplate.AddDefine("eventName", eventSymbol.Name);
+            eventBinderTemplate.AddDefine("parametersDeclaration", parametersDeclaration);
+            eventBinderTemplate.AddDefine("commandId", index.ToString());
+            eventBinderTemplate.AddDefine("transferParameters", transferParameters);
+            var eventBinderCode = eventBinderTemplate.Compile();
+            document.Insert("eventBinder", eventBinderCode);
         }
 
         public static string JoinWithComa(IEnumerable<string> parts) => string.Join(", ", parts);
@@ -545,20 +533,8 @@ namespace mROA.Codegen
                     var parameterTypes = string.Join(", ",
                         $"{string.Join(", ", method.Parameters.Select(p => $"typeof({p.Type.ToDisplayString()})"))}");
                     var parameterInserts = string.Join(", ",
-                        method.Parameters.Take(method.Parameters.Length - 1).Select(p =>
-                            {
-                                return Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]");
-                                // if (!p.Type.IsValueType)
-                                //     return "parameters[" + method.Parameters.IndexOf(p) + "] as " +
-                                //            p.Type.ToDisplayString();
-                                // return $"({p.Type.ToDisplayString()})parameters[{method.Parameters.IndexOf(p)}]";
-                            }
-                        ));
+                        method.Parameters.Take(method.Parameters.Length - 1).Select(p => Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
 
-                    // var valueInsert = !method.Parameters.Last().Type.IsValueType
-                    //     ? "parameters[" + (method.Parameters.Length - 1) + "] as " +
-                    //       method.Parameters.Last().Type.ToDisplayString()
-                    //     : $"({method.Parameters.Last().Type.ToDisplayString()})parameters[{method.Parameters.Length - 1}]";
                     var valueInsert = Caster(method.Parameters.Last().Type,
                         "parameters[" + (method.Parameters.Length - 1) + "]");
                     backend = $@"new mROA.Implementation.MethodInvoker 

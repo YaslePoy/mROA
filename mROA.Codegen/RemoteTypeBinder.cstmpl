@@ -12,11 +12,41 @@ namespace mROA.Codegen
     {
         static RemoteTypeBinder(){
             RemoteContextRepository.RemoteTypes = new Dictionary<Type, Type> {
-            <!I remoteTypePair r sep typesSep><!D typesSep>,
-            <!D>};
+                <!I remoteTypePair r sep typesSep><!D typesSep>,
+                <!D>
+            };
             ContextRepository.EventBinders = new object[] {
-            <!I eventBinder r sep typesSep>
-                };
+                <!I eventBinder r sep typesSep>
+                <!T objectBinderTemplate>
+                new EventBinder<<!L type>>
+                {
+                    BindAction = (instance, context, representationProducer, index) =>
+                    {  
+                        var ownerId = context.OwnerId;
+                        var module = representationProducer.Produce(ownerId);
+                        <!I eventBinder r sep typesSep><!D typesSep>
+                        <!D>
+                        <!T eventBinderTemplate>
+                        (instance as <!L type>).<!L eventName> += (<!L parametersDeclaration>) => 
+                        {
+                            Console.WriteLine($"Try to send to {ownerId} with hash code {context.GetHashCode()}");
+                            <!I callFilter>
+                            Console.WriteLine("Sending event...");
+                            var request = new DefaultCallRequest
+                            {
+                                CommandId = <!L commandId>, 
+                                ObjectId = new ComplexObjectIdentifier(index, ownerId), 
+                                Parameters = new object[] { <!L transferParameters> }
+                            };
+                            
+                            module.PostCallMessageAsync(request.Id, MessageType.EventRequest, request);
+                        };
+                        <!T>
+                    }
+                }
+                <!T>
+            };
         }
     }
 }
+
