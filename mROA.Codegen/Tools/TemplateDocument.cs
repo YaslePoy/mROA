@@ -55,5 +55,7 @@ namespace mROA.CodegenTools
         {
             Parts.Add(new DefineTemplateSection(text, tag, this));
         }
+
+        public void AddDefine(string tag, object value) => AddDefine(tag, value.ToString());
     }
 }

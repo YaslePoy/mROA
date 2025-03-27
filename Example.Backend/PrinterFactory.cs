@@ -9,7 +9,7 @@ namespace Example.Backend
     [SharedObjectSingleton]
     public class PrinterFactory : IPrinterFactory
     {
-        private List<IPrinter> _printers = new List<IPrinter>();
+        private readonly List<IPrinter> _printers = new();
 
         public IPrinter Create(string printerName)
         {

@@ -80,8 +80,6 @@ namespace mROA.Codegen
         private void GenerateCode(GeneratorExecutionContext context, Compilation compilation,
             ImmutableArray<InterfaceDeclarationSyntax> classes)
         {
-
-
             List<IMethodSymbol> totalMethods = new List<IMethodSymbol>();
 
 
@@ -215,7 +213,8 @@ namespace mROA.Codegen
             InterfaceTemplate.AddDefine("name", classSymbol.Name);
             InterfaceTemplate.AddDefine("namespace", classSymbol.ContainingNamespace.ToDisplayString());
             var singleEventBinder = new List<string>(events.Count);
-            var objectBinderTemplate = (TemplateDocument)((InnerTemplateSection)BinderTemplate["objectBinderTemplate"]).InnerTemplate.Clone();
+            var objectBinderTemplate =
+                (TemplateDocument)((InnerTemplateSection)BinderTemplate["objectBinderTemplate"]).InnerTemplate.Clone();
             for (int i = 0; i < events.Count; i++)
             {
                 var currentEvent = events[i];
@@ -228,6 +227,7 @@ namespace mROA.Codegen
                 GenerateEventCode(currentEvent, invokers, classSymbol);
                 GenerateBinderCode(currentEvent, invokers, classSymbol, objectBinderTemplate);
             }
+
             objectBinderTemplate.AddDefine("type", classSymbol.ToDisplayString());
             var partialInterface = InterfaceTemplate.Compile();
             var binder = objectBinderTemplate.Compile();
@@ -377,23 +377,26 @@ namespace mROA.Codegen
             }
 
             if (isAsync)
-                backend = $@"new mROA.Implementation.AsyncMethodInvoker 
-{level}{{
-{level}    IsVoid = {isVoid.ToString().ToLower()},
-{(isVoid ? String.Empty : (level + "\t" + "ReturnType = typeof(" + ExtractTaskType(method.ReturnType)) + "),")}
-{level}    ParameterTypes = new Type[] {{ {parameterTypes} }},
-{level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
-{level}    Invoking = (i, parameters, special, post) => {funcInvoking},
-{level}}}";
+            {
+                var invokerTemplate = (TemplateDocument)((InnerTemplateSection)MethodRepoTemplate["asyncInvoker"]).InnerTemplate.Clone();
+                invokerTemplate.AddDefine("isVoid", isVoid.ToString().ToLower());
+                invokerTemplate.AddDefine("returnType", ExtractTaskType(method.ReturnType));
+                invokerTemplate.AddDefine("parametersType", parameterTypes);
+                invokerTemplate.AddDefine("suitableType", baseInterace.ToDisplayString());
+                invokerTemplate.AddDefine("funcInvoking", funcInvoking);
+                backend = invokerTemplate.Compile();
+            }
             else
-                backend = $@"new mROA.Implementation.MethodInvoker 
-{level}{{
-{level}    IsVoid = {isVoid.ToString().ToLower()},
-{level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
-{level}    ParameterTypes = new Type[] {{ {parameterTypes} }},
-{level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
-{level}    Invoking = (i, parameters, special) => {funcInvoking}
-{level}}}";
+            {
+                var invokerTemplate = (TemplateDocument)((InnerTemplateSection)MethodRepoTemplate["syncInvoker"]).InnerTemplate.Clone();
+                invokerTemplate.AddDefine("isVoid",  isVoid.ToString().ToLower());
+                invokerTemplate.AddDefine("returnType", isVoid ? "void" : method.ReturnType.ToDisplayString());
+                invokerTemplate.AddDefine("parametersType", parameterTypes);
+                invokerTemplate.AddDefine("suitableType", baseInterace.ToDisplayString());
+                invokerTemplate.AddDefine("funcInvoking", funcInvoking);
+                backend = invokerTemplate.Compile();
+            }
+
             MethodRepoTemplate.Insert("invoker", backend);
 
             invokers.Add(backend);
@@ -402,8 +405,9 @@ namespace mROA.Codegen
         private void GenerateBinderCode(IEventSymbol eventSymbol, List<string> invokers, INamedTypeSymbol baseType,
             TemplateDocument document)
         {
-            var eventBinderTemplate = (TemplateDocument)((InnerTemplateSection)document["eventBinderTemplate"]!).InnerTemplate.Clone();
-            
+            var eventBinderTemplate =
+                (TemplateDocument)((InnerTemplateSection)document["eventBinderTemplate"]!).InnerTemplate.Clone();
+
             var index = invokers.Count - 1;
             var parameters = (eventSymbol.Type as INamedTypeSymbol)!.TypeArguments.ToList();
             int parameterIndex = 0;
@@ -421,7 +425,6 @@ namespace mROA.Codegen
             {
                 callFilter = $"\n\r\t\t\tif(ownerId == p{requestIndex}.OwnerId) return;";
                 eventBinderTemplate.AddDefine("callFilter", callFilter);
-
             }
 
             eventBinderTemplate.AddDefine("type", baseType.ToDisplayString());
@@ -533,7 +536,8 @@ namespace mROA.Codegen
                     var parameterTypes = string.Join(", ",
                         $"{string.Join(", ", method.Parameters.Select(p => $"typeof({p.Type.ToDisplayString()})"))}");
                     var parameterInserts = string.Join(", ",
-                        method.Parameters.Take(method.Parameters.Length - 1).Select(p => Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
+                        method.Parameters.Take(method.Parameters.Length - 1).Select(p =>
+                            Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
 
                     var valueInsert = Caster(method.Parameters.Last().Type,
                         "parameters[" + (method.Parameters.Length - 1) + "]");
@@ -578,7 +582,8 @@ namespace mROA.Codegen
 
         private string ExtractTaskType(ITypeSymbol taskType)
         {
-            return (taskType as INamedTypeSymbol).TypeArguments[0].ToDisplayString();
+            var generics = ((INamedTypeSymbol)taskType).TypeArguments;
+            return generics.Length == 0 ? "void" : generics[0].ToDisplayString();
         }
 
         private bool ContainsSOIAttribute(SyntaxList<AttributeListSyntax> attributes, GeneratorExecutionContext context,

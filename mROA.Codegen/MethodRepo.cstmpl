@@ -13,6 +13,24 @@ namespace mROA.Codegen
         private readonly List<IMethodInvoker> _methods = new () {
             <!I invoker r sep invokerSep><!D invokerSep>,
             <!D>
+            <!T asyncInvoker>
+            new mROA.Implementation.AsyncMethodInvoker
+            {
+                IsVoid = <!L isVoid>,
+                ReturnType = typeof(<!L returnType>),
+                ParameterTypes = new Type[]  { <!L parametersType> },
+                SuitableType = typeof(<!L suitableType>),
+                Invoking = (i, parameters, special, post) => <!L funcInvoking>,
+            }<!T>
+            <!T syncInvoker>
+            new mROA.Implementation.MethodInvoker
+            {
+                IsVoid = <!L isVoid>,
+                ReturnType = typeof(<!L returnType>),
+                ParameterTypes = new Type[]  { <!L parametersType> },
+                SuitableType = typeof(<!L suitableType>),
+                Invoking = (i, parameters, special) => <!L funcInvoking>,
+            }<!T>
         };
 
         public IMethodInvoker GetMethod(int id)
