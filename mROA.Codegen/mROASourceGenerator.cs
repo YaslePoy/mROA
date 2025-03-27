@@ -26,7 +26,7 @@ namespace mROA.Codegen
         private TemplateDocument InterfaceTemplateOriginal;
         private TemplateDocument InterfaceTemplate;
         private TemplateDocument BinderTemplate;
-
+        private TemplateDocument MethodInvokerOriginal;
         private static Predicate<IParameterSymbol> ParameterFilter =
             i => i.Type.Name is "CancellationToken" or "RequestContext";
 
@@ -36,6 +36,8 @@ namespace mROA.Codegen
         public void Initialize(GeneratorInitializationContext context)
         {
             MethodRepoTemplate = TemplateReader.FromEmbeddedResource("MethodRepo.cstmpl");
+            MethodInvokerOriginal =
+                ((InnerTemplateSection)MethodRepoTemplate["syncInvoker"])?.InnerTemplate;
             ClassTemplateOriginal = TemplateReader.FromEmbeddedResource("RemoteEndpoint.cstmpl");
             BinderTemplate = TemplateReader.FromEmbeddedResource("RemoteTypeBinder.cstmpl");
             InterfaceTemplateOriginal = TemplateReader.FromEmbeddedResource("PartialInterface.cstmpl");
@@ -182,9 +184,7 @@ namespace mROA.Codegen
             {
                 var methodsStringed = invokers;
 
-                // var invokersJoin = string.Join(",\r\n\t\t\t", methodsStringed);
-
-                // MethodRepoTemplate.Insert("invoker", invokersJoin);
+   
 
                 var coCodegenRepoCode = MethodRepoTemplate.Compile();
 #if !DONT_ADD
@@ -388,7 +388,7 @@ namespace mROA.Codegen
             }
             else
             {
-                var invokerTemplate = (TemplateDocument)((InnerTemplateSection)MethodRepoTemplate["syncInvoker"]).InnerTemplate.Clone();
+                var invokerTemplate = (TemplateDocument)MethodInvokerOriginal.Clone();
                 invokerTemplate.AddDefine("isVoid",  isVoid.ToString().ToLower());
                 invokerTemplate.AddDefine("returnType", isVoid ? "void" : method.ReturnType.ToDisplayString());
                 invokerTemplate.AddDefine("parametersType", parameterTypes);
@@ -467,18 +467,22 @@ namespace mROA.Codegen
                 }
             }
 
+ 
+            
             var parametersInsert = string.Join(", ", parametersInsertList);
-            var backend = $@"new mROA.Implementation.MethodInvoker 
-{level}{{
-{level}    IsVoid = true,
-{level}    ReturnType = typeof(void),
-{level}    ParameterTypes = new Type[] {{ {parameterTypes} }},
-{level}    SuitableType = typeof({baseInterface.ToDisplayString()}),
-{level}    Invoking = (i, parameters, special) => {{
+            
+            var funcInvoking = $@"{{
 {level}        (i as {baseInterface.ToDisplayString()}).{EventExternalName(eventSymbol)}({parametersInsert});
 {level}        return null;
-{level}    }}
-{level}}}";
+{level}    }}";
+            
+            var invokerTemplate = (TemplateDocument)MethodInvokerOriginal.Clone();
+            invokerTemplate.AddDefine("isVoid",  "true");
+            invokerTemplate.AddDefine("returnType", "void");
+            invokerTemplate.AddDefine("parametersType", parameterTypes);
+            invokerTemplate.AddDefine("suitableType", baseInterface.ToDisplayString());
+            invokerTemplate.AddDefine("funcInvoking", funcInvoking);
+            var backend = invokerTemplate.Compile();
             MethodRepoTemplate.Insert("invoker", backend);
 
             invokers.Add(backend);
@@ -503,24 +507,38 @@ namespace mROA.Codegen
                     var parameterInserts = string.Join(", ",
                         method.Parameters.Select(
                             p => Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
-                    backend = $@"new mROA.Implementation.MethodInvoker 
-{level}{{
-{level}    IsVoid = false,
-{level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
-{level}    ParameterTypes = new Type[] {{ {parameterTypes} }},
-{level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
-{level}    Invoking = (i, parameters, _) => (i as {method.ContainingType.ToDisplayString()})[{parameterInserts}],
-{level}}}";
+                    
+                    var invokerTemplate = (TemplateDocument)MethodInvokerOriginal.Clone();
+                    invokerTemplate.AddDefine("isVoid",  "false");
+                    invokerTemplate.AddDefine("returnType", method.ReturnType.ToDisplayString());
+                    invokerTemplate.AddDefine("parametersType", parameterTypes);
+                    invokerTemplate.AddDefine("suitableType", baseInterace.ToDisplayString());
+                    invokerTemplate.AddDefine("funcInvoking", $"(i as {method.ContainingType.ToDisplayString()})[{parameterInserts}]");
+                    backend = invokerTemplate.Compile();
+//                     backend = $@"new mROA.Implementation.MethodInvoker 
+// {level}{{
+// {level}    IsVoid = false,
+// {level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
+// {level}    ParameterTypes = new Type[] {{ {parameterTypes} }},
+// {level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
+// {level}    Invoking = (i, parameters, _) => (i as {method.ContainingType.ToDisplayString()})[{parameterInserts}],
+// {level}}}";
                 }
                 else
                 {
-                    backend = $@"new mROA.Implementation.MethodInvoker 
-{level}{{
-{level}    IsVoid = false,
-{level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
-{level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
-{level}    Invoking = (i, _, _) => (i as {method.ContainingType.ToDisplayString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name},
-{level}}}";
+                    var invokerTemplate = (TemplateDocument)MethodInvokerOriginal.Clone();
+                    invokerTemplate.AddDefine("isVoid",  "false");
+                    invokerTemplate.AddDefine("returnType", method.ReturnType.ToDisplayString());
+                    invokerTemplate.AddDefine("suitableType", baseInterace.ToDisplayString());
+                    invokerTemplate.AddDefine("funcInvoking", $"(i as {method.ContainingType.ToDisplayString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name}");
+                    backend = invokerTemplate.Compile();
+//                     backend = $@"new mROA.Implementation.MethodInvoker 
+// {level}{{
+// {level}    IsVoid = false,
+// {level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
+// {level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
+// {level}    Invoking = (i, _, _) => (i as {method.ContainingType.ToDisplayString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name},
+// {level}}}";
                 }
 
                 frontend =
@@ -541,25 +559,43 @@ namespace mROA.Codegen
 
                     var valueInsert = Caster(method.Parameters.Last().Type,
                         "parameters[" + (method.Parameters.Length - 1) + "]");
-                    backend = $@"new mROA.Implementation.MethodInvoker 
-{level}{{
-{level}    IsVoid = true,
-{level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
-{level}    ParameterTypes = new Type[] {{ {parameterTypes} }},
-{level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
-{level}    Invoking = (i, parameters, _) => (i as {method.ContainingType.ToDisplayString()})[{parameterInserts}] = {valueInsert},
-{level}}}";
+                    var invokerTemplate = (TemplateDocument)MethodInvokerOriginal.Clone();
+                    
+                    
+                    invokerTemplate.AddDefine("isVoid",  "true");
+                    invokerTemplate.AddDefine("returnType", method.ReturnType.ToDisplayString());
+                    invokerTemplate.AddDefine("parametersType", parameterTypes);
+                    invokerTemplate.AddDefine("suitableType", baseInterace.ToDisplayString());
+                    invokerTemplate.AddDefine("funcInvoking", $"(i as {method.ContainingType.ToDisplayString()})[{parameterInserts}] = {valueInsert}");
+                    backend = invokerTemplate.Compile();
+//                     backend = $@"new mROA.Implementation.MethodInvoker 
+// {level}{{
+// {level}    IsVoid = true,
+// {level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
+// {level}    ParameterTypes = new Type[] {{ {parameterTypes} }},
+// {level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
+// {level}    Invoking = (i, parameters, _) => (i as {method.ContainingType.ToDisplayString()})[{parameterInserts}] = {valueInsert},
+// {level}}}";
                 }
                 else
                 {
-                    backend = $@"new mROA.Implementation.MethodInvoker 
-{level}{{
-{level}    IsVoid = true,
-{level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
-{level}    ParameterTypes = new Type[] {{ typeof({method.Parameters.First().Type.ToDisplayString()}) }},
-{level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
-{level}    Invoking = (i, parameters, _) => (i as {method.ContainingType.ToDisplayString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name} = {Caster((method.AssociatedSymbol as IPropertySymbol)!.Type, "parameters[0]")},
-{level}}}";
+                    var invokerTemplate = (TemplateDocument)MethodInvokerOriginal.Clone();
+                    
+                    invokerTemplate.AddDefine("isVoid",  "true");
+                    invokerTemplate.AddDefine("returnType", method.ReturnType.ToDisplayString());
+                    invokerTemplate.AddDefine("parametersType", $"typeof({method.Parameters.First().Type.ToDisplayString()})");
+                    invokerTemplate.AddDefine("suitableType", baseInterace.ToDisplayString());
+                    invokerTemplate.AddDefine("funcInvoking", $"(i as {method.ContainingType.ToDisplayString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name} = {Caster((method.AssociatedSymbol as IPropertySymbol)!.Type, "parameters[0]")}");
+                    backend = invokerTemplate.Compile();
+                    
+//                     backend = $@"new mROA.Implementation.MethodInvoker 
+// {level}{{
+// {level}    IsVoid = true,
+// {level}    ReturnType = typeof({method.ReturnType.ToDisplayString()}),
+// {level}    ParameterTypes = new Type[] {{ typeof({method.Parameters.First().Type.ToDisplayString()}) }},
+// {level}    SuitableType = typeof({baseInterace.ToDisplayString()}),
+// {level}    Invoking = (i, parameters, _) => (i as {method.ContainingType.ToDisplayString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name} = {Caster((method.AssociatedSymbol as IPropertySymbol)!.Type, "parameters[0]")},
+// {level}}}";
                 }
 
                 frontend = $"set => CallAsync({index}, new object[] {{ {parametersArray} }}).Wait();";
