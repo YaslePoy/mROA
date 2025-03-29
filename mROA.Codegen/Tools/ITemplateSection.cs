@@ -1,6 +1,6 @@
 using System;
 
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools
 {
     public interface ITemplateSection : ICloneable
     {
@@ -12,8 +12,7 @@ namespace mROA.CodegenTools
     {
         string Bake();
     }
-    
-    
+
     public interface ITagged : ITemplateSection
     {
         string Tag { get; }

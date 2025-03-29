@@ -1,25 +1,24 @@
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools
 {
     public class InnerTemplateSection : ITemplateSection, ITagged
     {
-        private readonly string _tag;
-        public TemplateDocument Context { get; set; }
-        public int TargetLength => 0;
-
-        public string Tag => _tag;
-        
-        public TemplateDocument InnerTemplate { get; }
-
         public InnerTemplateSection(string tag, TemplateDocument innerTemplate, TemplateDocument context)
         {
-            _tag = tag;
+            Tag = tag;
             Context = context;
             InnerTemplate = innerTemplate;
         }
 
+        public TemplateDocument InnerTemplate { get; }
+
+        public string Tag { get; }
+
+        public TemplateDocument Context { get; set; }
+        public int TargetLength => 0;
+
         public object Clone()
         {
-            return new InnerTemplateSection(_tag, InnerTemplate, Context);
+            return new InnerTemplateSection(Tag, InnerTemplate, Context);
         }
     }
 }

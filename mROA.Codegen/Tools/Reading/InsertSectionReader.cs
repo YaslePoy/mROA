@@ -1,6 +1,6 @@
 using System.Linq;
 
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools.Reading
 {
     public class InsertSectionReader : LeadingTextSectionReader
     {
@@ -12,12 +12,12 @@ namespace mROA.CodegenTools
         public override ITemplateSection ExtractSection(ref int index, TemplateDocument document)
         {
             var from = index;
-             index = PassCaretToCloseSymbol();
-            var to  = index - 1;
+            index = PassCaretToCloseSymbol();
+            var to = index - 1;
 
             var tagText = GetTagValue(from, to);
             var parts = tagText.Split(' ');
-            
+
             return new InsertTemplateSection(parts[0], document, parts.Skip(1).ToArray());
         }
     }

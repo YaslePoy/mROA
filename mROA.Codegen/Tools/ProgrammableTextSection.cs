@@ -1,13 +1,10 @@
 using System;
 
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools
 {
     public class ProgrammableTextSection : ITemplateSection, IBaking
     {
-        public TemplateDocument Context { get; set; }
-        public int TargetLength => 0;
-
-        private Func<object, string> _bakeFunc;
+        private readonly Func<object, string> _bakeFunc;
 
         public ProgrammableTextSection(Func<object, string> bakeFunc, TemplateDocument context)
         {
@@ -20,6 +17,9 @@ namespace mROA.CodegenTools
         {
             return _bakeFunc(Context.AdditionalContext);
         }
+
+        public TemplateDocument Context { get; set; }
+        public int TargetLength => 0;
 
         public object Clone()
         {

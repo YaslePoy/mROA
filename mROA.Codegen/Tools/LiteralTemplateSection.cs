@@ -1,8 +1,8 @@
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools
 {
     public class LiteralTemplateSection : ITemplateSection, IBaking
     {
-        private string _internalText;
+        private readonly string _internalText;
 
         public LiteralTemplateSection(string internalText, TemplateDocument context)
         {
@@ -10,22 +10,22 @@ namespace mROA.CodegenTools
             Context = context;
         }
 
-        public TemplateDocument Context { get; set; }
-        public int TargetLength => _internalText.Length;
-
         public string Bake()
         {
             return ToString();
         }
 
-        public override string ToString()
-        {
-            return _internalText;
-        }
+        public TemplateDocument Context { get; set; }
+        public int TargetLength => _internalText.Length;
 
         public object Clone()
         {
             return new LiteralTemplateSection(_internalText, Context);
+        }
+
+        public override string ToString()
+        {
+            return _internalText;
         }
     }
 }

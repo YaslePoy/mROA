@@ -1,6 +1,6 @@
 using System;
 
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools.Reading
 {
     public class DefineSectionReader : LeadingTextSectionReader
     {

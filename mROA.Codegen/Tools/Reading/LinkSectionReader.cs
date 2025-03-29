@@ -1,4 +1,4 @@
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools.Reading
 {
     public class LinkSectionReader : LeadingTextSectionReader
     {
@@ -11,7 +11,7 @@ namespace mROA.CodegenTools
         {
             var from = index;
             index = PassCaretToCloseSymbol();
-            var to =  index - 1;
+            var to = index - 1;
 
             var tagText = GetTagValue(from, to);
             return new LinkTemplateSection(tagText, document);

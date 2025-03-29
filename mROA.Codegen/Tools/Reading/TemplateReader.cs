@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools.Reading
 {
     public static class TemplateReader
     {
-        private static readonly List<Type> ReaderTypes = new List<Type>
+        private static readonly List<Type> ReaderTypes = new()
         {
             typeof(DefineSectionReader),
             typeof(InsertSectionReader),
@@ -18,8 +18,7 @@ namespace mROA.CodegenTools
 
         public static TemplateDocument Parse(string templateText)
         {
-            
-            int currentIndex = 0;
+            var currentIndex = 0;
             var activeReaders = new List<ISectionReader>();
 
             foreach (var readerType in ReaderTypes)
@@ -28,26 +27,25 @@ namespace mROA.CodegenTools
                 reader.TemplateText = templateText;
                 activeReaders.Add(reader);
             }
-            
+
             var doc = new TemplateDocument();
 
             while (currentIndex < templateText.Length)
             {
-                List<(ISectionReader reader, int index)> indices = activeReaders.Select(i => ((ISectionReader Readers, int index))(i, i.GetNextSectionIndex(currentIndex))).Where(i => i.index > -1).ToList();
-                int minIndex = templateText.Length;
+                List<(ISectionReader reader, int index)> indices = activeReaders
+                    .Select(i => ((ISectionReader Readers, int index))(i, i.GetNextSectionIndex(currentIndex)))
+                    .Where(i => i.index > -1).ToList();
+                var minIndex = templateText.Length;
                 ISectionReader minReader = null;
                 if (indices.Count != 0)
                 {
                     minIndex = indices.Min(i => i.index);
                     minReader = indices.FirstOrDefault(i => i.index == minIndex).reader;
 
-                    if (indices.Count != activeReaders.Count)
-                    {
-                        activeReaders = indices.Select(i => i.reader).ToList();
-                    }
+                    if (indices.Count != activeReaders.Count) activeReaders = indices.Select(i => i.reader).ToList();
                 }
-     
-                
+
+
                 if (currentIndex != minIndex)
                 {
                     var literalText = templateText.Substring(currentIndex, minIndex - currentIndex);
@@ -62,8 +60,6 @@ namespace mROA.CodegenTools
                     var section = minReader.ExtractSection(ref currentIndex, doc);
                     doc.Parts.Add(section);
                 }
-             
-
             }
 
             return doc;

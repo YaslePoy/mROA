@@ -1,21 +1,15 @@
 using System;
 
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools.Reading
 {
     public abstract class LeadingTextSectionReader : ISectionReader
     {
+        private readonly string _tagLeading;
         protected int _currentCaretPosition;
-        private string _tagLeading;
 
         protected LeadingTextSectionReader(string tagLeading)
         {
             _tagLeading = tagLeading + " ";
-        }
-
-        protected int PassCaretToCloseSymbol()
-        {
-            _currentCaretPosition = TemplateText.IndexOf(">", _currentCaretPosition, StringComparison.Ordinal) + 1;
-            return _currentCaretPosition;
         }
 
         public string TemplateText { get; set; }
@@ -29,6 +23,12 @@ namespace mROA.CodegenTools
         }
 
         public abstract ITemplateSection ExtractSection(ref int index, TemplateDocument document);
+
+        protected int PassCaretToCloseSymbol()
+        {
+            _currentCaretPosition = TemplateText.IndexOf(">", _currentCaretPosition, StringComparison.Ordinal) + 1;
+            return _currentCaretPosition;
+        }
 
         protected string GetTagValue(int from, int to)
         {

@@ -23,6 +23,8 @@ namespace mROA.Implementation
             }
         }
 
+        
+        
         public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized"))
             .ConnectionId;
 

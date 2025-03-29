@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools.Reading
 {
     public interface ISectionReader
     {

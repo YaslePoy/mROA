@@ -1,10 +1,10 @@
 using System;
 
-namespace mROA.CodegenTools
+namespace mROA.Codegen.Tools.Reading
 {
     public class InnerTemplateSectionReader : LeadingTextSectionReader
     {
-        public InnerTemplateSectionReader() 
+        public InnerTemplateSectionReader()
             : base("<!T")
         {
         }
@@ -15,10 +15,10 @@ namespace mROA.CodegenTools
             var end = FindEnd(index + 4);
             var from = index;
             index = PassCaretToCloseSymbol();
-            var to  = index - 1;
+            var to = index - 1;
 
             var tagName = GetTagValue(from, to);
-            
+
             var innerDocText = TemplateText.Substring(index, end - index);
             var innerDoc = TemplateReader.Parse(innerDocText);
             _currentCaretPosition = end + 4;
