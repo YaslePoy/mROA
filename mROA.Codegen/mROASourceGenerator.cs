@@ -22,7 +22,7 @@ namespace mROA.Codegen
     ///     performance overhead.
     /// </summary>
     [Generator]
-    public class MRoaSourceGenerator : ISourceGenerator
+    public class mROAGenerator : ISourceGenerator
     {
         private static readonly Predicate<IParameterSymbol> ParameterFilter =
             i => i.Type.Name is "CancellationToken" or "RequestContext";
@@ -136,7 +136,7 @@ namespace mROA.Codegen
                             string impl;
                             if (propertySymbol.IsIndexer)
                                 impl =
-                                    $"public {propertySymbol.Type.ToUnityString()} this[{string.Join(", ", propertySymbol.Parameters.Select(p => p.ToDisplayString()))}] {{ {getter.Item1} {setter.Item1} }}";
+                                    $"public {propertySymbol.Type.ToUnityString()} this[{string.Join(", ", propertySymbol.Parameters.Select(p => p.ToUnityString()))}] {{ {getter.Item1} {setter.Item1} }}";
                             else
                                 impl =
                                     $"public {propertySymbol.Type.ToUnityString()} {symbol.Name} {{ {getter.Item1} {setter.Item1} }}";
@@ -173,6 +173,10 @@ namespace mROA.Codegen
             {
                 var coCodegenRepoCode = _methodRepoTemplate.Compile();
 #if !DONT_ADD
+                var template = TemplateReader.FromEmbeddedResource("TestClass.cstmpl");
+                template.AddDefine("param", "System.Int32 i");
+                
+                context.AddSource("TestClass.g.cs", SourceText.From(template.Compile(), Encoding.UTF8));
                 context.AddSource("CoCodegenMethodRepository.g.cs", SourceText.From(coCodegenRepoCode, Encoding.UTF8));
 #endif
             }
@@ -558,9 +562,9 @@ namespace mROA.Codegen
 
         private static string ToFullString(IParameterSymbol parameter)
         {
-            return parameter.ToDisplayParts().ToUnityString();
+            return parameter.Type.ToUnityString() + " " + parameter.Name;
         }
-
+        
         private static string ToFullString(ITypeSymbol type)
         {
             return type.ToUnityString();
@@ -613,6 +617,11 @@ namespace mROA.Codegen
             return type.ToDisplayString();
         }
 
+        public static string ToUnityString(this IParameterSymbol parameter)
+        {
+            return parameter.Type.ToUnityString() + " " + parameter.Name;
+        }
+        
         public static string ToUnityString(this ImmutableArray<SymbolDisplayPart> parts)
         {
             var sb = new StringBuilder();
