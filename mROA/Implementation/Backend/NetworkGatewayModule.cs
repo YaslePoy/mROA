@@ -68,18 +68,17 @@ namespace mROA.Implementation.Backend
                 var client = _tcpListener.AcceptTcpClient();
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
                 var interaction = Activator.CreateInstance(_interactionModuleType!) as INextGenerationInteractionModule;
+                foreach (var injectableModule in _injectableModules!)
+                    interaction!.Inject(injectableModule);
 
+                interaction!.Inject(_serialization);
+
+                interaction.BaseStream = client.GetStream();
+                
                 var connectionRequest = interaction.GetNextMessageReceiving().GetAwaiter().GetResult()!;
 
                 if (connectionRequest.MessageType == EMessageType.ClientConnect)
                 {
-                    foreach (var injectableModule in _injectableModules!)
-                        interaction!.Inject(injectableModule);
-
-                    interaction!.Inject(_serialization);
-
-                    interaction.BaseStream = client.GetStream();
-
                     interaction.PostMessage(new NetworkMessageHeader(_serialization!,
                         new IdAssignment { Id = -interaction.ConnectionId }));
                     _hub!.RegisterInteraction(interaction);

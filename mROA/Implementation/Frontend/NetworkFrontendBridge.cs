@@ -41,7 +41,7 @@ namespace mROA.Implementation.Frontend
             _tcpClient.Connect(_ipEndPoint);
             _interactionModule.BaseStream = _tcpClient.GetStream();
 
-            _interactionModule.PostMessage(new NetworkMessageHeader(_serialization, new ClientConnect())).Wait();
+            _ = _interactionModule.PostMessage(new NetworkMessageHeader(_serialization, new ClientConnect()));
             var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
             if (welcomeMessage.MessageType != EMessageType.IdAssigning)
             {
