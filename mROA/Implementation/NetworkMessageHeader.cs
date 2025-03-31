@@ -1,21 +1,27 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedMember.Global
 
 namespace mROA.Implementation
 {
-    public class NetworkMessage
+    public interface INetworkMessage
+    {
+        [SerializationIgnore]
+        public EMessageType MessageType { get; }
+    }
+    public class NetworkMessageHeader
     {
         public Guid Id { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public MessageType SchemaId { get; set; }
+        public EMessageType EMessageType { get; set; }
 
         public byte[] Data { get; set; }
     }
 
-    public enum MessageType
+    public enum EMessageType
     {
         Unknown,
         FinishedCommandExecution,
@@ -23,6 +29,7 @@ namespace mROA.Implementation
         CallRequest,
         IdAssigning,
         CancelRequest,
-        EventRequest
+        EventRequest,
+        ClientRecovery
     }
 }

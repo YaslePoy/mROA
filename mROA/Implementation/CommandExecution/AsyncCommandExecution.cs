@@ -6,5 +6,6 @@ namespace mROA.Implementation.CommandExecution
     public class AsyncCommandExecution : ICommandExecution
     {
         public Guid Id { get; set; }
+        public EMessageType MessageType => EMessageType.Unknown;
     }
 }

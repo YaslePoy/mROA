@@ -11,8 +11,8 @@ namespace mROA.Implementation
     {
         private const int BufferSize = ushort.MaxValue;
         private readonly Memory<byte> _buffer = new byte[BufferSize];
-        private readonly List<NetworkMessage> _messageBuffer = new(128);
-        private Task<NetworkMessage>? _currentReceiving;
+        private readonly List<NetworkMessageHeader> _messageBuffer = new(128);
+        private Task<NetworkMessageHeader>? _currentReceiving;
         private ISerializationToolkit? _serialization;
         public int ConnectionId { get; set; }
         public Stream? BaseStream { get; set; }
@@ -31,14 +31,14 @@ namespace mROA.Implementation
             }
         }
 
-        public Task<NetworkMessage> GetNextMessageReceiving()
+        public Task<NetworkMessageHeader> GetNextMessageReceiving()
         {
             if (_currentReceiving != null) return _currentReceiving;
             _currentReceiving = Task.Run(async () => await GetNextMessage());
             return _currentReceiving;
         }
 
-        public async Task PostMessage(NetworkMessage message)
+        public async Task PostMessage(NetworkMessageHeader messageHeader)
         {
             if (BaseStream == null)
                 throw new NullReferenceException("BaseStream is null");
@@ -49,26 +49,26 @@ namespace mROA.Implementation
             // Console.WriteLine("Sending {0}", JsonSerializer.Serialize(message));
 
 
-            var rawMessage = _serialization.Serialize(message);
+            var rawMessage = _serialization.Serialize(messageHeader);
             var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
 
             await BaseStream.WriteAsync(header);
             await BaseStream.WriteAsync(rawMessage);
         }
 
-        public void HandleMessage(NetworkMessage message)
+        public void HandleMessage(NetworkMessageHeader messageHeader)
         {
-            _messageBuffer.Remove(message);
+            _messageBuffer.Remove(messageHeader);
         }
 
-        public NetworkMessage[] UnhandledMessages => _messageBuffer.ToArray();
+        public NetworkMessageHeader[] UnhandledMessages => _messageBuffer.ToArray();
 
-        public NetworkMessage? FirstByFilter(Predicate<NetworkMessage> predicate)
+        public NetworkMessageHeader? FirstByFilter(Predicate<NetworkMessageHeader> predicate)
         {
             return _messageBuffer.FirstOrDefault(m => predicate(m));
         }
 
-        private async Task<NetworkMessage> GetNextMessage()
+        private async Task<NetworkMessageHeader> GetNextMessage()
         {
             if (BaseStream == null)
                 throw new NullReferenceException("BaseStream is null");
@@ -88,7 +88,7 @@ namespace mROA.Implementation
 
             // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
 
-            var message = _serialization.Deserialize<NetworkMessage>(localSpan.Span);
+            var message = _serialization.Deserialize<NetworkMessageHeader>(localSpan.Span);
 #if TRACE
             Console.WriteLine($"{DateTime.Now.TimeOfDay} Received Message {message.Id} - {message.SchemaId}");
             TransmissionConfig.TotalTransmittedBytes += len;

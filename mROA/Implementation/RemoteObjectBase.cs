@@ -56,24 +56,24 @@ namespace mROA.Implementation
                 CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
 
-            await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
+            await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request);
 
             var localTokenSource = new CancellationTokenSource();
 
             var successResponse =
                 _representationModule.GetMessageAsync<FinalCommandExecution<T>>(request.Id,
-                    MessageType.FinishedCommandExecution,
+                    EMessageType.FinishedCommandExecution,
                     localTokenSource.Token);
             var errorResponse =
                 _representationModule.GetMessageAsync<ExceptionCommandExecution>(requestId: request.Id,
-                    MessageType.ExceptionCommandExecution, localTokenSource.Token);
+                    EMessageType.ExceptionCommandExecution, localTokenSource.Token);
 
             cancellationToken.Register(async () =>
             {
 #if TRACE
                 Console.WriteLine("Cancelling task");
 #endif
-                await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest,
+                await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CancelRequest,
                     new CancelRequest
                     {
                         Id = request.Id
@@ -103,24 +103,24 @@ namespace mROA.Implementation
             {
                 CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
-            await _representationModule.PostCallMessageAsync(request.Id, MessageType.CallRequest, request);
+            await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request);
 
             var localTokenSource = new CancellationTokenSource();
 
             var successResponse =
                 _representationModule.GetMessageAsync<FinalCommandExecution>(request.Id,
-                    MessageType.FinishedCommandExecution,
+                    EMessageType.FinishedCommandExecution,
                     localTokenSource.Token);
             var errorResponse =
                 _representationModule.GetMessageAsync<ExceptionCommandExecution>(requestId: request.Id,
-                    MessageType.ExceptionCommandExecution, localTokenSource.Token);
+                    EMessageType.ExceptionCommandExecution, localTokenSource.Token);
 
             cancellationToken.Register(async () =>
             {
 #if TRACE
                 Console.WriteLine("Cancelling task");
 #endif
-                await _representationModule.PostCallMessageAsync(request.Id, MessageType.CancelRequest,
+                await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CancelRequest,
                     new CancelRequest
                     {
                         Id = request.Id

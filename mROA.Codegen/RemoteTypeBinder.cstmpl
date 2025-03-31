@@ -39,7 +39,7 @@ namespace mROA.Codegen
                                 Parameters = new object[] { <!L transferParameters> }
                             };
                             
-                            module.PostCallMessageAsync(request.Id, MessageType.EventRequest, request);
+                            module.PostCallMessageAsync(request.Id, EMessageType.EventRequest, request);
                         };
                         <!T>
                     }

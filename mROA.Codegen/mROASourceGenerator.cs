@@ -173,10 +173,6 @@ namespace mROA.Codegen
             {
                 var coCodegenRepoCode = _methodRepoTemplate.Compile();
 #if !DONT_ADD
-                var template = TemplateReader.FromEmbeddedResource("TestClass.cstmpl");
-                template.AddDefine("param", "System.Int32 i");
-
-                context.AddSource("TestClass.g.cs", SourceText.From(template.Compile(), Encoding.UTF8));
                 context.AddSource("CoCodegenMethodRepository.g.cs", SourceText.From(coCodegenRepoCode, Encoding.UTF8));
 #endif
             }

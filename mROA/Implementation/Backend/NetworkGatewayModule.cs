@@ -75,9 +75,9 @@ namespace mROA.Implementation.Backend
 
                 interaction.BaseStream = client.GetStream();
 
-                interaction.PostMessage(new NetworkMessage
+                interaction.PostMessage(new NetworkMessageHeader
                 {
-                    Id = Guid.NewGuid(), SchemaId = MessageType.IdAssigning,
+                    Id = Guid.NewGuid(), EMessageType = EMessageType.IdAssigning,
                     Data = _serialization!.Serialize(new IdAssignment { Id = -interaction.ConnectionId })
                 });
                 _hub!.RegisterInteraction(interaction);

@@ -198,7 +198,7 @@ namespace mROA.Implementation.Backend
                         TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
 
                     multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
-                    representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution, payload);
+                    representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution, payload);
                     multiClientOwnershipRepository?.FreeOwnership();
                 });
 
@@ -240,7 +240,7 @@ namespace mROA.Implementation.Backend
                         var multiClientOwnershipRepository =
                             TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
                         multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
-                        representationModule.PostCallMessage(command.Id, MessageType.FinishedCommandExecution,
+                        representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
                             payload);
                         multiClientOwnershipRepository?.FreeOwnership();
                     });

@@ -40,10 +40,10 @@ namespace mROA.Implementation.Frontend
             _tcpClient.Connect(_ipEndPoint);
             _interactionModule.BaseStream = _tcpClient.GetStream();
             var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
-            if (welcomeMessage.SchemaId != MessageType.IdAssigning)
+            if (welcomeMessage.EMessageType != EMessageType.IdAssigning)
             {
                 throw new Exception(
-                    $"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.SchemaId.ToString()}");
+                    $"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.EMessageType.ToString()}");
             }
 
 

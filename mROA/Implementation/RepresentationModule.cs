@@ -28,7 +28,7 @@ namespace mROA.Implementation
         public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized"))
             .ConnectionId;
 
-        public async Task<T> GetMessageAsync<T>(Guid? requestId, MessageType? messageType,
+        public async Task<T> GetMessageAsync<T>(Guid? requestId, EMessageType? messageType,
             CancellationToken token = default)
         {
             if (_serialization == null)
@@ -38,7 +38,7 @@ namespace mROA.Implementation
             return _serialization.Deserialize<T>(rawMessage)!;
         }
 
-        public T GetMessage<T>(Guid? requestId = null, MessageType? messageType = null)
+        public T GetMessage<T>(Guid? requestId = null, EMessageType? messageType = null)
         {
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
@@ -47,7 +47,7 @@ namespace mROA.Implementation
             return _serialization.Deserialize<T>(rawMessage)!;
         }
 
-        public async Task<byte[]> GetRawMessage(Guid? requestId = null, MessageType? messageType = null,
+        public async Task<byte[]> GetRawMessage(Guid? requestId = null, EMessageType? messageType = null,
             CancellationToken token = default)
         {
             if (_interaction == null)
@@ -56,7 +56,7 @@ namespace mROA.Implementation
             var fromBuffer =
                 _interaction.FirstByFilter(message =>
                     (requestId is null || message.Id == requestId) &&
-                    (messageType is null || message.SchemaId == messageType));
+                    (messageType is null || message.EMessageType == messageType));
 
             if (fromBuffer == null)
             {
@@ -64,7 +64,7 @@ namespace mROA.Implementation
                 {
                     var message = await _interaction.GetNextMessageReceiving();
                     if ((requestId is not null && message.Id != requestId) ||
-                        (messageType is not null && message.SchemaId != messageType))
+                        (messageType is not null && message.EMessageType != messageType))
                         continue;
 
                     _interaction.HandleMessage(message);
@@ -81,12 +81,12 @@ namespace mROA.Implementation
             return fromBuffer.Data;
         }
 
-        public async Task PostCallMessageAsync<T>(Guid id, MessageType messageType, T payload) where T : notnull
+        public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull
         {
-            await PostCallMessageAsync(id, messageType, payload, typeof(T));
+            await PostCallMessageAsync(id, eMessageType, payload, typeof(T));
         }
 
-        public async Task PostCallMessageAsync(Guid id, MessageType messageType, object payload, Type payloadType)
+        public async Task PostCallMessageAsync(Guid id, EMessageType eMessageType, object payload, Type payloadType)
         {
             if (_interaction == null)
                 throw new NullReferenceException("Interaction toolkit is not initialized");
@@ -97,18 +97,18 @@ namespace mROA.Implementation
 #endif
 
             var serialized = _serialization.Serialize(payload, payloadType);
-            await _interaction.PostMessage(new NetworkMessage
-                { Id = id, SchemaId = messageType, Data = serialized });
+            await _interaction.PostMessage(new NetworkMessageHeader
+                { Id = id, EMessageType = eMessageType, Data = serialized });
         }
 
-        public void PostCallMessage<T>(Guid id, MessageType messageType, T payload) where T : notnull
+        public void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull
         {
-            PostCallMessageAsync(id, messageType, payload).GetAwaiter().GetResult();
+            PostCallMessageAsync(id, eMessageType, payload).GetAwaiter().GetResult();
         }
 
-        public void PostCallMessage(Guid id, MessageType messageType, object payload, Type payloadType)
+        public void PostCallMessage(Guid id, EMessageType eMessageType, object payload, Type payloadType)
         {
-            PostCallMessageAsync(id, messageType, payload, payloadType).GetAwaiter().GetResult();
+            PostCallMessageAsync(id, eMessageType, payload, payloadType).GetAwaiter().GetResult();
         }
     }
 }

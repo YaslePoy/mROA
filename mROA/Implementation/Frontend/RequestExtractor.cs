@@ -73,13 +73,13 @@ namespace mROA.Implementation.Frontend
                         var token = tokenSource.Token;
                         var defaultRequest =
                             _representationModule!.GetMessageAsync<DefaultCallRequest>(
-                                messageType: MessageType.CallRequest, token: token);
+                                messageType: EMessageType.CallRequest, token: token);
                         var cancelRequest =
                             _representationModule!.GetMessageAsync<CancelRequest>(
-                                messageType: MessageType.CancelRequest, token: token);
+                                messageType: EMessageType.CancelRequest, token: token);
                         var eventRequest =
                             _representationModule!.GetMessageAsync<DefaultCallRequest>(
-                                messageType: MessageType.EventRequest, token: token);
+                                messageType: EMessageType.EventRequest, token: token);
                         Task.WaitAny(defaultRequest, cancelRequest, eventRequest);
 #if TRACE
                         Console.WriteLine("Request received");
@@ -135,13 +135,9 @@ namespace mROA.Implementation.Frontend
 
             var result = _executeModule!.Execute(request, _realContextRepository!, _representationModule!);
 
-            var resultType = result switch
-            {
-                FinalCommandExecution => MessageType.FinishedCommandExecution,
-                ExceptionCommandExecution => MessageType.ExceptionCommandExecution,
-                _ => MessageType.Unknown
-            };
-            if (resultType == MessageType.Unknown)
+            var resultType = result.MessageType;
+            
+            if (resultType == EMessageType.Unknown)
             {
                 return;
             }
