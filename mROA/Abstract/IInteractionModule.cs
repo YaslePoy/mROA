@@ -7,7 +7,7 @@ namespace mROA.Abstract
 {
     public interface INextGenerationInteractionModule : IInjectableModule
     {
-        int ConnectionId { get; }
+        int ConnectionId { get; set; }
         public Stream? BaseStream { get; set; }
         Task<NetworkMessageHeader> GetNextMessageReceiving();
         Task PostMessage(NetworkMessageHeader messageHeader);

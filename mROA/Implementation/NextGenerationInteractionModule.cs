@@ -14,8 +14,21 @@ namespace mROA.Implementation
         private readonly List<NetworkMessageHeader> _messageBuffer = new(128);
         private Task<NetworkMessageHeader>? _currentReceiving;
         private ISerializationToolkit? _serialization;
+        private Stream? _baseStream;
         public int ConnectionId { get; set; }
-        public Stream? BaseStream { get; set; }
+
+        public Stream? BaseStream
+        {
+            get => _baseStream;
+            set
+            {
+                if (_baseStream is null)
+                {
+                    
+                }
+                _baseStream = value;
+            }
+        }
 
 
         public void Inject<T>(T dependency)
@@ -77,27 +90,36 @@ namespace mROA.Implementation
                 throw new NullReferenceException("Serialization toolkit is null");
 
 
-            // Console.WriteLine("Receiving message");
-            var firstBit = (byte)BaseStream.ReadByte();
-            var secondBit = (byte)BaseStream.ReadByte();
+            try
+            {
+                // Console.WriteLine("Receiving message");
+                var firstBit = (byte)BaseStream.ReadByte();
+                var secondBit = (byte)BaseStream.ReadByte();
 
-            var len = BitConverter.ToUInt16(new[] { firstBit, secondBit });
-            var localSpan = _buffer[..len];
+                var len = BitConverter.ToUInt16(new[] { firstBit, secondBit });
+                var localSpan = _buffer[..len];
 
-            await BaseStream.ReadExactlyAsync(localSpan);
+                await BaseStream.ReadExactlyAsync(localSpan);
 
-            // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
+                // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
 
-            var message = _serialization.Deserialize<NetworkMessageHeader>(localSpan.Span);
+                var message = _serialization.Deserialize<NetworkMessageHeader>(localSpan.Span);
 #if TRACE
             Console.WriteLine($"{DateTime.Now.TimeOfDay} Received Message {message.Id} - {message.SchemaId}");
             TransmissionConfig.TotalTransmittedBytes += len;
             Console.WriteLine($"Total recieced bytes are {TransmissionConfig.TotalTransmittedBytes}");
 #endif
-            _messageBuffer.Add(message);
-            _currentReceiving = Task.Run(async () => await GetNextMessage());
+                _messageBuffer.Add(message);
+                _currentReceiving = Task.Run(async () => await GetNextMessage());
 
-            return message;
+                return message;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
         }
     }
 }

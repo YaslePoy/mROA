@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -68,20 +69,41 @@ namespace mROA.Implementation.Backend
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
                 var interaction = Activator.CreateInstance(_interactionModuleType!) as INextGenerationInteractionModule;
 
-                foreach (var injectableModule in _injectableModules!)
-                    interaction!.Inject(injectableModule);
+                var connectionRequest = interaction.GetNextMessageReceiving().GetAwaiter().GetResult()!;
 
-                interaction!.Inject(_serialization);
-
-                interaction.BaseStream = client.GetStream();
-
-                interaction.PostMessage(new NetworkMessageHeader
+                if (connectionRequest.MessageType == EMessageType.ClientConnect)
                 {
-                    Id = Guid.NewGuid(), EMessageType = EMessageType.IdAssigning,
-                    Data = _serialization!.Serialize(new IdAssignment { Id = -interaction.ConnectionId })
-                });
-                _hub!.RegisterInteraction(interaction);
-                Console.WriteLine("Client registered");
+                    foreach (var injectableModule in _injectableModules!)
+                        interaction!.Inject(injectableModule);
+
+                    interaction!.Inject(_serialization);
+
+                    interaction.BaseStream = client.GetStream();
+
+                    interaction.PostMessage(new NetworkMessageHeader(_serialization!,
+                        new IdAssignment { Id = -interaction.ConnectionId }));
+                    _hub!.RegisterInteraction(interaction);
+                    Console.WriteLine("Client registered");
+                }else if (connectionRequest.MessageType == EMessageType.ClientRecovery)
+                {
+                    var modidiedModules = _injectableModules!.ToList();
+                    modidiedModules.RemoveAll(i => i is IIdentityGenerator);
+                    
+                    foreach (var injectableModule in modidiedModules)
+                        interaction.Inject(injectableModule);
+
+                    var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
+                    interaction.ConnectionId = recoveryRequest.Id;
+                    
+                    interaction.Inject(_serialization);
+
+                    interaction.BaseStream = client.GetStream();
+
+                    interaction.PostMessage(new NetworkMessageHeader(_serialization!,
+                        new IdAssignment { Id = -interaction.ConnectionId }));
+                    _hub!.RegisterInteraction(interaction);
+                    Console.WriteLine("Client registered");
+                }
             }
         }
 

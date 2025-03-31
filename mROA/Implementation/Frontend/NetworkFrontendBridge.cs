@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using mROA.Abstract;
+using Exception = System.Exception;
 
 namespace mROA.Implementation.Frontend
 {
@@ -39,14 +40,17 @@ namespace mROA.Implementation.Frontend
 
             _tcpClient.Connect(_ipEndPoint);
             _interactionModule.BaseStream = _tcpClient.GetStream();
+
+            _interactionModule.PostMessage(new NetworkMessageHeader(_serialization, new ClientConnect())).Wait();
             var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
-            if (welcomeMessage.EMessageType != EMessageType.IdAssigning)
+            if (welcomeMessage.MessageType != EMessageType.IdAssigning)
             {
                 throw new Exception(
-                    $"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.EMessageType.ToString()}");
+                    $"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.MessageType.ToString()}");
             }
-
-
+            
+            
+            
             var assignment = _serialization.Deserialize<IdAssignment>(welcomeMessage.Data)!;
             _interactionModule.ConnectionId = -assignment.Id;
             TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);

@@ -56,7 +56,7 @@ namespace mROA.Implementation
             var fromBuffer =
                 _interaction.FirstByFilter(message =>
                     (requestId is null || message.Id == requestId) &&
-                    (messageType is null || message.EMessageType == messageType));
+                    (messageType is null || message.MessageType == messageType));
 
             if (fromBuffer == null)
             {
@@ -64,7 +64,7 @@ namespace mROA.Implementation
                 {
                     var message = await _interaction.GetNextMessageReceiving();
                     if ((requestId is not null && message.Id != requestId) ||
-                        (messageType is not null && message.EMessageType != messageType))
+                        (messageType is not null && message.MessageType != messageType))
                         continue;
 
                     _interaction.HandleMessage(message);
@@ -98,7 +98,7 @@ namespace mROA.Implementation
 
             var serialized = _serialization.Serialize(payload, payloadType);
             await _interaction.PostMessage(new NetworkMessageHeader
-                { Id = id, EMessageType = eMessageType, Data = serialized });
+                { Id = id, MessageType = eMessageType, Data = serialized });
         }
 
         public void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull
