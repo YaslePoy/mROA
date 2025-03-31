@@ -175,7 +175,7 @@ namespace mROA.Codegen
 #if !DONT_ADD
                 var template = TemplateReader.FromEmbeddedResource("TestClass.cstmpl");
                 template.AddDefine("param", "System.Int32 i");
-                
+
                 context.AddSource("TestClass.g.cs", SourceText.From(template.Compile(), Encoding.UTF8));
                 context.AddSource("CoCodegenMethodRepository.g.cs", SourceText.From(coCodegenRepoCode, Encoding.UTF8));
 #endif
@@ -564,7 +564,7 @@ namespace mROA.Codegen
         {
             return parameter.Type.ToUnityString() + " " + parameter.Name;
         }
-        
+
         private static string ToFullString(ITypeSymbol type)
         {
             return type.ToUnityString();
@@ -612,16 +612,18 @@ namespace mROA.Codegen
         {
             var parts = type.ToDisplayParts();
 
-            if (parts.Any(i => i.Kind == SymbolDisplayPartKind.Keyword)) return parts.ToUnityString();
+            if (parts.Any(i => i.Kind == SymbolDisplayPartKind.Keyword))
+                return parts.ToUnityString();
 
             return type.ToDisplayString();
+            
         }
 
         public static string ToUnityString(this IParameterSymbol parameter)
         {
             return parameter.Type.ToUnityString() + " " + parameter.Name;
         }
-        
+
         public static string ToUnityString(this ImmutableArray<SymbolDisplayPart> parts)
         {
             var sb = new StringBuilder();
