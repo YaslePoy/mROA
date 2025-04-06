@@ -85,23 +85,11 @@ namespace mROA.Implementation.Backend
                     Console.WriteLine("Client registered");
                 }else if (connectionRequest.MessageType == EMessageType.ClientRecovery)
                 {
-                    var modidiedModules = _injectableModules!.ToList();
-                    modidiedModules.RemoveAll(i => i is IIdentityGenerator);
-                    
-                    foreach (var injectableModule in modidiedModules)
-                        interaction.Inject(injectableModule);
-
                     var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
-                    interaction.ConnectionId = recoveryRequest.Id;
-                    
-                    interaction.Inject(_serialization);
-
-                    interaction.BaseStream = client.GetStream();
-
-                    interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
-                        new IdAssignment { Id = -interaction.ConnectionId }));
-                    _hub!.RegisterInteraction(interaction);
-                    Console.WriteLine("Client registered");
+                    var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
+                    recoveryInteraction.BaseStream = client.GetStream();
+                    recoveryInteraction.Restart();
+                    Console.WriteLine($"Client {recoveryRequest.Id} reconnected");
                 }
             }
         }

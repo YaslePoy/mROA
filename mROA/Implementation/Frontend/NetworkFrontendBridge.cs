@@ -9,14 +9,14 @@ namespace mROA.Implementation.Frontend
 {
     public class NetworkFrontendBridge : IFrontendBridge
     {
-        private readonly IPEndPoint _ipEndPoint;
-        private readonly TcpClient _tcpClient = new();
+        private readonly IPEndPoint _serverEndPoint;
+        private TcpClient _tcpClient = new();
         private NextGenerationInteractionModule? _interactionModule;
         private ISerializationToolkit? _serialization;
 
-        public NetworkFrontendBridge(IPEndPoint ipEndPoint)
+        public NetworkFrontendBridge(IPEndPoint serverEndPoint)
         {
-            _ipEndPoint = ipEndPoint;
+            _serverEndPoint = serverEndPoint;
         }
 
         public void Inject<T>(T dependency)
@@ -39,13 +39,13 @@ namespace mROA.Implementation.Frontend
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
 
-            _tcpClient.Connect(_ipEndPoint);
+            _tcpClient.Connect(_serverEndPoint);
 
             _interactionModule.BaseStream = _tcpClient.GetStream();
 
             _interactionModule.OnDisconected += async id =>
             {
-                await Reconect();
+                await Reconnect();
             };
             _ = _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect()));
             var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
@@ -61,9 +61,10 @@ namespace mROA.Implementation.Frontend
             TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);
         }
 
-        private async Task Reconect()
+        private async Task Reconnect()
         {
-            _tcpClient.Connect(_ipEndPoint);
+            _tcpClient = new TcpClient();
+            _tcpClient.Connect(_serverEndPoint);
             _interactionModule.BaseStream = _tcpClient.GetStream();
             await _interactionModule.Restart();
         }

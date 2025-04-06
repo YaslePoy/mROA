@@ -21,7 +21,7 @@ namespace mROA.Implementation.Backend
             OnConnected?.Invoke(module);
         }
 
-        public INextGenerationInteractionModule GetInteracion(int id)
+        public INextGenerationInteractionModule GetInteraction(int id)
         {
             return _connections!.GetValueOrDefault(id, null) ?? throw new Exception("No connection found");
         }

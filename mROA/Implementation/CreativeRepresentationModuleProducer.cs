@@ -34,7 +34,7 @@ namespace mROA.Implementation
             foreach (var creationModule in _creationModules)
                 produced.Inject(creationModule);
 
-            var interaction = _hub.GetInteracion(id);
+            var interaction = _hub.GetInteraction(id);
             produced.Inject(interaction);
 
             return produced;
