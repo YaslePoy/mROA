@@ -97,7 +97,7 @@ namespace mROA.Implementation
 #endif
 
             var serialized = _serialization.Serialize(payload, payloadType);
-            await _interaction.PostMessage(new NetworkMessageHeader
+            await _interaction.PostMessageAsync(new NetworkMessageHeader
                 { Id = id, MessageType = eMessageType, Data = serialized });
         }
 

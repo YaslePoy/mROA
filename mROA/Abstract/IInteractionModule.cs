@@ -10,9 +10,11 @@ namespace mROA.Abstract
         int ConnectionId { get; set; }
         public Stream? BaseStream { get; set; }
         Task<NetworkMessageHeader> GetNextMessageReceiving();
-        Task PostMessage(NetworkMessageHeader messageHeader);
+        Task PostMessageAsync(NetworkMessageHeader messageHeader);
         void HandleMessage(NetworkMessageHeader messageHeader);
         NetworkMessageHeader[] UnhandledMessages { get; }
         NetworkMessageHeader? FirstByFilter(Predicate<NetworkMessageHeader> predicate);
+        event Action<int> OnDisconected;
+        
     }
 }

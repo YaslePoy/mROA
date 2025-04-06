@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using mROA.Abstract;
 using Exception = System.Exception;
 
@@ -39,21 +40,50 @@ namespace mROA.Implementation.Frontend
                 throw new NullReferenceException("Serialization toolkit is not initialized");
 
             _tcpClient.Connect(_ipEndPoint);
+
             _interactionModule.BaseStream = _tcpClient.GetStream();
 
-            _ = _interactionModule.PostMessage(new NetworkMessageHeader(_serialization, new ClientConnect()));
+            _interactionModule.OnDisconected += async id =>
+            {
+                await Reconect();
+            };
+            _ = _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect()));
             var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
             if (welcomeMessage.MessageType != EMessageType.IdAssigning)
             {
                 throw new Exception(
                     $"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.MessageType.ToString()}");
             }
-            
-            
-            
+
+
             var assignment = _serialization.Deserialize<IdAssignment>(welcomeMessage.Data)!;
             _interactionModule.ConnectionId = -assignment.Id;
             TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);
+        }
+
+        private async Task Reconect()
+        {
+            _tcpClient.Connect(_ipEndPoint);
+            _interactionModule.BaseStream = _tcpClient.GetStream();
+            await _interactionModule.Restart();
+        }
+
+        public void Obstacle()
+        {
+            _interactionModule!.BaseStream!.Close();
+            _tcpClient.Close();
+        }
+
+        public void Disconnect()
+        {
+            _ = _interactionModule!.PostMessageAsync(new NetworkMessageHeader(_serialization!, new ClientDisconnect()));
+            _interactionModule.BaseStream!.Close();
+            _tcpClient.Dispose();
+        }
+
+        public void Dispose()
+        {
+            Disconnect();
         }
     }
 }

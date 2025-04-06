@@ -10,6 +10,7 @@ namespace mROA.Implementation
         CancelRequest,
         EventRequest,
         ClientRecovery,
-        ClientConnect
+        ClientConnect,
+        ClientDisconnect,
     }
 }

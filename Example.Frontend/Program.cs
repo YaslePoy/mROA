@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Example.Frontend;
 using Example.Shared;
+using mROA.Abstract;
 using mROA.Cbor;
 using mROA.Codegen;
 using mROA.Implementation;
@@ -38,7 +39,7 @@ class Program
         TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>();
         TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
 
-        builder.GetModule<NetworkFrontendBridge>()!.Connect();
+        builder.GetModule<IFrontendBridge>()!.Connect();
         _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
         Console.WriteLine(TransmissionConfig.OwnershipRepository.GetOwnershipId());
         var context = builder.GetModule<RemoteContextRepository>();

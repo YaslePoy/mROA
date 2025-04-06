@@ -37,7 +37,7 @@ namespace mROA.Test
 
                 foreach (var guid in guids)
                 {
-                    _interactionModuleB.PostMessage(new NetworkMessageHeader { Id = guid, Data = "Hello user"u8.ToArray() });
+                    _interactionModuleB.PostMessageAsync(new NetworkMessageHeader { Id = guid, Data = "Hello user"u8.ToArray() });
                 }
             });
         

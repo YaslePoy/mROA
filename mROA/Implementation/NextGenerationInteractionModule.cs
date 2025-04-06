@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using mROA.Abstract;
 
@@ -15,6 +16,9 @@ namespace mROA.Implementation
         private Task<NetworkMessageHeader>? _currentReceiving;
         private ISerializationToolkit? _serialization;
         private Stream? _baseStream;
+
+        private TaskCompletionSource<Stream> _reconection = new();
+
         public int ConnectionId { get; set; }
 
         public Stream? BaseStream
@@ -24,8 +28,8 @@ namespace mROA.Implementation
             {
                 if (_baseStream is null)
                 {
-                    
                 }
+
                 _baseStream = value;
             }
         }
@@ -51,7 +55,7 @@ namespace mROA.Implementation
             return _currentReceiving;
         }
 
-        public async Task PostMessage(NetworkMessageHeader messageHeader)
+        public async Task PostMessageAsync(NetworkMessageHeader messageHeader)
         {
             if (BaseStream == null)
                 throw new NullReferenceException("BaseStream is null");
@@ -81,6 +85,8 @@ namespace mROA.Implementation
             return _messageBuffer.FirstOrDefault(m => predicate(m));
         }
 
+        public event Action<int>? OnDisconected;
+
         private async Task<NetworkMessageHeader> GetNextMessage()
         {
             if (BaseStream == null)
@@ -89,37 +95,53 @@ namespace mROA.Implementation
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is null");
 
-
-            try
+            while (true)
             {
-                // Console.WriteLine("Receiving message");
-                var firstBit = (byte)BaseStream.ReadByte();
-                var secondBit = (byte)BaseStream.ReadByte();
+                try
+                {
+                    return await Receive();
+                }
+                catch (Exception)
+                {
+                    OnDisconected!.Invoke(ConnectionId);
+                    _ = await _reconection.Task;
+                }
+            }
+        }
 
-                var len = BitConverter.ToUInt16(new[] { firstBit, secondBit });
-                var localSpan = _buffer[..len];
+        private ushort ReadMessageLength()
+        {
+            var firstBit = (byte)BaseStream.ReadByte();
+            var secondBit = (byte)BaseStream.ReadByte();
 
-                await BaseStream.ReadExactlyAsync(localSpan);
+            var len = BitConverter.ToUInt16(new[] { firstBit, secondBit });
 
-                // Console.WriteLine("Receiving {0}", Encoding.Default.GetString(_buffer[..len]));
+            return len;
+        }
 
-                var message = _serialization.Deserialize<NetworkMessageHeader>(localSpan.Span);
+        private async Task<NetworkMessageHeader> Receive()
+        {
+            var len = ReadMessageLength();
+            var localSpan = _buffer[..len];
+
+            await BaseStream.ReadExactlyAsync(localSpan);
+
+            var message = _serialization.Deserialize<NetworkMessageHeader>(localSpan.Span);
 #if TRACE
             Console.WriteLine($"{DateTime.Now.TimeOfDay} Received Message {message.Id} - {message.SchemaId}");
             TransmissionConfig.TotalTransmittedBytes += len;
             Console.WriteLine($"Total recieced bytes are {TransmissionConfig.TotalTransmittedBytes}");
 #endif
-                _messageBuffer.Add(message);
-                _currentReceiving = Task.Run(async () => await GetNextMessage());
+            _messageBuffer.Add(message);
+            _currentReceiving = Task.Run(async () => await GetNextMessage());
 
-                return message;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            return message;
+        }
 
+        public async Task Restart()
+        {
+            await PostMessageAsync(new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId))));
+            _reconection.SetResult(BaseStream!);
         }
     }
 }

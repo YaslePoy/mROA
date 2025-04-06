@@ -79,7 +79,7 @@ namespace mROA.Implementation.Backend
 
                 if (connectionRequest.MessageType == EMessageType.ClientConnect)
                 {
-                    interaction.PostMessage(new NetworkMessageHeader(_serialization!,
+                    interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
                         new IdAssignment { Id = -interaction.ConnectionId }));
                     _hub!.RegisterInteraction(interaction);
                     Console.WriteLine("Client registered");
@@ -98,7 +98,7 @@ namespace mROA.Implementation.Backend
 
                     interaction.BaseStream = client.GetStream();
 
-                    interaction.PostMessage(new NetworkMessageHeader(_serialization!,
+                    interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
                         new IdAssignment { Id = -interaction.ConnectionId }));
                     _hub!.RegisterInteraction(interaction);
                     Console.WriteLine("Client registered");

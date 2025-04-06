@@ -9,6 +9,11 @@ namespace mROA.Implementation
 
     public class ClientRecovery : INetworkMessage
     {
+        public ClientRecovery(int id)
+        {
+            Id = id;
+        }
+
         public int Id { get; set; }
         public EMessageType MessageType => EMessageType.ClientRecovery;
     }
