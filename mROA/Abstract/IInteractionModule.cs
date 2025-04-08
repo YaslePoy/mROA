@@ -9,7 +9,6 @@ namespace mROA.Abstract
     {
         int ConnectionId { get; set; }
         public Stream? BaseStream { get; set; }
-        public IntPtr StreamHandle { get; set; }
         Task<NetworkMessageHeader> GetNextMessageReceiving(bool infinite = true);
         Task PostMessageAsync(NetworkMessageHeader messageHeader);
         void HandleMessage(NetworkMessageHeader messageHeader);

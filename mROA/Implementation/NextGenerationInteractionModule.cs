@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using mROA.Abstract;
 
@@ -27,14 +26,7 @@ namespace mROA.Implementation
         }
 
         public int ConnectionId { get; set; }
-
-        public Stream? BaseStream
-        {
-            get => _baseStream;
-            set => _baseStream = value;
-        }
-
-        public IntPtr StreamHandle { get; set; }
+        public Stream? BaseStream { get; set; }
 
 
         public void Inject<T>(T dependency)
@@ -63,7 +55,7 @@ namespace mROA.Implementation
         {
 #if TRACE
             Console.WriteLine(
-                $"{DateTime.Now.TimeOfDay} Posting message to {StreamHandle}: {messageHeader.Id} - {messageHeader.MessageType} to {ConnectionId}");
+                $"{DateTime.Now.TimeOfDay} Posting message: {messageHeader.Id} - {messageHeader.MessageType} to {ConnectionId}");
 #endif
 
             var rawMessage = _serialization.Serialize(messageHeader);
@@ -178,7 +170,7 @@ namespace mROA.Implementation
 
             var message = _serialization.Deserialize<NetworkMessageHeader>(localSpan.Span);
 #if TRACE
-            Console.WriteLine($"{DateTime.Now.TimeOfDay} Received Message from {StreamHandle} {message.Id} - {message.MessageType}");
+            Console.WriteLine($"{DateTime.Now.TimeOfDay} Received Message {message.Id} - {message.MessageType}");
             TransmissionConfig.TotalTransmittedBytes += len;
             Console.WriteLine($"Total received bytes are {TransmissionConfig.TotalTransmittedBytes}");
 #endif

@@ -73,7 +73,6 @@ namespace mROA.Implementation.Backend
 
                 interaction!.Inject(_serialization);
                 interaction.BaseStream = client.GetStream();
-                interaction.StreamHandle = client.Client.Handle;
 
                 var connectionRequest = interaction.GetNextMessageReceiving(false)
                     .GetAwaiter().GetResult()!;
@@ -91,7 +90,6 @@ namespace mROA.Implementation.Backend
                         var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
                         recoveryInteraction.BaseStream = client.GetStream();
-                        recoveryInteraction.StreamHandle = client.Client.Handle;
                         
                         recoveryInteraction.Restart(false);
                         Console.WriteLine("Connection recovery for client {0} finished", recoveryRequest.Id);
