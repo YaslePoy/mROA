@@ -18,6 +18,7 @@ namespace mROA.Implementation
         {
             MessageType = networkMessage.MessageType;
             Data = serializationToolkit.Serialize(networkMessage);
+            Id = Guid.NewGuid();
         }
         public Guid Id { get; set; }
 

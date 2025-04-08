@@ -71,8 +71,8 @@ namespace mROA.Implementation.Frontend
 
         public void Obstacle()
         {
-            _interactionModule!.BaseStream!.Close();
-            _tcpClient.Close();
+            _interactionModule!.BaseStream!.Dispose();
+            _tcpClient.Dispose();
         }
 
         public void Disconnect()

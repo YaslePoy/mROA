@@ -9,13 +9,13 @@ namespace mROA.Abstract
     {
         int ConnectionId { get; set; }
         public Stream? BaseStream { get; set; }
-        Task<NetworkMessageHeader> GetNextMessageReceiving();
+        public IntPtr StreamHandle { get; set; }
+        Task<NetworkMessageHeader> GetNextMessageReceiving(bool infinite = true);
         Task PostMessageAsync(NetworkMessageHeader messageHeader);
         void HandleMessage(NetworkMessageHeader messageHeader);
         NetworkMessageHeader[] UnhandledMessages { get; }
         NetworkMessageHeader? FirstByFilter(Predicate<NetworkMessageHeader> predicate);
         event Action<int> OnDisconected;
         Task Restart(bool sendRecovery);
-
     }
 }
