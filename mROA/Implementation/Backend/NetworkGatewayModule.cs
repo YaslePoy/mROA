@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using mROA.Abstract;
+using static System.Byte;
 
 namespace mROA.Implementation.Backend
 {
@@ -66,7 +67,7 @@ namespace mROA.Implementation.Backend
             while (true)
             {
                 var client = _tcpListener.AcceptTcpClient();
-                
+
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
                 var interaction = Activator.CreateInstance(_interactionModuleType!) as INextGenerationInteractionModule;
                 foreach (var injectableModule in _injectableModules!)
@@ -75,7 +76,7 @@ namespace mROA.Implementation.Backend
                 interaction!.Inject(_serialization);
 
                 interaction.BaseStream = client.GetStream();
-                
+
                 var connectionRequest = interaction.GetNextMessageReceiving().GetAwaiter().GetResult()!;
 
                 switch (connectionRequest.MessageType)
@@ -91,6 +92,8 @@ namespace mROA.Implementation.Backend
                         var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
                         recoveryInteraction.BaseStream = client.GetStream();
+                        
+
                         recoveryInteraction.Restart(false);
                         Console.WriteLine($"Client {recoveryRequest.Id} reconnected");
                         break;

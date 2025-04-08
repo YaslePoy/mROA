@@ -17,15 +17,13 @@ namespace mROA.Implementation
         private Task<NetworkMessageHeader>? _currentReceiving;
         private ISerializationToolkit? _serialization;
         private Stream? _baseStream;
-        private bool _isRecovering;
-        private event Action OnReconnected;
-
-        private TaskCompletionSource<Stream> _reconection;
+        private bool _isConnected = true;
+        private bool _isInReconnectionState;
+        private TaskCompletionSource<Stream> _reconnection;
 
         public NextGenerationInteractionModule()
         {
-            _reconection = new TaskCompletionSource<Stream>();
-            _reconection.SetResult(Stream.Null);
+            _reconnection = new TaskCompletionSource<Stream>();
         }
 
         public int ConnectionId { get; set; }
@@ -104,6 +102,8 @@ namespace mROA.Implementation
                 if (await PostMessageInternal(messageHeader))
                     break;
 
+                _isConnected = false;
+                await MakeRecovery("OUT");
                 // Console.WriteLine("Try to get lock from post");
                 // lock (_reconection)
                 // {
@@ -159,8 +159,9 @@ namespace mROA.Implementation
                 {
                     return await Receive();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    await MakeRecovery("IN");
                     // Console.WriteLine("Try to get lock from receive");
                     // lock (_reconection)
                     // {
@@ -186,10 +187,18 @@ namespace mROA.Implementation
 
         private ushort ReadMessageLength()
         {
-            var firstBit = (byte)BaseStream.ReadByte();
+            
+            var firstBit = BaseStream.ReadByte();
+            if (firstBit == -1)
+            {
+                _isConnected = false;
+                throw new EndOfStreamException();
+            }
+
+            _isConnected = true;
             var secondBit = (byte)BaseStream.ReadByte();
 
-            var len = BitConverter.ToUInt16(new[] { firstBit, secondBit });
+            var len = BitConverter.ToUInt16(new[] { (byte)firstBit, secondBit });
 
             return len;
         }
@@ -216,12 +225,50 @@ namespace mROA.Implementation
         public async Task Restart(bool sendRecovery)
         {
             if (sendRecovery)
+            {
                 await PostMessageAsync(
                     new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId))));
-            _isRecovering = false;
-            _reconection.SetResult(BaseStream!);
-            _reconection = new TaskCompletionSource<Stream>();
+                
+                var confirmByte = BaseStream.ReadByte();
+                Console.WriteLine("Reconnection byte {0}", confirmByte);
+            }
+            else
+            {
+                BaseStream.WriteByte(byte.MaxValue);
+            }
 
+            Console.WriteLine("Setting result for reconnection");
+            _reconnection.SetResult(BaseStream!);
+            Console.WriteLine("Set result for reconnection successfull");
+
+            _reconnection = new TaskCompletionSource<Stream>();
+        }
+
+        private async Task MakeRecovery(string source)
+        {
+
+            Console.WriteLine("Staring recovery from {0}", source);
+            lock (_reconnection)
+            {
+                Console.WriteLine("Got lock from {0}", source);
+                if (_isConnected || _isInReconnectionState)
+                {
+                    Console.WriteLine($"{_isConnected} {_isInReconnectionState} {!_baseStream.CanRead} {!_baseStream.CanWrite}");
+                    return;
+                }
+
+                Console.WriteLine("Call OnDisconnected from {0}", source);
+                _isInReconnectionState = true;
+                OnDisconected?.Invoke(ConnectionId);
+            }
+            
+            Console.WriteLine("Waiting for reconnect from {0}", source);
+            await _reconnection.Task;
+            Console.WriteLine("Reconnect finished from {0}", source);
+            lock (_reconnection)
+            {
+                _isInReconnectionState = false;
+            }
         }
     }
 }

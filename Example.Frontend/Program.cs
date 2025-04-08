@@ -58,7 +58,7 @@ class Program
             Console.WriteLine("Printer created");
             Thread.Sleep(100);
 
-            // frontendBridge.Obstacle();
+            frontendBridge.Obstacle();
             var name = disposingPrinter.GetName();
             DemoCheck.BasicNonParamsCall = true;
             Console.WriteLine("Printer name : {0}", name);
