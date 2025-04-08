@@ -80,7 +80,10 @@ namespace mROA.Implementation.Frontend
                         var eventRequest =
                             _representationModule!.GetMessageAsync<DefaultCallRequest>(
                                 messageType: EMessageType.EventRequest, token: token);
-                        Task.WaitAny(defaultRequest, cancelRequest, eventRequest);
+                        var disconnectRequest =
+                            _representationModule!.GetMessageAsync<ClientDisconnect>(
+                                messageType: EMessageType.ClientDisconnect, token:token);
+                        Task.WaitAny(defaultRequest, cancelRequest, eventRequest, disconnectRequest);
 #if TRACE
                         Console.WriteLine("Request received");
                         sw.Restart();
@@ -96,9 +99,12 @@ namespace mROA.Implementation.Frontend
                         {
                             HandleCallRequest(tokenSource, defaultRequest.Result);
                         }
-                        else
+                        else if(eventRequest.IsCompleted)
                         {
                             HandleEventRequest(tokenSource, eventRequest.Result);
+                        }else if (disconnectRequest.IsCompleted)
+                        {
+                            break;
                         }
                     }
                 }

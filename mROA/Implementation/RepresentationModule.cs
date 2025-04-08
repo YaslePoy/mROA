@@ -92,9 +92,6 @@ namespace mROA.Implementation
                 throw new NullReferenceException("Interaction toolkit is not initialized");
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
-#if TRACE
-            Console.WriteLine($"{DateTime.Now.TimeOfDay} Posting message: {id} - {messageType} to {Id}");
-#endif
 
             var serialized = _serialization.Serialize(payload, payloadType);
             await _interaction.PostMessageAsync(new NetworkMessageHeader
