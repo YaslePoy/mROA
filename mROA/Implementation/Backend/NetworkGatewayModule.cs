@@ -66,6 +66,7 @@ namespace mROA.Implementation.Backend
             while (true)
             {
                 var client = _tcpListener.AcceptTcpClient();
+                
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
                 var interaction = Activator.CreateInstance(_interactionModuleType!) as INextGenerationInteractionModule;
                 foreach (var injectableModule in _injectableModules!)
@@ -77,19 +78,26 @@ namespace mROA.Implementation.Backend
                 
                 var connectionRequest = interaction.GetNextMessageReceiving().GetAwaiter().GetResult()!;
 
-                if (connectionRequest.MessageType == EMessageType.ClientConnect)
+                switch (connectionRequest.MessageType)
                 {
-                    interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
-                        new IdAssignment { Id = -interaction.ConnectionId }));
-                    _hub!.RegisterInteraction(interaction);
-                    Console.WriteLine("Client registered");
-                }else if (connectionRequest.MessageType == EMessageType.ClientRecovery)
-                {
-                    var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
-                    var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
-                    recoveryInteraction.BaseStream = client.GetStream();
-                    recoveryInteraction.Restart();
-                    Console.WriteLine($"Client {recoveryRequest.Id} reconnected");
+                    case EMessageType.ClientConnect:
+                        interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
+                            new IdAssignment { Id = -interaction.ConnectionId }));
+                        _hub!.RegisterInteraction(interaction);
+                        Console.WriteLine("Client registered");
+                        break;
+                    case EMessageType.ClientRecovery:
+                    {
+                        var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
+                        var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
+                        recoveryInteraction.BaseStream = client.GetStream();
+                        recoveryInteraction.Restart(false);
+                        Console.WriteLine($"Client {recoveryRequest.Id} reconnected");
+                        break;
+                    }
+                    default:
+                        client.Close();
+                        break;
                 }
             }
         }

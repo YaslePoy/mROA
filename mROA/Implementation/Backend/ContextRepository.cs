@@ -10,14 +10,10 @@ namespace mROA.Implementation.Backend
 {
     public class ContextRepository : IContextRepository
     {
-        private const int StartupSize = 1024;
-        private const int GrowSize = 128;
         public static object[] EventBinders = { };
 
         private static int LastDebugId = -1;
         private int _debugId = -1;
-
-        private Task<int> _lastIndexFinder = Task.FromResult(0);
 
         private IRepresentationModuleProducer? _representationModuleProducer;
 

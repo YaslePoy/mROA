@@ -56,6 +56,11 @@ namespace mROA.Implementation.Backend
             return repository;
         }
 
+        public void FreeRepository(int clientId)
+        {
+            _repositories.Remove(clientId);
+        }
+
         private IContextRepository GetRepositoryByClientId(int clientId)
         {
             if (_repositories.TryGetValue(clientId, out var repository))

@@ -39,14 +39,14 @@ class Program
         TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>();
         TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
 
-        builder.GetModule<IFrontendBridge>()!.Connect();
+        var frontendBridge = builder.GetModule<IFrontendBridge>()!;
+        frontendBridge.Connect();
         _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
         Console.WriteLine(TransmissionConfig.OwnershipRepository.GetOwnershipId());
         var context = builder.GetModule<RemoteContextRepository>();
 
         var factory = context.GetSingleObject(typeof(IPrinterFactory), 0) as IPrinterFactory;
 
-//правильный порядок команд 8-5-10-7
         using (var disposingPrinter = factory.Create("Test"))
         {
             DemoCheck.CreatingPrinter = true;
@@ -58,6 +58,7 @@ class Program
             Console.WriteLine("Printer created");
             Thread.Sleep(100);
 
+            // frontendBridge.Obstacle();
             var name = disposingPrinter.GetName();
             DemoCheck.BasicNonParamsCall = true;
             Console.WriteLine("Printer name : {0}", name);
@@ -114,6 +115,9 @@ class Program
         cts.Cancel();
         Console.WriteLine($"Token state {cts.Token.IsCancellationRequested}");
         DemoCheck.TaskCancelation = true;
+        
+        frontendBridge.Disconnect();
+        
         DemoCheck.Show();
         Console.ReadKey();
         //

@@ -43,9 +43,9 @@ namespace mROA.Implementation.Frontend
 
             _interactionModule.BaseStream = _tcpClient.GetStream();
 
-            _interactionModule.OnDisconected += async id =>
+            _interactionModule.OnDisconected += id =>
             {
-                await Reconnect();
+                Reconnect();
             };
             _ = _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect()));
             var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
@@ -66,7 +66,7 @@ namespace mROA.Implementation.Frontend
             _tcpClient = new TcpClient();
             _tcpClient.Connect(_serverEndPoint);
             _interactionModule.BaseStream = _tcpClient.GetStream();
-            await _interactionModule.Restart();
+            await _interactionModule.Restart(true);
         }
 
         public void Obstacle()

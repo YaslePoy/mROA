@@ -10,14 +10,23 @@ namespace mROA.Implementation
 {
     public class NextGenerationInteractionModule : INextGenerationInteractionModule
     {
+        private int DebugId = new Random().Next();
         private const int BufferSize = ushort.MaxValue;
         private readonly Memory<byte> _buffer = new byte[BufferSize];
         private readonly List<NetworkMessageHeader> _messageBuffer = new(128);
         private Task<NetworkMessageHeader>? _currentReceiving;
         private ISerializationToolkit? _serialization;
         private Stream? _baseStream;
+        private bool _isRecovering;
+        private event Action OnReconnected;
 
-        private TaskCompletionSource<Stream> _reconection = new();
+        private TaskCompletionSource<Stream> _reconection;
+
+        public NextGenerationInteractionModule()
+        {
+            _reconection = new TaskCompletionSource<Stream>();
+            _reconection.SetResult(Stream.Null);
+        }
 
         public int ConnectionId { get; set; }
 
@@ -54,6 +63,25 @@ namespace mROA.Implementation
             _currentReceiving = Task.Run(async () => await GetNextMessage());
             return _currentReceiving;
         }
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        private async ValueTask<bool> PostMessageInternal(NetworkMessageHeader messageHeader)
+        {
+            
+#if TRACE
+            Console.WriteLine($"{DateTime.Now.TimeOfDay} Posting message: {messageHeader.Id} - {messageHeader.MessageType} to {ConnectionId}");
+#endif
+            
+            var rawMessage = _serialization.Serialize(messageHeader);
+            var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
+
+            if (!_baseStream.CanWrite)
+                return false;
+            await BaseStream.WriteAsync(header);
+            await BaseStream.WriteAsync(rawMessage);
+            return true;
+        }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+
 
         public async Task PostMessageAsync(NetworkMessageHeader messageHeader)
         {
@@ -65,12 +93,35 @@ namespace mROA.Implementation
 
             // Console.WriteLine("Sending {0}", JsonSerializer.Serialize(message));
 
+            bool withError = false;
+            while (true)
+            {
+                if (withError)
+                {
+                    Console.WriteLine("Post again");
+                }
 
-            var rawMessage = _serialization.Serialize(messageHeader);
-            var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
+                if (await PostMessageInternal(messageHeader))
+                    break;
 
-            await BaseStream.WriteAsync(header);
-            await BaseStream.WriteAsync(rawMessage);
+                // Console.WriteLine("Try to get lock from post");
+                // lock (_reconection)
+                // {
+                //     Console.WriteLine("Got lock from post");
+                //     if (!_isRecovering)
+                //     {
+                //         _isRecovering = true;
+                //         Console.WriteLine("Disconnect invoke for post");
+                //         OnDisconected?.Invoke(ConnectionId);
+                //         Console.WriteLine("Disconnect invoked for post");
+                //     }
+                // }
+                //
+                // withError = true;
+                // Console.WriteLine("Start waiting for recovery from post");
+                // _ = await _reconection.Task;
+                // Console.WriteLine("Connection recovered from post");
+            }
         }
 
         public void HandleMessage(NetworkMessageHeader messageHeader)
@@ -95,16 +146,40 @@ namespace mROA.Implementation
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is null");
 
+            bool withError = false;
+
             while (true)
             {
+                if (withError)
+                {
+                    Console.WriteLine("Recieve again");
+                }
+
                 try
                 {
                     return await Receive();
                 }
                 catch (Exception)
                 {
-                    OnDisconected!.Invoke(ConnectionId);
-                    _ = await _reconection.Task;
+                    // Console.WriteLine("Try to get lock from receive");
+                    // lock (_reconection)
+                    // {
+                    //     Console.WriteLine("Got lock from receive");
+                    //
+                    //     if (!_isRecovering)
+                    //     {
+                    //         _isRecovering = true;
+                    //         Console.WriteLine("Disconnect invoke");
+                    //         OnDisconected?.Invoke(ConnectionId);
+                    //         Console.WriteLine("Disconnect invoked for receive");
+                    //
+                    //     }
+                    // }
+                    //
+                    // withError = true;
+                    // Console.WriteLine("Start waiting for recovery from receive");
+                    // _ = await _reconection.Task;
+                    // Console.WriteLine("Connection recovered");
                 }
             }
         }
@@ -119,7 +194,7 @@ namespace mROA.Implementation
             return len;
         }
 
-        private async Task<NetworkMessageHeader> Receive()
+        private async ValueTask<NetworkMessageHeader> Receive()
         {
             var len = ReadMessageLength();
             var localSpan = _buffer[..len];
@@ -128,9 +203,9 @@ namespace mROA.Implementation
 
             var message = _serialization.Deserialize<NetworkMessageHeader>(localSpan.Span);
 #if TRACE
-            Console.WriteLine($"{DateTime.Now.TimeOfDay} Received Message {message.Id} - {message.SchemaId}");
+            Console.WriteLine($"{DateTime.Now.TimeOfDay} Received Message {message.Id} - {message.MessageType}");
             TransmissionConfig.TotalTransmittedBytes += len;
-            Console.WriteLine($"Total recieced bytes are {TransmissionConfig.TotalTransmittedBytes}");
+            Console.WriteLine($"Total received bytes are {TransmissionConfig.TotalTransmittedBytes}");
 #endif
             _messageBuffer.Add(message);
             _currentReceiving = Task.Run(async () => await GetNextMessage());
@@ -138,10 +213,15 @@ namespace mROA.Implementation
             return message;
         }
 
-        public async Task Restart()
+        public async Task Restart(bool sendRecovery)
         {
-            await PostMessageAsync(new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId))));
+            if (sendRecovery)
+                await PostMessageAsync(
+                    new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId))));
+            _isRecovering = false;
             _reconection.SetResult(BaseStream!);
+            _reconection = new TaskCompletionSource<Stream>();
+
         }
     }
 }

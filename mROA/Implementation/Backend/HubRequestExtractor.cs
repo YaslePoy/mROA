@@ -49,9 +49,15 @@ namespace mROA.Implementation.Backend
         private void HubOnOnConnected(IRepresentationModule interaction)
         {
             var extractor = CreateExtractor(interaction);
-            _ = extractor.StartExtraction();
+            extractor.StartExtraction().ContinueWith(t => OnDisconnected(interaction));
         }
 
+        private void OnDisconnected(IRepresentationModule representationModule)
+        {
+            if (_contextRepository is IContextRepositoryHub contextHub)
+                contextHub.FreeRepository(representationModule.Id);
+        }
+        
         private IRequestExtractor CreateExtractor(IRepresentationModule interaction)
         {
             var extractor = (IRequestExtractor)Activator.CreateInstance(_extractorType)!;

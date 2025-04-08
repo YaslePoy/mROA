@@ -40,10 +40,11 @@ namespace Example.Backend
                     Console.WriteLine("Waiting canceled");
                     return;
                 }
+
                 Console.WriteLine("Waiting...");
                 await Task.Delay(1000);
             }
-            
+
 
             Console.WriteLine("Waited until the end");
         }

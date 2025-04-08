@@ -15,7 +15,7 @@ namespace mROA.Abstract
         NetworkMessageHeader[] UnhandledMessages { get; }
         NetworkMessageHeader? FirstByFilter(Predicate<NetworkMessageHeader> predicate);
         event Action<int> OnDisconected;
-        Task Restart();
+        Task Restart(bool sendRecovery);
 
     }
 }
