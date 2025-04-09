@@ -8,6 +8,7 @@ namespace mROA.Implementation
 {
     public class NetworkMessageHeader
     {
+        public static readonly NetworkMessageHeader Null = new();
         public NetworkMessageHeader()
         {
             Id = Guid.NewGuid();

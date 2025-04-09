@@ -5,7 +5,7 @@ using mROA.Implementation;
 
 namespace mROA.Abstract
 {
-    public interface INextGenerationInteractionModule : IInjectableModule
+    public interface INextGenerationInteractionModule : IInjectableModule, IDisposable
     {
         int ConnectionId { get; set; }
         public Stream? BaseStream { get; set; }

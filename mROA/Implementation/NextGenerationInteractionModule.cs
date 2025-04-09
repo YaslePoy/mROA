@@ -18,6 +18,7 @@ namespace mROA.Implementation
         private Stream? _baseStream;
         private bool _isConnected = true;
         private bool _isInReconnectionState;
+        private bool _isActive = true;
         private TaskCompletionSource<Stream> _reconnection;
 
         public NextGenerationInteractionModule()
@@ -96,6 +97,10 @@ namespace mROA.Implementation
                 if (await PostMessageInternal(messageHeader))
                     break;
 
+                if (!_isActive)
+                {
+                    return;
+                }
                 _isConnected = false;
                 withError = true;
                 await MakeRecovery("OUT");
@@ -142,6 +147,10 @@ namespace mROA.Implementation
                 }
                 catch (Exception ex)
                 {
+                    if (!_isActive)
+                    {
+                        return NetworkMessageHeader.Null;
+                    }
                     withError = true;
                     await MakeRecovery("IN");
                 }
@@ -244,6 +253,13 @@ namespace mROA.Implementation
             {
                 _isInReconnectionState = false;
             }
+        }
+
+        public void Dispose()
+        {
+            _isActive = false;
+            _currentReceiving?.Dispose();
+            _baseStream?.Dispose();
         }
     }
 }

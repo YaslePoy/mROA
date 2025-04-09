@@ -79,7 +79,7 @@ namespace mROA.Implementation.Frontend
         public void Disconnect()
         {
             _ = _interactionModule!.PostMessageAsync(new NetworkMessageHeader(_serialization!, new ClientDisconnect()));
-            _interactionModule.BaseStream!.Close();
+            _interactionModule.Dispose();
             _tcpClient.Dispose();
         }
 
