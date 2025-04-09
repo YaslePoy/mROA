@@ -13,7 +13,7 @@ namespace mROA.Test
         private TcpListener _listener;
         private NextGenerationInteractionModule _interactionModuleA;
         private NextGenerationInteractionModule _interactionModuleB;
-        private Guid[] guids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        private Guid[] guids = [Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()];
 
         [SetUp]
         public void Setup()
@@ -72,6 +72,8 @@ namespace mROA.Test
         {
             _listener.Stop();
             _listener.Dispose();
+            _interactionModuleA.Dispose();
+            _interactionModuleB.Dispose();
         }
     }
 }

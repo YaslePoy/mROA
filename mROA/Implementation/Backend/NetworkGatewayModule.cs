@@ -87,6 +87,8 @@ namespace mROA.Implementation.Backend
                         break;
                     case EMessageType.ClientRecovery:
                     {
+
+                        interaction.BaseStream = null;
                         var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
                         recoveryInteraction.BaseStream = client.GetStream();

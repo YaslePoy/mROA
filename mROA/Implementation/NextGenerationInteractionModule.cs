@@ -257,8 +257,12 @@ namespace mROA.Implementation
 
         public void Dispose()
         {
+            Console.WriteLine("Interaction module disposed");
             _isActive = false;
-            _currentReceiving?.Dispose();
+            if (_currentReceiving is { IsCompleted: true })
+            {
+                _currentReceiving?.Dispose();
+            }
             _baseStream?.Dispose();
         }
     }
