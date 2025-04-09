@@ -47,16 +47,17 @@ namespace mROA.Implementation.Frontend
             {
                 Reconnect();
             };
-            _ = _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect()));
-            var welcomeMessage = _interactionModule.GetNextMessageReceiving().GetAwaiter().GetResult();
-            if (welcomeMessage.MessageType != EMessageType.IdAssigning)
+            
+            _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect())).Wait();
+            var idMessage = _interactionModule.GetNextMessageReceiving(false).GetAwaiter().GetResult();
+            if (idMessage.MessageType != EMessageType.IdAssigning)
             {
                 throw new Exception(
-                    $"Incorrect message type. Must be IdAssigning, current : {welcomeMessage.MessageType.ToString()}");
+                    $"Incorrect message type. Must be IdAssigning, current : {idMessage.MessageType.ToString()}");
             }
 
 
-            var assignment = _serialization.Deserialize<IdAssignment>(welcomeMessage.Data)!;
+            var assignment = _serialization.Deserialize<IdAssignment>(idMessage.Data)!;
             _interactionModule.ConnectionId = -assignment.Id;
             TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);
         }

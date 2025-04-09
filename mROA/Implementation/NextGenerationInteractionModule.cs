@@ -26,7 +26,11 @@ namespace mROA.Implementation
         }
 
         public int ConnectionId { get; set; }
-        public Stream? BaseStream { get; set; }
+
+        public Stream? BaseStream
+        {
+            get => _baseStream; set => _baseStream = value;
+        }
 
 
         public void Inject<T>(T dependency)
