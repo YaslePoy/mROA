@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using mROA.Abstract;
 using Exception = System.Exception;
@@ -11,7 +12,7 @@ namespace mROA.Implementation.Frontend
     {
         private readonly IPEndPoint _serverEndPoint;
         private TcpClient _tcpClient = new();
-        private NextGenerationInteractionModule? _interactionModule;
+        private INextGenerationInteractionModule? _interactionModule;
         private ISerializationToolkit? _serialization;
 
         public NetworkFrontendBridge(IPEndPoint serverEndPoint)
@@ -42,12 +43,14 @@ namespace mROA.Implementation.Frontend
             _tcpClient.Connect(_serverEndPoint);
 
             _interactionModule.BaseStream = _tcpClient.GetStream();
-
-            _interactionModule.OnDisconected += id =>
+            _interactionModule.UntrustedReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
             {
-                Reconnect();
-            };
-            
+                SingleWriter = false,
+                SingleReader = false,
+                AllowSynchronousContinuations = true
+            }).Reader;
+            _interactionModule.OnDisconnected += id => { Reconnect(); };
+
             _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect())).Wait();
             var idMessage = _interactionModule.GetNextMessageReceiving(false).GetAwaiter().GetResult();
             if (idMessage.MessageType != EMessageType.IdAssigning)
@@ -67,6 +70,12 @@ namespace mROA.Implementation.Frontend
             _tcpClient = new TcpClient();
             _tcpClient.Connect(_serverEndPoint);
             _interactionModule.BaseStream = _tcpClient.GetStream();
+            _interactionModule.UntrustedReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            {
+                SingleWriter = false,
+                SingleReader = false,
+                AllowSynchronousContinuations = true
+            }).Reader;
             await _interactionModule.Restart(true);
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using mROA.Abstract;
 
@@ -67,13 +68,18 @@ namespace mROA.Implementation.Backend
                 var client = _tcpListener.AcceptTcpClient();
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
                 var interaction = Activator.CreateInstance(_interactionModuleType!) as INextGenerationInteractionModule;
-                
+
                 foreach (var injectableModule in _injectableModules!)
                     interaction!.Inject(injectableModule);
 
                 interaction!.Inject(_serialization);
                 interaction.BaseStream = client.GetStream();
-
+                interaction.UntrustedReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+                {
+                    SingleWriter = false,
+                    SingleReader = false,
+                    AllowSynchronousContinuations = true
+                }).Reader;
                 var connectionRequest = interaction.GetNextMessageReceiving(false)
                     .GetAwaiter().GetResult()!;
 
@@ -87,12 +93,19 @@ namespace mROA.Implementation.Backend
                         break;
                     case EMessageType.ClientRecovery:
                     {
-
                         interaction.BaseStream = null;
                         var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
+                        recoveryInteraction.UntrustedReceiveChanel =
+                            Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+                            {
+                                SingleWriter = false,
+                                SingleReader = false,
+                                AllowSynchronousContinuations = true,
+                                
+                            }).Reader;
                         recoveryInteraction.BaseStream = client.GetStream();
-                        
+
                         recoveryInteraction.Restart(false);
                         Console.WriteLine("Connection recovery for client {0} finished", recoveryRequest.Id);
                         break;
