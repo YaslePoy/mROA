@@ -12,7 +12,7 @@ namespace mROA.Implementation.Frontend
     {
         private readonly IPEndPoint _serverEndPoint;
         private TcpClient _tcpClient = new();
-        private INextGenerationInteractionModule? _interactionModule;
+        private IChannelInteractionModule? _interactionModule;
         private ISerializationToolkit? _serialization;
 
         public NetworkFrontendBridge(IPEndPoint serverEndPoint)
@@ -24,7 +24,7 @@ namespace mROA.Implementation.Frontend
         {
             switch (dependency)
             {
-                case NextGenerationInteractionModule interactionModule:
+                case ChannelInteractionModule interactionModule:
                     _interactionModule = interactionModule;
                     break;
                 case ISerializationToolkit toolkit:
@@ -43,12 +43,14 @@ namespace mROA.Implementation.Frontend
             _tcpClient.Connect(_serverEndPoint);
 
             _interactionModule.BaseStream = _tcpClient.GetStream();
-            _interactionModule.UntrustedReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            var channel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
             {
                 SingleWriter = false,
                 SingleReader = false,
                 AllowSynchronousContinuations = true
-            }).Reader;
+            });
+            _interactionModule.UntrustedReceiveChanel = channel.Reader;
+            _interactionModule.UntrustedReceiveChanelWriter = channel.Writer;
             _interactionModule.OnDisconnected += id => { Reconnect(); };
 
             _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect())).Wait();
@@ -70,12 +72,14 @@ namespace mROA.Implementation.Frontend
             _tcpClient = new TcpClient();
             _tcpClient.Connect(_serverEndPoint);
             _interactionModule.BaseStream = _tcpClient.GetStream();
-            _interactionModule.UntrustedReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            var channel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
             {
                 SingleWriter = false,
                 SingleReader = false,
                 AllowSynchronousContinuations = true
-            }).Reader;
+            });
+            _interactionModule.UntrustedReceiveChanel = channel.Reader;
+            _interactionModule.UntrustedReceiveChanelWriter = channel.Writer;
             await _interactionModule.Restart(true);
         }
 

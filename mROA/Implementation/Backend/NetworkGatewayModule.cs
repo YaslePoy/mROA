@@ -67,19 +67,21 @@ namespace mROA.Implementation.Backend
             {
                 var client = _tcpListener.AcceptTcpClient();
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
-                var interaction = Activator.CreateInstance(_interactionModuleType!) as INextGenerationInteractionModule;
+                var interaction = Activator.CreateInstance(_interactionModuleType!) as IChannelInteractionModule;
 
                 foreach (var injectableModule in _injectableModules!)
                     interaction!.Inject(injectableModule);
 
                 interaction!.Inject(_serialization);
                 interaction.BaseStream = client.GetStream();
-                interaction.UntrustedReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+                var channel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
                 {
                     SingleWriter = false,
                     SingleReader = false,
                     AllowSynchronousContinuations = true
-                }).Reader;
+                }); 
+                interaction.UntrustedReceiveChanel = channel.Reader;
+                interaction.UntrustedReceiveChanelWriter = channel.Writer;
                 var connectionRequest = interaction.GetNextMessageReceiving(false)
                     .GetAwaiter().GetResult()!;
 

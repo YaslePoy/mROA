@@ -23,7 +23,7 @@ class Program
         builder.Modules.Add(new CborSerializationToolkit());
 
         builder.Modules.Add(new RemoteContextRepository());
-        builder.Modules.Add(new NextGenerationInteractionModule());
+        builder.Modules.Add(new ChannelInteractionModule());
         builder.Modules.Add(new RepresentationModule());
         builder.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
         builder.Modules.Add(new StaticRepresentationModuleProducer());
@@ -58,7 +58,7 @@ class Program
             Console.WriteLine("Printer created");
             Thread.Sleep(100);
 
-            frontendBridge.Obstacle();
+            // frontendBridge.Obstacle();
             var name = disposingPrinter.GetName();
             DemoCheck.BasicNonParamsCall = true;
             Console.WriteLine("Printer name : {0}", name);

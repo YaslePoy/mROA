@@ -2,43 +2,59 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using mROA.Abstract;
 
 namespace mROA.Implementation
 {
-    public class NextGenerationInteractionModule : INextGenerationInteractionModule
+    public class ChannelInteractionModule : IChannelInteractionModule
     {
-        private int DebugId = new Random().Next();
+        private readonly ChannelReader<NetworkMessageHeader> _receiveReader;
+        private readonly Channel<NetworkMessageHeader> _inputChannel;
+        private readonly Channel<NetworkMessageHeader> _outputTrustedChannel;
+        private readonly Channel<NetworkMessageHeader> _outputUntrustedChannel;
         private const int BufferSize = ushort.MaxValue;
         private readonly Memory<byte> _buffer = new byte[BufferSize];
         private readonly List<NetworkMessageHeader> _messageBuffer = new(128);
         private Task<NetworkMessageHeader>? _currentReceiving;
         private ISerializationToolkit? _serialization;
-        private Stream? _baseStream;
         private bool _isConnected = true;
         private bool _isInReconnectionState;
         private bool _isActive = true;
         private TaskCompletionSource<Stream> _reconnection;
-        private ValueTask<NetworkMessageHeader>? _trustedReceive;
-        private TaskCompletionSource<NetworkMessageHeader> _untrustedReceive;
 
-        public NextGenerationInteractionModule()
+        public ChannelInteractionModule()
         {
             _reconnection = new TaskCompletionSource<Stream>();
+            _inputChannel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            {
+                SingleReader = false,
+                SingleWriter = false,
+                AllowSynchronousContinuations = true
+            });
+            _receiveReader = _inputChannel.Reader;
+            _outputTrustedChannel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = true,
+                AllowSynchronousContinuations = true
+            });
+            _outputUntrustedChannel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = true,
+                AllowSynchronousContinuations = true
+            });
         }
 
         public int ConnectionId { get; set; }
 
-        public Stream? BaseStream
-        {
-            get => _baseStream;
-            set => _baseStream = value;
-        }
-
-        public ChannelReader<NetworkMessageHeader> UntrustedReceiveChanel { get; set; }
-        public ChannelWriter<(int clientId, NetworkMessageHeader messageHeader)> UntrustedPostChanel { get; set; }
+        public ChannelWriter<NetworkMessageHeader> ReceiveChanel => _inputChannel.Writer;
+        public ChannelReader<NetworkMessageHeader> TrustedPostChanel => _outputTrustedChannel.Reader;
+        public ChannelReader<NetworkMessageHeader> UntrustedPostChanel => _outputUntrustedChannel.Reader;
+        public Action<bool> IsConnected { get; set; }
 
 
         public void Inject<T>(T dependency)
@@ -152,46 +168,10 @@ namespace mROA.Implementation
 
                 try
                 {
-                    NetworkMessageHeader message;
-
-                    var wasNull = _untrustedReceive is null;
-
-                    _trustedReceive ??= Receive();
-                    _untrustedReceive = new TaskCompletionSource<NetworkMessageHeader>();
-
-
-                    if (!wasNull)
-                    {
-                        if (_trustedReceive.Value.IsCompleted)
-                        {
-                            _trustedReceive = Receive();
-                        }
-
-                        if (_untrustedReceive.Task.IsCompleted)
-                        {
-                            _untrustedReceive = new TaskCompletionSource<NetworkMessageHeader>();
-                            _ = UntrustedReceiveChanel.ReadAsync().AsTask()
-                                .ContinueWith(task => _untrustedReceive.SetResult(task.Result));
-                        }
-                    }
-                    else
-                    {
-                        _ = UntrustedReceiveChanel.ReadAsync().AsTask()
-                            .ContinueWith(task => _untrustedReceive.SetResult(task.Result));
-                    }
-
-
-                    await Task.WhenAny(_trustedReceive.Value.AsTask() , _untrustedReceive.Task);
-
-                    message = _trustedReceive.Value.IsCompleted
-                        ? _trustedReceive.Value.Result
-                        : _untrustedReceive.Task.Result;
-
-                    _currentReceiving = Task.Run(async () => await GetNextMessage());
-
+                    var message = await _receiveReader.ReadAsync();
                     return message;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     if (!_isActive)
                     {
@@ -276,12 +256,6 @@ namespace mROA.Implementation
             lock (_reconnection)
             {
                 Console.WriteLine("Got lock from {0}", source);
-                if (_isConnected || _isInReconnectionState)
-                {
-                    Console.WriteLine(
-                        $"{source} {_isConnected} {_isInReconnectionState} {!_baseStream.CanRead} {!_baseStream.CanWrite}");
-                    return;
-                }
 
                 Console.WriteLine("Call OnDisconnected from {0}", source);
                 _isInReconnectionState = true;
@@ -310,8 +284,6 @@ namespace mROA.Implementation
             {
                 _currentReceiving?.Dispose();
             }
-
-            _baseStream?.Dispose();
         }
     }
 }

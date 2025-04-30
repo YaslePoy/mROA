@@ -6,8 +6,8 @@
 
     public interface IConnectionHub : IInjectableModule
     {
-        void RegisterInteraction(INextGenerationInteractionModule interaction);
-        INextGenerationInteractionModule GetInteraction(int id);
+        void RegisterInteraction(IChannelInteractionModule interaction);
+        IChannelInteractionModule GetInteraction(int id);
         event ConnectionHandler? OnConnected;
         event DisconnectionHandler? OnDisconnected;
     }

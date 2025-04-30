@@ -7,7 +7,7 @@ namespace mROA.Implementation
 {
     public class RepresentationModule : IRepresentationModule
     {
-        private INextGenerationInteractionModule? _interaction;
+        private IChannelInteractionModule? _interaction;
         private ISerializationToolkit? _serialization;
 
         public void Inject<T>(T dependency)
@@ -17,7 +17,7 @@ namespace mROA.Implementation
                 case ISerializationToolkit toolkit:
                     _serialization = toolkit;
                     break;
-                case INextGenerationInteractionModule interactionModule:
+                case IChannelInteractionModule interactionModule:
                     _interaction = interactionModule;
                     break;
             }

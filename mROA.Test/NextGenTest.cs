@@ -11,17 +11,17 @@ namespace mROA.Test
     public class NextGenTest
     {
         private TcpListener _listener;
-        private NextGenerationInteractionModule _interactionModuleA;
-        private NextGenerationInteractionModule _interactionModuleB;
+        private ChannelInteractionModule _interactionModuleA;
+        private ChannelInteractionModule _interactionModuleB;
         private Guid[] guids = [Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()];
 
         [SetUp]
         public void Setup()
         {
             _listener = new TcpListener(IPAddress.Loopback, 4567);
-            _interactionModuleA = new NextGenerationInteractionModule();
+            _interactionModuleA = new ChannelInteractionModule();
             _interactionModuleA.Inject(new JsonSerializationToolkit());
-            _interactionModuleB = new NextGenerationInteractionModule();
+            _interactionModuleB = new ChannelInteractionModule();
             _interactionModuleB.Inject(new JsonSerializationToolkit());
 
         }
