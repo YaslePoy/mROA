@@ -78,7 +78,7 @@ namespace mROA.Implementation.Backend
                 
                 var streamExtractor = new StreamExtractor(client.GetStream(), _serialization);
                 interaction.IsConnected = () =>  streamExtractor.IsConnected;
-                streamExtractor.MessageReceived += message => interaction.ReceiveChanel.WriteAsync(message); 
+                streamExtractor.MessageReceived = message => interaction.ReceiveChanel.Writer.WriteAsync(message); 
                 streamExtractor.SingleReceive();
                 var connectionRequest = interaction.GetNextMessageReceiving(false)
                     .GetAwaiter().GetResult()!;
@@ -98,10 +98,8 @@ namespace mROA.Implementation.Backend
                         var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
                         
-                        streamExtractor = new StreamExtractor(client.GetStream(), _serialization);
-                        streamExtractor.MessageReceived += message => recoveryInteraction.ReceiveChanel.WriteAsync(message);
+                        streamExtractor.MessageReceived = message => recoveryInteraction.ReceiveChanel.Writer.WriteAsync(message);
 
-                        _ = streamExtractor.LoopedReceive();
                         recoveryInteraction.Restart(false);
                         Console.WriteLine("Connection recovery for client {0} finished", recoveryRequest.Id);
                         break;

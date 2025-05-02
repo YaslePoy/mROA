@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -24,72 +26,48 @@ namespace mROA.Implementation
             }
         }
 
-        
-        
+
         public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized"))
             .ConnectionId;
 
-        public Task<(object parced, EMessageType originalType)> GetSingle(Predicate<NetworkMessageHeader> rule, CancellationToken token, params Func<NetworkMessageHeader, Type?>[] converter)
+        public async Task<(object? Deserialized, EMessageType MessageType)> GetSingle(
+            Predicate<NetworkMessageHeader> rule,
+            CancellationToken token = default, params Func<NetworkMessageHeader, Type?>[] converter)
         {
-            throw new NotImplementedException();
-        }
-
-        public IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(Predicate<NetworkMessageHeader> rule, CancellationToken token, params Func<NetworkMessageHeader, Type?>[] converter)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<T> GetMessageAsync<T>(Guid? requestId, EMessageType? messageType,
-            CancellationToken token = default)
-        {
-            if (_serialization == null)
-                throw new NullReferenceException("Serialization toolkit is not initialized");
-
-            var rawMessage = await GetRawMessage(requestId, messageType, token);
-            return _serialization.Deserialize<T>(rawMessage)!;
-        }
-
-        public T GetMessage<T>(Guid? requestId = null, EMessageType? messageType = null)
-        {
-            if (_serialization == null)
-                throw new NullReferenceException("Serialization toolkit is not initialized");
-
-            var rawMessage = GetRawMessage(requestId, messageType).GetAwaiter().GetResult();
-            return _serialization.Deserialize<T>(rawMessage)!;
-        }
-
-        public async Task<byte[]> GetRawMessage(Guid? requestId = null, EMessageType? messageType = null,
-            CancellationToken token = default)
-        {
-            if (_interaction == null)
-                throw new NullReferenceException("Interaction toolkit is not initialized");
-
-            var fromBuffer =
-                _interaction.FirstByFilter(message =>
-                    (requestId is null || message.Id == requestId) &&
-                    (messageType is null || message.MessageType == messageType));
-
-            if (fromBuffer == null)
+            var writer = _interaction.ReceiveChanel.Writer;
+            await foreach (var message in _interaction.ReceiveChanel.Reader.ReadAllAsync(token))
             {
-                while (token.IsCancellationRequested == false)
+                if (!rule(message))
                 {
-                    var message = await _interaction.GetNextMessageReceiving();
-                    if ((requestId is not null && message.Id != requestId) ||
-                        (messageType is not null && message.MessageType != messageType))
-                        continue;
-
-                    _interaction.HandleMessage(message);
-                    return message.Data;
+                    await writer.WriteAsync(message, token);
+                    continue;
                 }
+
+                var type = converter.Select(i => i(message)).First(i => i != null)!;
+                var deserialized = _serialization.Deserialize(message.Data, type);
+                return (deserialized, message.MessageType);
             }
 
-            if (fromBuffer == null)
+            return (null, EMessageType.Unknown);
+        }
+
+        public async IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(
+            Predicate<NetworkMessageHeader> rule, [EnumeratorCancellation] CancellationToken token = default,
+            params Func<NetworkMessageHeader, Type?>[] converter)
+        {
+            var writer = _interaction?.ReceiveChanel.Writer;
+            await foreach (var message in _interaction.ReceiveChanel.Reader.ReadAllAsync(token))
             {
-                return Array.Empty<byte>();
-            }
+                if (!rule(message))
+                {
+                    await writer.WriteAsync(message, token);
+                    continue;
+                }
 
-            _interaction.HandleMessage(fromBuffer);
-            return fromBuffer.Data;
+                var type = converter.Select(i => i(message)).First(i => i != null)!;
+                var deserialized = _serialization.Deserialize(message.Data, type);
+                yield return (deserialized, message.MessageType)!;
+            }
         }
 
         public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull

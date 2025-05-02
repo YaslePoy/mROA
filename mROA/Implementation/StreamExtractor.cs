@@ -21,7 +21,7 @@ namespace mROA.Implementation
             _serializationToolkit = serializationToolkit;
         }
 
-        public event Action<NetworkMessageHeader> MessageReceived;
+        public Action<NetworkMessageHeader> MessageReceived = _ => { };
 
         private ushort ReadMessageLength()
         {

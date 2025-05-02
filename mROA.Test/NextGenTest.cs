@@ -33,7 +33,7 @@ namespace mROA.Test
             Task.Run(() =>
             {
                 _listener.Start();
-                _interactionModuleB.BaseStream = _listener.AcceptTcpClient().GetStream();
+                // _interactionModuleB.BaseStream = _listener.AcceptTcpClient().GetStream();
 
                 foreach (var guid in guids)
                 {
@@ -43,7 +43,7 @@ namespace mROA.Test
         
             var client = new TcpClient();
             client.Connect(IPAddress.Loopback, 4567);
-            _interactionModuleA.BaseStream = client.GetStream();
+            // _interactionModuleA.BaseStream = client.GetStream();
 
             var tasks = guids.Select(ReadStream);
 

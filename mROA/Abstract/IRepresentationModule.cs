@@ -10,7 +10,8 @@ namespace mROA.Abstract
     {
         int Id { get; }
 
-        Task<(object parced, EMessageType originalType)> GetSingle(Predicate<NetworkMessageHeader> rule, CancellationToken token,
+        Task<(object? Deserialized, EMessageType MessageType)> GetSingle(Predicate<NetworkMessageHeader> rule,
+            CancellationToken token,
             params Func<NetworkMessageHeader, Type?>[] converter);
         
         IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(Predicate<NetworkMessageHeader> rule, CancellationToken token,

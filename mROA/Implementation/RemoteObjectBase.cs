@@ -82,14 +82,14 @@ namespace mROA.Implementation
 
             var response = await responseRequestTask;
 
-            if (response.parced is FinalCommandExecution<T> successResponse)
+            if (response.Deserialized is FinalCommandExecution<T> successResponse)
             {
                 localTokenSource.Cancel();
                 return successResponse.Result!;
             }
 
             localTokenSource.Cancel();
-            throw (response.parced as ExceptionCommandExecution)!.GetException();
+            throw (response.Deserialized as ExceptionCommandExecution)!.GetException();
         }
 
         protected async Task CallAsync(int methodId, object?[]? parameters = null,
@@ -103,7 +103,7 @@ namespace mROA.Implementation
 
             var localTokenSource = new CancellationTokenSource();
 
-            var responceRequestTask = _representationModule.GetSingle(
+            var responseRequestTask = _representationModule.GetSingle(
                 m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution,
                 localTokenSource.Token,
                 m => m.MessageType is EMessageType.FinishedCommandExecution ? typeof(FinalCommandExecution) : null,
@@ -124,16 +124,16 @@ namespace mROA.Implementation
                     }).ContinueWith(_ => localTokenSource.Cancel());
             });
 
-            var responseRequest = await responceRequestTask;
+            var responseRequest = await responseRequestTask;
 #if TRACE
             Console.WriteLine($"Handling message");
 #endif
-            switch (responseRequest.originalType)
+            switch (responseRequest.MessageType)
             {
                 case EMessageType.FinishedCommandExecution:
                     return;
                 case EMessageType.ExceptionCommandExecution:
-                    throw (responseRequest.parced as ExceptionCommandExecution)!.GetException();
+                    throw (responseRequest.Deserialized as ExceptionCommandExecution)!.GetException();
             }
         }
 

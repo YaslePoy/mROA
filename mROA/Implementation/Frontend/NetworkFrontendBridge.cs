@@ -78,7 +78,7 @@ namespace mROA.Implementation.Frontend
 
             _ = _currentExtractor.SendFromChannel(_interactionModule.TrustedPostChanel,
                 _rawExtractorCancellation.Token);
-            _currentExtractor.MessageReceived += message => _interactionModule.ReceiveChanel.WriteAsync(message);
+            _currentExtractor.MessageReceived = message => _interactionModule.ReceiveChanel.Writer.WriteAsync(message);
         }
 
         private async Task Reconnect()

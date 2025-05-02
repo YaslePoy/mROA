@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -14,7 +13,6 @@ namespace mROA.Implementation
         private readonly ChannelReader<NetworkMessageHeader> _receiveReader;
         private readonly ChannelWriter<NetworkMessageHeader> _trustedWriter;
         private readonly ChannelWriter<NetworkMessageHeader> _untrustedWriter;
-        private readonly Channel<NetworkMessageHeader> _inputChannel;
         private readonly Channel<NetworkMessageHeader> _outputTrustedChannel;
         private readonly Channel<NetworkMessageHeader> _outputUntrustedChannel;
         private readonly List<NetworkMessageHeader> _messageBuffer = new(128);
@@ -26,13 +24,13 @@ namespace mROA.Implementation
 
         public ChannelInteractionModule()
         {
-            _inputChannel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            ReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
             {
                 SingleReader = false,
                 SingleWriter = false,
                 AllowSynchronousContinuations = true
             });
-            _receiveReader = _inputChannel.Reader;
+            _receiveReader = ReceiveChanel.Reader;
             _outputTrustedChannel = Channel.CreateBounded<NetworkMessageHeader>(new BoundedChannelOptions(1)
             {
                 SingleReader = true,
@@ -52,7 +50,8 @@ namespace mROA.Implementation
 
         public int ConnectionId { get; set; }
 
-        public ChannelWriter<NetworkMessageHeader> ReceiveChanel => _inputChannel.Writer;
+        public Channel<NetworkMessageHeader> ReceiveChanel { get; }
+
         public ChannelReader<NetworkMessageHeader> TrustedPostChanel => _outputTrustedChannel.Reader;
         public ChannelReader<NetworkMessageHeader> UntrustedPostChanel => _outputUntrustedChannel.Reader;
         public Func<bool> IsConnected { get; set; }
@@ -71,12 +70,12 @@ namespace mROA.Implementation
             }
         }
 
-        public Task<NetworkMessageHeader> GetNextMessageReceiving(bool infinite = true)
+        public ValueTask<NetworkMessageHeader> GetNextMessageReceiving(bool infinite = true)
         {
-            if (!infinite) return _receiveReader.ReadAsync().AsTask();
-            if (_currentReceiving != null) return _currentReceiving;
-            _currentReceiving = Task.Run(async () => await GetNextMessage());
-            return _currentReceiving;
+            return _receiveReader.ReadAsync();
+            // if (_currentReceiving != null) return _currentReceiving;
+            // _currentReceiving = Task.Run(async () => await GetNextMessage());
+            // return _currentReceiving;
         }
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
         private async ValueTask<bool> PostMessageInternal(NetworkMessageHeader messageHeader)
@@ -192,6 +191,7 @@ namespace mROA.Implementation
         private async Task MakeRecovery(string source)
         {
             //TODO переделать реконнект
+            
             // Console.WriteLine("Staring recovery from {0}", source);
             //
             // lock (_reconnection)

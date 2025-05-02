@@ -47,6 +47,9 @@ namespace mROA.Implementation.Frontend
         public async Task StartExtraction()
         {
             ThrowIfNotInjected();
+
+            TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(_representationModule.Id);
+            
             var multiClientOwnershipRepository =
                 TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
             multiClientOwnershipRepository?.RegisterOwnership(_representationModule!.Id);
@@ -54,11 +57,11 @@ namespace mROA.Implementation.Frontend
             try
             {
 #if TRACE
-                    var sw = new Stopwatch();
+                var sw = new Stopwatch();
 #endif
 
                 var streamTokenSource = new CancellationTokenSource();
-                
+
                 var query = _representationModule!.GetStream(m =>
                         m.MessageType is EMessageType.CallRequest or EMessageType.CancelRequest
                             or EMessageType.EventRequest or EMessageType.ClientDisconnect, streamTokenSource.Token,
@@ -71,17 +74,18 @@ namespace mROA.Implementation.Frontend
                 await foreach (var command in query)
                 {
 #if TRACE
-                        Console.WriteLine("Waiting for request...");
-                        if (sw.IsRunning)
-                        {
-                            sw.Stop();
-                            Console.WriteLine($"Request handling took {Math.Round(sw.Elapsed.TotalMilliseconds * 1000.0)} microseconds.");
-                        }
+                    Console.WriteLine("Waiting for request...");
+                    if (sw.IsRunning)
+                    {
+                        sw.Stop();
+                        Console.WriteLine(
+                            $"Request handling took {Math.Round(sw.Elapsed.TotalMilliseconds * 1000.0)} microseconds.");
+                    }
 #endif
 
 #if TRACE
-                        Console.WriteLine("Request received");
-                        sw.Restart();
+                    Console.WriteLine("Request received");
+                    sw.Restart();
 #endif
                     switch (command.originalType)
                     {
@@ -95,7 +99,6 @@ namespace mROA.Implementation.Frontend
                             break;
                         case EMessageType.CancelRequest:
                             HandleCancelRequest((command.parced as CancelRequest)!);
-
                             break;
                         default:
                             continue;
