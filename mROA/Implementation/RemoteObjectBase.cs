@@ -10,7 +10,7 @@ namespace mROA.Implementation
 {
     public abstract class RemoteObjectBase : IDisposable
     {
-        protected bool Equals(RemoteObjectBase other)
+        public bool Equals(RemoteObjectBase other)
         {
             return _identifier.Equals(other._identifier);
         }
@@ -60,40 +60,36 @@ namespace mROA.Implementation
 
             var localTokenSource = new CancellationTokenSource();
 
-            var successResponse =
-                _representationModule.GetMessageAsync<FinalCommandExecution<T>>(request.Id,
-                    EMessageType.FinishedCommandExecution,
-                    localTokenSource.Token);
-            var errorResponse =
-                _representationModule.GetMessageAsync<ExceptionCommandExecution>(requestId: request.Id,
-                    EMessageType.ExceptionCommandExecution, localTokenSource.Token);
+            var responseRequestTask = _representationModule.GetSingle(
+                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution,
+                localTokenSource.Token,
+                m => m.MessageType is EMessageType.FinishedCommandExecution ? typeof(FinalCommandExecution<T>) : null,
+                m => m.MessageType is EMessageType.ExceptionCommandExecution
+                    ? typeof(ExceptionCommandExecution)
+                    : null);
 
-            cancellationToken.Register(async () =>
+            cancellationToken.Register(() =>
             {
 #if TRACE
                 Console.WriteLine("Cancelling task");
 #endif
-                await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CancelRequest,
+                _representationModule.PostCallMessageAsync(request.Id, EMessageType.CancelRequest,
                     new CancelRequest
                     {
                         Id = request.Id
-                    });
-                localTokenSource.Cancel();
+                    }).ContinueWith(_ => localTokenSource.Cancel());
             });
 
-            Task.WaitAny(new Task[]
-            {
-                successResponse, errorResponse
-            }, cancellationToken);
+            var response = await responseRequestTask;
 
-            if (successResponse.IsCompletedSuccessfully)
+            if (response.parced is FinalCommandExecution<T> successResponse)
             {
                 localTokenSource.Cancel();
-                return successResponse.Result.Result!;
+                return successResponse.Result!;
             }
 
             localTokenSource.Cancel();
-            throw errorResponse.Result.GetException();
+            throw (response.parced as ExceptionCommandExecution)!.GetException();
         }
 
         protected async Task CallAsync(int methodId, object?[]? parameters = null,
@@ -107,40 +103,38 @@ namespace mROA.Implementation
 
             var localTokenSource = new CancellationTokenSource();
 
-            var successResponse =
-                _representationModule.GetMessageAsync<FinalCommandExecution>(request.Id,
-                    EMessageType.FinishedCommandExecution,
-                    localTokenSource.Token);
-            var errorResponse =
-                _representationModule.GetMessageAsync<ExceptionCommandExecution>(requestId: request.Id,
-                    EMessageType.ExceptionCommandExecution, localTokenSource.Token);
+            var responceRequestTask = _representationModule.GetSingle(
+                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution,
+                localTokenSource.Token,
+                m => m.MessageType is EMessageType.FinishedCommandExecution ? typeof(FinalCommandExecution) : null,
+                m => m.MessageType is EMessageType.ExceptionCommandExecution
+                    ? typeof(ExceptionCommandExecution)
+                    : null);
 
-            cancellationToken.Register(async () =>
+
+            cancellationToken.Register(() =>
             {
 #if TRACE
                 Console.WriteLine("Cancelling task");
 #endif
-                await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CancelRequest,
+                _representationModule.PostCallMessageAsync(request.Id, EMessageType.CancelRequest,
                     new CancelRequest
                     {
                         Id = request.Id
-                    });
-                localTokenSource.Cancel();
+                    }).ContinueWith(_ => localTokenSource.Cancel());
             });
 
-            Task.WaitAny(new Task[]
-            {
-                errorResponse, successResponse
-            }, cancellationToken);
-
+            var responseRequest = await responceRequestTask;
 #if TRACE
             Console.WriteLine($"Handling message");
 #endif
-            if (successResponse.IsCompletedSuccessfully)
-                return;
-
-            if (errorResponse.IsCompletedSuccessfully)
-                throw errorResponse.Result.GetException();
+            switch (responseRequest.originalType)
+            {
+                case EMessageType.FinishedCommandExecution:
+                    return;
+                case EMessageType.ExceptionCommandExecution:
+                    throw (responseRequest.parced as ExceptionCommandExecution)!.GetException();
+            }
         }
 
         public override string ToString()

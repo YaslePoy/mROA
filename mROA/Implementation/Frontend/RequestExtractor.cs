@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.Backend;
-using mROA.Implementation.CommandExecution;
 
 // ReSharper disable MethodHasAsyncOverload
 
@@ -45,22 +44,32 @@ namespace mROA.Implementation.Frontend
             }
         }
 
-        public Task StartExtraction()
+        public async Task StartExtraction()
         {
-            return Task.Run(() =>
-            {
-                ThrowIfNotInjected();
-                var multiClientOwnershipRepository =
-                    TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
-                multiClientOwnershipRepository?.RegisterOwnership(_representationModule.Id);
+            ThrowIfNotInjected();
+            var multiClientOwnershipRepository =
+                TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
+            multiClientOwnershipRepository?.RegisterOwnership(_representationModule!.Id);
 
-                try
-                {
+            try
+            {
 #if TRACE
                     var sw = new Stopwatch();
 #endif
-                    while (true)
-                    {
+
+                var streamTokenSource = new CancellationTokenSource();
+                
+                var query = _representationModule!.GetStream(m =>
+                        m.MessageType is EMessageType.CallRequest or EMessageType.CancelRequest
+                            or EMessageType.EventRequest or EMessageType.ClientDisconnect, streamTokenSource.Token,
+                    m => m.MessageType == EMessageType.CallRequest ? typeof(DefaultCallRequest) : null,
+                    m => m.MessageType == EMessageType.CancelRequest ? typeof(CancelRequest) : null,
+                    m => m.MessageType == EMessageType.EventRequest ? typeof(DefaultCallRequest) : null,
+                    m => m.MessageType == EMessageType.ClientDisconnect ? typeof(ClientDisconnect) : null);
+
+
+                await foreach (var command in query)
+                {
 #if TRACE
                         Console.WriteLine("Waiting for request...");
                         if (sw.IsRunning)
@@ -69,50 +78,34 @@ namespace mROA.Implementation.Frontend
                             Console.WriteLine($"Request handling took {Math.Round(sw.Elapsed.TotalMilliseconds * 1000.0)} microseconds.");
                         }
 #endif
-                        var tokenSource = new CancellationTokenSource();
-                        var token = tokenSource.Token;
-                        var defaultRequest =
-                            _representationModule!.GetMessageAsync<DefaultCallRequest>(
-                                messageType: EMessageType.CallRequest, token: token);
-                        var cancelRequest =
-                            _representationModule!.GetMessageAsync<CancelRequest>(
-                                messageType: EMessageType.CancelRequest, token: token);
-                        var eventRequest =
-                            _representationModule!.GetMessageAsync<DefaultCallRequest>(
-                                messageType: EMessageType.EventRequest, token: token);
-                        var disconnectRequest =
-                            _representationModule!.GetMessageAsync<ClientDisconnect>(
-                                messageType: EMessageType.ClientDisconnect, token:token);
-                        Task.WaitAny(defaultRequest, cancelRequest, eventRequest, disconnectRequest);
+
 #if TRACE
                         Console.WriteLine("Request received");
                         sw.Restart();
 #endif
-                        if (cancelRequest.IsCompleted)
-                        {
-#if TRACE
-                            Console.WriteLine("Cancelling request");
-#endif
-                            HandleCancelRequest(tokenSource, cancelRequest.Result);
-                        }
-                        else if (defaultRequest.IsCompleted)
-                        {
-                            HandleCallRequest(tokenSource, defaultRequest.Result);
-                        }
-                        else if(eventRequest.IsCompleted)
-                        {
-                            HandleEventRequest(tokenSource, eventRequest.Result);
-                        }else if (disconnectRequest.IsCompleted)
-                        {
+                    switch (command.originalType)
+                    {
+                        case EMessageType.CallRequest:
+                            HandleCallRequest((command.parced as DefaultCallRequest)!);
                             break;
-                        }
+                        case EMessageType.ClientDisconnect:
+                            return;
+                        case EMessageType.EventRequest:
+                            HandleEventRequest((command.parced as DefaultCallRequest)!);
+                            break;
+                        case EMessageType.CancelRequest:
+                            HandleCancelRequest((command.parced as CancelRequest)!);
+
+                            break;
+                        default:
+                            continue;
                     }
                 }
-                catch
-                {
-                    multiClientOwnershipRepository?.FreeOwnership();
-                }
-            });
+            }
+            catch
+            {
+                multiClientOwnershipRepository?.FreeOwnership();
+            }
         }
 
         private void ThrowIfNotInjected()
@@ -129,20 +122,17 @@ namespace mROA.Implementation.Frontend
                 throw new NullReferenceException("Method repository is null.");
         }
 
-        private void HandleCancelRequest(CancellationTokenSource tokenSource, CancelRequest req)
+        private void HandleCancelRequest(CancelRequest req)
         {
-            tokenSource.Cancel();
             _executeModule!.Execute(req, _realContextRepository!, _representationModule!);
         }
 
-        private void HandleCallRequest(CancellationTokenSource tokenSource, DefaultCallRequest request)
+        private void HandleCallRequest(DefaultCallRequest request)
         {
-            tokenSource.Cancel();
-
             var result = _executeModule!.Execute(request, _realContextRepository!, _representationModule!);
 
             var resultType = result.MessageType;
-            
+
             if (resultType == EMessageType.Unknown)
             {
                 return;
@@ -151,9 +141,8 @@ namespace mROA.Implementation.Frontend
             _representationModule!.PostCallMessage(request.Id, resultType, result, result.GetType());
         }
 
-        private void HandleEventRequest(CancellationTokenSource tokenSource, DefaultCallRequest request)
+        private void HandleEventRequest(DefaultCallRequest request)
         {
-            tokenSource.Cancel();
             _executeModule!.Execute(request, _remoteContextRepository!, _representationModule!);
         }
     }

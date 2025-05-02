@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 using mROA.Abstract;
+using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedMember.Global
 
@@ -45,5 +46,9 @@ namespace mROA.Implementation
         public EMessageType MessageType { get; set; }
 
         public byte[] Data { get; set; }
+        
+        [JsonIgnore]
+        [SerializationIgnore]
+        public object Parced { get; set; }
     }
 }

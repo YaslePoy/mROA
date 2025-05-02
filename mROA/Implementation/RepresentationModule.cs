@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -27,6 +28,16 @@ namespace mROA.Implementation
         
         public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized"))
             .ConnectionId;
+
+        public Task<(object parced, EMessageType originalType)> GetSingle(Predicate<NetworkMessageHeader> rule, CancellationToken token, params Func<NetworkMessageHeader, Type?>[] converter)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(Predicate<NetworkMessageHeader> rule, CancellationToken token, params Func<NetworkMessageHeader, Type?>[] converter)
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task<T> GetMessageAsync<T>(Guid? requestId, EMessageType? messageType,
             CancellationToken token = default)

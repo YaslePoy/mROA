@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Implementation;
@@ -9,16 +10,13 @@ namespace mROA.Abstract
     {
         int Id { get; }
 
-        Task<T> GetMessageAsync<T>(Guid? requestId = null, EMessageType? messageType = null,
-            CancellationToken token = default);
-
-        T GetMessage<T>(Guid? requestId = null, EMessageType? messageType = null);
-
-        Task<byte[]> GetRawMessage(Guid? requestId = null, EMessageType? messageType = null,
-            CancellationToken token = default);
+        Task<(object parced, EMessageType originalType)> GetSingle(Predicate<NetworkMessageHeader> rule, CancellationToken token,
+            params Func<NetworkMessageHeader, Type?>[] converter);
+        
+        IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(Predicate<NetworkMessageHeader> rule, CancellationToken token,
+            params Func<NetworkMessageHeader, Type?>[] converter);
 
         Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
-        Task PostCallMessageAsync(Guid id, EMessageType eMessageType, object payload, Type payloadType);
         void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
         void PostCallMessage(Guid id, EMessageType eMessageType, object payload, Type payloadType);
     }
