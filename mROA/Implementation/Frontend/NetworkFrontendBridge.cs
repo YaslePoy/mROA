@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -14,10 +15,13 @@ namespace mROA.Implementation.Frontend
         private TcpClient _tcpClient = new();
         private IChannelInteractionModule? _interactionModule;
         private ISerializationToolkit? _serialization;
+        private StreamExtractor _currentExtractor;
+        private CancellationTokenSource _rawExtractorCancellation;
 
         public NetworkFrontendBridge(IPEndPoint serverEndPoint)
         {
             _serverEndPoint = serverEndPoint;
+            _rawExtractorCancellation = new CancellationTokenSource();
         }
 
         public void Inject<T>(T dependency)
@@ -42,19 +46,15 @@ namespace mROA.Implementation.Frontend
 
             _tcpClient.Connect(_serverEndPoint);
 
-            _interactionModule.BaseStream = _tcpClient.GetStream();
-            var channel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
-            {
-                SingleWriter = false,
-                SingleReader = false,
-                AllowSynchronousContinuations = true
-            });
-            _interactionModule.UntrustedReceiveChanel = channel.Reader;
-            _interactionModule.UntrustedReceiveChanelWriter = channel.Writer;
+            PrepareExtractor();
+            _interactionModule.IsConnected = () =>  _currentExtractor.IsConnected;
             _interactionModule.OnDisconnected += id => { Reconnect(); };
 
             _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect())).Wait();
+            
+            _currentExtractor.SingleReceive();
             var idMessage = _interactionModule.GetNextMessageReceiving(false).GetAwaiter().GetResult();
+
             if (idMessage.MessageType != EMessageType.IdAssigning)
             {
                 throw new Exception(
@@ -62,30 +62,40 @@ namespace mROA.Implementation.Frontend
             }
 
 
+            var stopToken = _rawExtractorCancellation.Token;
+            Task.Run(async () => await _currentExtractor.LoopedReceive(stopToken));
+
             var assignment = _serialization.Deserialize<IdAssignment>(idMessage.Data)!;
             _interactionModule.ConnectionId = -assignment.Id;
             TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);
+        }
+
+        private void PrepareExtractor()
+        {
+            _currentExtractor = new StreamExtractor(_tcpClient.GetStream(), _serialization);
+
+            _ = _currentExtractor.SendFromChannel(_interactionModule.TrustedPostChanel,
+                _rawExtractorCancellation.Token);
+            _currentExtractor.MessageReceived += message => _interactionModule.ReceiveChanel.WriteAsync(message);
         }
 
         private async Task Reconnect()
         {
             _tcpClient = new TcpClient();
             _tcpClient.Connect(_serverEndPoint);
-            _interactionModule.BaseStream = _tcpClient.GetStream();
-            var channel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
-            {
-                SingleWriter = false,
-                SingleReader = false,
-                AllowSynchronousContinuations = true
-            });
-            _interactionModule.UntrustedReceiveChanel = channel.Reader;
-            _interactionModule.UntrustedReceiveChanelWriter = channel.Writer;
+
+            _rawExtractorCancellation.Cancel();
+            _rawExtractorCancellation = new CancellationTokenSource();
+
+            PrepareExtractor();
+            
+            _ = _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token);
+
             await _interactionModule.Restart(true);
         }
 
         public void Obstacle()
         {
-            _interactionModule!.BaseStream!.Dispose();
             _tcpClient.Dispose();
         }
 

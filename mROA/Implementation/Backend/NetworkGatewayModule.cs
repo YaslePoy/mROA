@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -73,21 +74,20 @@ namespace mROA.Implementation.Backend
                     interaction!.Inject(injectableModule);
 
                 interaction!.Inject(_serialization);
-                interaction.BaseStream = client.GetStream();
-                var channel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
-                {
-                    SingleWriter = false,
-                    SingleReader = false,
-                    AllowSynchronousContinuations = true
-                }); 
-                interaction.UntrustedReceiveChanel = channel.Reader;
-                interaction.UntrustedReceiveChanelWriter = channel.Writer;
+
+                
+                var streamExtractor = new StreamExtractor(client.GetStream(), _serialization);
+                interaction.IsConnected = () =>  streamExtractor.IsConnected;
+                streamExtractor.MessageReceived += message => interaction.ReceiveChanel.WriteAsync(message); 
+                streamExtractor.SingleReceive();
                 var connectionRequest = interaction.GetNextMessageReceiving(false)
                     .GetAwaiter().GetResult()!;
-
+                
                 switch (connectionRequest.MessageType)
                 {
                     case EMessageType.ClientConnect:
+                        Task.Run(async () => await streamExtractor.LoopedReceive());
+                        streamExtractor.SendFromChannel(interaction.TrustedPostChanel);
                         interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
                             new IdAssignment { Id = -interaction.ConnectionId }));
                         _hub!.RegisterInteraction(interaction);
@@ -95,19 +95,13 @@ namespace mROA.Implementation.Backend
                         break;
                     case EMessageType.ClientRecovery:
                     {
-                        interaction.BaseStream = null;
                         var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
-                        recoveryInteraction.UntrustedReceiveChanel =
-                            Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
-                            {
-                                SingleWriter = false,
-                                SingleReader = false,
-                                AllowSynchronousContinuations = true,
-                                
-                            }).Reader;
-                        recoveryInteraction.BaseStream = client.GetStream();
+                        
+                        streamExtractor = new StreamExtractor(client.GetStream(), _serialization);
+                        streamExtractor.MessageReceived += message => recoveryInteraction.ReceiveChanel.WriteAsync(message);
 
+                        _ = streamExtractor.LoopedReceive();
                         recoveryInteraction.Restart(false);
                         Console.WriteLine("Connection recovery for client {0} finished", recoveryRequest.Id);
                         break;
@@ -118,7 +112,7 @@ namespace mROA.Implementation.Backend
                 }
             }
         }
-
+        
         private void ThrowIfNotInjected()
         {
             if (_hub is null)

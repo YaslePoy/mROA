@@ -8,6 +8,24 @@ namespace mROA.Implementation
 {
     public class NetworkMessageHeader
     {
+        protected bool Equals(NetworkMessageHeader other)
+        {
+            return Id.Equals(other.Id) && MessageType == other.MessageType;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((NetworkMessageHeader)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id, (int)MessageType);
+        }
+
         public static readonly NetworkMessageHeader Null = new();
         public NetworkMessageHeader()
         {
