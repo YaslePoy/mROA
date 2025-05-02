@@ -49,11 +49,11 @@ namespace mROA.Implementation.Frontend
             _tcpClient.Connect(_serverEndPoint);
 
             PrepareExtractor();
-            _interactionModule.IsConnected = () =>  _currentExtractor.IsConnected;
+            _interactionModule.IsConnected = () => _currentExtractor.IsConnected;
             _interactionModule.OnDisconnected += id => { Reconnect(); };
 
             _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect())).Wait();
-            
+
             _currentExtractor.SingleReceive();
             var idMessage = _interactionModule.GetNextMessageReceiving(false).GetAwaiter().GetResult();
 
@@ -78,7 +78,10 @@ namespace mROA.Implementation.Frontend
 
             _ = _currentExtractor.SendFromChannel(_interactionModule.TrustedPostChanel,
                 _rawExtractorCancellation.Token);
-            _currentExtractor.MessageReceived = message => _interactionModule.ReceiveChanel.Writer.WriteAsync(message);
+            _currentExtractor.MessageReceived = message =>
+            {
+                _interactionModule.ReceiveChanel.Writer.WriteAsync(message);
+            };
         }
 
         private async Task Reconnect()
@@ -90,7 +93,7 @@ namespace mROA.Implementation.Frontend
             _rawExtractorCancellation = new CancellationTokenSource();
 
             PrepareExtractor();
-            
+
             _ = _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token);
 
             await _interactionModule.Restart(true);

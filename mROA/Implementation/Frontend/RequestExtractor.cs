@@ -48,11 +48,14 @@ namespace mROA.Implementation.Frontend
         {
             ThrowIfNotInjected();
 
-            TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(_representationModule.Id);
-            
+
             var multiClientOwnershipRepository =
                 TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
             multiClientOwnershipRepository?.RegisterOwnership(_representationModule!.Id);
+            if (multiClientOwnershipRepository is not null)
+            {
+                TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(_representationModule.Id);
+            }
 
             try
             {

@@ -28,14 +28,14 @@ namespace mROA.Implementation
             {
                 SingleReader = false,
                 SingleWriter = false,
-                AllowSynchronousContinuations = true
+                // AllowSynchronousContinuations = true
             });
             _receiveReader = ReceiveChanel.Reader;
             _outputTrustedChannel = Channel.CreateBounded<NetworkMessageHeader>(new BoundedChannelOptions(1)
             {
                 SingleReader = true,
                 SingleWriter = true,
-                AllowSynchronousContinuations = true,
+                // AllowSynchronousContinuations = true,
                 
             });
             _trustedWriter = _outputTrustedChannel.Writer;
@@ -43,7 +43,7 @@ namespace mROA.Implementation
             {
                 SingleReader = true,
                 SingleWriter = true,
-                AllowSynchronousContinuations = true
+                // AllowSynchronousContinuations = true
             });
             _untrustedWriter = _outputUntrustedChannel.Writer;
         }

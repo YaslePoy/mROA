@@ -35,7 +35,10 @@ namespace mROA.Implementation
             CancellationToken token = default, params Func<NetworkMessageHeader, Type?>[] converter)
         {
             var writer = _interaction.ReceiveChanel.Writer;
-            await foreach (var message in _interaction.ReceiveChanel.Reader.ReadAllAsync(token))
+            var reader = _interaction.ReceiveChanel.Reader;
+
+            
+            await foreach (var message in reader.ReadAllAsync(token))
             {
                 if (!rule(message))
                 {

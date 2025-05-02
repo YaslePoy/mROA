@@ -48,7 +48,7 @@ namespace mROA.Implementation
                 throw new NullReferenceException("representation producer is not initialized");
 
             var representationModule =
-                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+                _representationProducer.Produce(ownerId);
 
             _producedRemoteEndpoints.Add((Activator.CreateInstance(RemoteTypes[type], -1,
                 representationModule) as RemoteObjectBase)!);

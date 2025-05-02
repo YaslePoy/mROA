@@ -13,10 +13,8 @@ namespace mROA.Implementation.Backend
             return _ownerships.GetValueOrDefault(Environment.CurrentManagedThreadId, 0);
         }
 
-        public int GetHostOwnershipId()
-        {
-            return 0;
-        }
+        public int GetHostOwnershipId() => 0;
+
 
         public void RegisterOwnership(int ownershipId)
         {

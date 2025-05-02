@@ -45,7 +45,7 @@ class Program
         Console.WriteLine(TransmissionConfig.OwnershipRepository.GetOwnershipId());
         var context = builder.GetModule<RemoteContextRepository>();
 
-        var factory = context.GetSingleObject(typeof(IPrinterFactory), 0) as IPrinterFactory;
+        var factory = context.GetSingleObject(typeof(IPrinterFactory), -TransmissionConfig.OwnershipRepository.GetHostOwnershipId()) as IPrinterFactory;
 
         using (var disposingPrinter = factory.Create("Test"))
         {
