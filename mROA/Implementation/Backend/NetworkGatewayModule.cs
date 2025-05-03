@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -15,6 +16,7 @@ namespace mROA.Implementation.Backend
         private readonly TcpListener _tcpListener;
         private IConnectionHub? _hub;
         private ISerializationToolkit? _serialization;
+        private Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
 
         public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType,
             IInjectableModule[] injectableModules)
@@ -82,14 +84,16 @@ namespace mROA.Implementation.Backend
                 streamExtractor.SingleReceive();
                 var connectionRequest = interaction.GetNextMessageReceiving(false)
                     .GetAwaiter().GetResult()!;
+                var cts = new CancellationTokenSource();
 
                 switch (connectionRequest.MessageType)
                 {
                     case EMessageType.ClientConnect:
-                        Task.Run(async () => await streamExtractor.LoopedReceive());
-                        streamExtractor.SendFromChannel(interaction.TrustedPostChanel);
+                        Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
+                        _ = streamExtractor.SendFromChannel(interaction.TrustedPostChanel, cts.Token);
                         interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
                             new IdAssignment { Id = -interaction.ConnectionId }));
+                        _extractorsCTS[interaction.ConnectionId] = cts;
                         _hub!.RegisterInteraction(interaction);
                         Console.WriteLine("Client registered");
                         break;
@@ -97,13 +101,17 @@ namespace mROA.Implementation.Backend
                     {
                         var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
-                        
+
+                        _extractorsCTS[recoveryRequest.Id].Cancel();
+
                         recoveryInteraction.IsConnected = () => streamExtractor.IsConnected;
                         streamExtractor.MessageReceived = message =>
                         {
                             recoveryInteraction.ReceiveChanel.Writer.WriteAsync(message);
                         };
-                        Task.Run(async () => await streamExtractor.LoopedReceive());
+                        _ = streamExtractor.SendFromChannel(recoveryInteraction.TrustedPostChanel, cts.Token);
+
+                        Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
 
 
                         recoveryInteraction.Restart(false);
