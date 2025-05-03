@@ -25,8 +25,10 @@ class Program
 
         builder.Modules.Add(new RemoteContextRepository());
         builder.Modules.Add(new ChannelInteractionModule());
+        builder.Modules.Add(new UdpUntrustedInteraction());
         builder.Modules.Add(new RepresentationModule());
-        builder.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
+        var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
+        builder.Modules.Add(new NetworkFrontendBridge(serverEndPoint));
         builder.Modules.Add(new StaticRepresentationModuleProducer());
         builder.Modules.Add(new RequestExtractor());
         builder.Modules.Add(new BasicExecutionModule());
@@ -43,10 +45,13 @@ class Program
         var frontendBridge = builder.GetModule<IFrontendBridge>()!;
         frontendBridge.Connect();
         _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
+        _ = builder.GetModule<UdpUntrustedInteraction>().Start(serverEndPoint);
         Console.WriteLine(TransmissionConfig.OwnershipRepository.GetOwnershipId());
         var context = builder.GetModule<RemoteContextRepository>();
 
-        var factory = context.GetSingleObject(typeof(IPrinterFactory), -TransmissionConfig.OwnershipRepository.GetHostOwnershipId()) as IPrinterFactory;
+        var factory =
+            context.GetSingleObject(typeof(IPrinterFactory),
+                -TransmissionConfig.OwnershipRepository.GetHostOwnershipId()) as IPrinterFactory;
 
         using (var disposingPrinter = factory.Create("Test"))
         {
@@ -66,6 +71,9 @@ class Program
 
             Thread.Sleep(100);
 
+            disposingPrinter.SomeoneIsApproaching("Mikhail");
+            Console.WriteLine("Approaching detected");
+            
             factory.Register(new ClientBasedPrinter());
             DemoCheck.ClientBasedImplementation = true;
             Console.WriteLine("Registered printer");
@@ -102,6 +110,7 @@ class Program
 
             Console.WriteLine("Dispose printer");
         }
+
         DemoCheck.Dispose = true;
 
 
@@ -116,12 +125,12 @@ class Program
         cts.Cancel();
         Console.WriteLine($"Token state {cts.Token.IsCancellationRequested}");
         DemoCheck.TaskCancelation = true;
-        
+
         frontendBridge.Disconnect();
-        
+
         DemoCheck.Show();
         Console.ReadKey();
-        
+
         //
         // const int iterations = 10000;
         // var timer = Stopwatch.StartNew();

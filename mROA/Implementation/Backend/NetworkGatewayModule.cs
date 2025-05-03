@@ -18,6 +18,8 @@ namespace mROA.Implementation.Backend
         private ISerializationToolkit? _serialization;
         private Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
 
+        
+        
         public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType,
             IInjectableModule[] injectableModules)
         {
@@ -124,7 +126,7 @@ namespace mROA.Implementation.Backend
                 }
             }
         }
-
+        
         private void ThrowIfNotInjected()
         {
             if (_hub is null)

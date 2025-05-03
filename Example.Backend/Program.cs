@@ -19,9 +19,10 @@ class Program
         builder.Modules.Add(new BackendIdentityGenerator());
         // builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567), typeof(NextGenerationInteractionModule),
         //     builder.GetModule<IIdentityGenerator>()!);
-        builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567), typeof(ChannelInteractionModule),
+        var listening = new IPEndPoint(IPAddress.Loopback, 4567);
+        builder.UseNetworkGateway(listening, typeof(ChannelInteractionModule),
             builder.GetModule<IIdentityGenerator>()!);
-
+        builder.Modules.Add(new UdpGateway(listening));
         builder.Modules.Add(new ConnectionHub());
         builder.Modules.Add(new HubRequestExtractor(typeof(RequestExtractor)));
 
@@ -45,12 +46,12 @@ class Program
         builder.Build();
         new RemoteTypeBinder();
 
-        TransmissionConfig.RealContextRepository = builder.GetModule<MultiClientContextRepository>();
-        TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
+        TransmissionConfig.RealContextRepository = builder.GetModule<MultiClientContextRepository>()!;
+        TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>()!;
         TransmissionConfig.OwnershipRepository = new MultiClientOwnershipRepository();
 
+        _ = builder.GetModule<UdpGateway>()!.Start();
         var gateway = builder.GetModule<IGatewayModule>();
-
         gateway.Run();
     }
 }

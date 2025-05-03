@@ -12,6 +12,7 @@ namespace mROA.Implementation
         private ISerializationToolkit _serializationToolkit;
         private IChannelInteractionModule _channelInteractionModule;
         private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+
         public void Dispose()
         {
             _tokenSource.Cancel();
@@ -35,19 +36,36 @@ namespace mROA.Implementation
             {
                 var message = new Memory<byte>((await udpClient.ReceiveAsync()).Buffer);
                 var parsed = _serializationToolkit.Deserialize<NetworkMessageHeader>(message.Span)!;
+
                 await writer.WriteAsync(parsed, token);
             }
         }
 
         private async Task Posting(UdpClient udpClient, CancellationToken token)
         {
+            var initMessage = new NetworkMessageHeader
+            {
+                MessageType = EMessageType.UntrustedConnect, Id = Guid.NewGuid(),
+                Data = BitConverter.GetBytes(Math.Abs(_channelInteractionModule.ConnectionId))
+            };
+
+            var initParsed = _serializationToolkit.Serialize(initMessage);
+
+            await udpClient.SendAsync(initParsed, initParsed.Length);
+
             await foreach (var post in _channelInteractionModule.UntrustedPostChanel.ReadAllAsync(token))
             {
                 var serialized = _serializationToolkit.Serialize(post);
+#if TRACE
+                Console.WriteLine("Untrusted write start");
+#endif
                 await udpClient.SendAsync(serialized, serialized.Length);
+#if TRACE
+                Console.WriteLine("Untrusted write finished");
+#endif
             }
         }
-        
+
         public void Inject<T>(T dependency)
         {
             switch (dependency)
