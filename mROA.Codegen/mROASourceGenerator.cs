@@ -291,23 +291,38 @@ namespace mROA.Codegen
                           $"{method.ReturnType.ToUnityString()} {method.Name}({string.Join(", ", method.Parameters.Select(ToFullString))}){{");
 
 
+            var isUntrusted = method.GetAttributes().Any(i => i.AttributeClass.Name == "UntrustedAttribute");
+
             var prefix = isAsync ? "await " : "";
             var postfix = !isAsync ? isVoid ? ".Wait()" : ".GetAwaiter().GetResult()" : "";
             var parameterLink = isParametrized
                 ? ", new System.Object[] { " + string.Join(", ", parameters.Select(i => i.Name)) + " }"
                 : string.Empty;
-            var tokenInsert = isAsync && method.Parameters.FirstOrDefault(i => i.Type.Name == "CancellationToken") is
-                { } tokenSymbol
-                ? ", cancellationToken : " + tokenSymbol.Name
-                : string.Empty;
-            var caller = isVoid
-                ? $"CallAsync({index}{parameterLink}{tokenInsert})"
-                : isAsync
-                    ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>({index}{parameterLink}{tokenInsert})"
-                    : $"GetResultAsync<{ToFullString(method.ReturnType)}>({index}{parameterLink}{tokenInsert})";
 
-            if (!isVoid)
-                prefix = "return " + prefix;
+            string caller;
+
+            if (isUntrusted)
+            {
+                caller = $"CallUntrustedAsync({index}{parameterLink})";
+            }
+            else
+            {
+                var tokenInsert = isAsync &&
+                                  method.Parameters.FirstOrDefault(i => i.Type.Name == "CancellationToken") is
+                                      { } tokenSymbol
+                    ? ", cancellationToken : " + tokenSymbol.Name
+                    : string.Empty;
+
+                caller = isVoid
+                    ? $"CallAsync({index}{parameterLink}{tokenInsert})"
+                    : isAsync
+                        ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>({index}{parameterLink}{tokenInsert})"
+                        : $"GetResultAsync<{ToFullString(method.ReturnType)}>({index}{parameterLink}{tokenInsert})";
+
+                if (!isVoid)
+                    prefix = "return " + prefix;
+
+            }
 
             sb.AppendLine("\t\t\t" + prefix + caller + postfix + ";");
 
@@ -482,8 +497,8 @@ namespace mROA.Codegen
                     var parameterTypes = string.Join(", ",
                         $"{string.Join(", ", method.Parameters.Select(p => "typeof(" + p.Type.ToUnityString() + ")"))}");
                     var parameterInserts = string.Join(", ",
-                        method.Parameters.Select(
-                            p => Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
+                        method.Parameters.Select(p =>
+                            Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
 
                     var invokerTemplate = (TemplateDocument)_methodInvokerOriginal.Clone();
                     invokerTemplate.AddDefine("isVoid", "false");
@@ -612,7 +627,6 @@ namespace mROA.Codegen
                 return parts.ToUnityString();
 
             return type.ToDisplayString();
-            
         }
 
         public static string ToUnityString(this IParameterSymbol parameter)

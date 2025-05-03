@@ -19,6 +19,7 @@ namespace mROA.Abstract
 
         Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
         void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
+        Task PostCallMessageUntrustedAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
         void PostCallMessage(Guid id, EMessageType eMessageType, object payload, Type payloadType);
     }
 }

@@ -8,6 +8,11 @@ namespace Example.Frontend
 {
     public class ClientBasedPrinter : IPrinter
     {
+        public Task SomeoneIsApproaching(string humanName)
+        {
+            return Task.CompletedTask;
+        }
+
         public void OnPrintExternal(IPage p0, RequestContext ro)
         {
         }

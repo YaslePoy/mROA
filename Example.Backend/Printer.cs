@@ -10,6 +10,11 @@ namespace Example.Backend
     {
         public string Name;
 
+        public async Task SomeoneIsApproaching(string humanName)
+        {
+            Console.WriteLine(humanName + " is approaching");
+        }
+
         public void OnPrintExternal(IPage p0, RequestContext ro)
         {
             OnPrint?.Invoke(p0, ro);

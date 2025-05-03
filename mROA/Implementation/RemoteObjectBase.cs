@@ -137,6 +137,15 @@ namespace mROA.Implementation
             }
         }
 
+        protected async Task CallUntrustedAsync(int methodId, object?[]? parameters = null)
+        {
+            var request = new DefaultCallRequest
+            {
+                CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+            };
+            await _representationModule.PostCallMessageUntrustedAsync(request.Id, EMessageType.CallRequest, request);
+        }
+
         public override string ToString()
         {
             return _identifier.ToString();

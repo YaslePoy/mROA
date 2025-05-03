@@ -37,7 +37,7 @@ namespace mROA.Implementation
             var writer = _interaction.ReceiveChanel.Writer;
             var reader = _interaction.ReceiveChanel.Reader;
 
-            
+
             await foreach (var message in reader.ReadAllAsync(token))
             {
                 if (!rule(message))
@@ -93,6 +93,13 @@ namespace mROA.Implementation
         public void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull
         {
             PostCallMessageAsync(id, eMessageType, payload).GetAwaiter().GetResult();
+        }
+
+        public async Task PostCallMessageUntrustedAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull
+        {
+            var serialized = _serialization.Serialize(payload, typeof(T));
+            await _interaction.PostMessageUntrustedAsync(new NetworkMessageHeader
+                { Id = id, MessageType = eMessageType, Data = serialized });
         }
 
         public void PostCallMessage(Guid id, EMessageType eMessageType, object payload, Type payloadType)
