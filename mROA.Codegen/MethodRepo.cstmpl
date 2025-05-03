@@ -17,6 +17,7 @@ namespace mROA.Codegen
             new mROA.Implementation.AsyncMethodInvoker
             {
                 IsVoid = <!L isVoid>,
+                IsTrusted = <!L isTrusted>,
                 ReturnType = typeof(<!L returnType>),
                 ParameterTypes = new Type[]  { <!L parametersType> },
                 SuitableType = typeof(<!L suitableType>),
@@ -26,6 +27,7 @@ namespace mROA.Codegen
             new mROA.Implementation.MethodInvoker
             {
                 IsVoid = <!L isVoid>,
+                IsTrusted = <!L isTrusted>,
                 ReturnType = typeof(<!L returnType>),
                 ParameterTypes = new Type[]  { <!L parametersType> },
                 SuitableType = typeof(<!L suitableType>),

@@ -95,7 +95,8 @@ namespace mROA.Implementation.Backend
             }
         }
 
-        private static object GetContext(ICallRequest command, IContextRepository contextRepository, IMethodInvoker invoker)
+        private static object GetContext(ICallRequest command, IContextRepository contextRepository,
+            IMethodInvoker invoker)
         {
             var context = command.ObjectId.ContextId != -1
                 ? contextRepository.GetObject<object>(command.ObjectId)
@@ -147,7 +148,12 @@ namespace mROA.Implementation.Backend
             {
                 var finalResult = invoker.Invoke(instance, parameter, new object[] { executionContext });
 
-                if (invoker.IsVoid)
+                if (!invoker.IsTrusted)
+                {
+                    return new AsyncCommandExecution();
+                }
+                
+                if (invoker.IsVoid )
                 {
                     return new FinalCommandExecution
                     {
@@ -163,10 +169,15 @@ namespace mROA.Implementation.Backend
             }
             catch (Exception e)
             {
-                return new ExceptionCommandExecution
+                if (invoker.IsTrusted)
+                    return new ExceptionCommandExecution
+                    {
+                        Id = command.Id,
+                        Exception = e.ToString()
+                    };
+                return new AsyncCommandExecution
                 {
-                    Id = command.Id,
-                    Exception = e.ToString()
+                    Id = command.Id
                 };
             }
         }
@@ -198,7 +209,9 @@ namespace mROA.Implementation.Backend
                         TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
 
                     multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
-                    representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution, payload);
+                    if (invoker.IsTrusted)
+                        representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
+                            payload);
                     multiClientOwnershipRepository?.FreeOwnership();
                 });
 
@@ -209,10 +222,15 @@ namespace mROA.Implementation.Backend
             }
             catch (Exception e)
             {
-                return new ExceptionCommandExecution
+                if (invoker.IsTrusted)
+                    return new ExceptionCommandExecution
+                    {
+                        Id = command.Id,
+                        Exception = e.ToString()
+                    };
+                return new AsyncCommandExecution
                 {
-                    Id = command.Id,
-                    Exception = e.ToString()
+                    Id = command.Id
                 };
             }
         }

@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
 
-namespace mROA.Implementation
+namespace mROA.Implementation.Frontend
 {
     public class UdpUntrustedInteraction : IUntrustedInteractionModule
     {
@@ -55,6 +55,10 @@ namespace mROA.Implementation
 
             await foreach (var post in _channelInteractionModule.UntrustedPostChanel.ReadAllAsync(token))
             {
+                if (post.MessageType is not (EMessageType.CallRequest or EMessageType.CancelRequest
+                    or EMessageType.EventRequest))
+                    continue;
+
                 var serialized = _serializationToolkit.Serialize(post);
 #if TRACE
                 Console.WriteLine("Untrusted write start");

@@ -380,6 +380,7 @@ namespace mROA.Codegen
                 invokerTemplate.AddDefine("parametersType", parameterTypes);
                 invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                 invokerTemplate.AddDefine("funcInvoking", funcInvoking);
+                invokerTemplate.AddDefine("isTrusted", (!isUntrusted).ToString().ToLower());
                 backend = invokerTemplate.Compile();
             }
             else
@@ -390,6 +391,7 @@ namespace mROA.Codegen
                 invokerTemplate.AddDefine("parametersType", parameterTypes);
                 invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                 invokerTemplate.AddDefine("funcInvoking", funcInvoking);
+                invokerTemplate.AddDefine("isTrusted", (!isUntrusted).ToString().ToLower());
                 backend = invokerTemplate.Compile();
             }
 
@@ -474,6 +476,7 @@ namespace mROA.Codegen
             invokerTemplate.AddDefine("parametersType", parameterTypes);
             invokerTemplate.AddDefine("suitableType", baseInterface.ToUnityString());
             invokerTemplate.AddDefine("funcInvoking", funcInvoking);
+            invokerTemplate.AddDefine("isTrusted", "true");
             var backend = invokerTemplate.Compile();
             _methodRepoTemplate.Insert("invoker", backend);
 
@@ -507,6 +510,8 @@ namespace mROA.Codegen
                     invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                     invokerTemplate.AddDefine("funcInvoking",
                         $"(i as {method.ContainingType.ToUnityString()})[{parameterInserts}]");
+                    invokerTemplate.AddDefine("isTrusted", "true");
+
                     backend = invokerTemplate.Compile();
                 }
                 else
@@ -517,6 +522,8 @@ namespace mROA.Codegen
                     invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                     invokerTemplate.AddDefine("funcInvoking",
                         $"(i as {method.ContainingType.ToUnityString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name}");
+                    invokerTemplate.AddDefine("isTrusted", "true");
+
                     backend = invokerTemplate.Compile();
                 }
 
@@ -547,6 +554,8 @@ namespace mROA.Codegen
                     invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                     invokerTemplate.AddDefine("funcInvoking",
                         $"(i as {method.ContainingType.ToUnityString()})[{parameterInserts}] = {valueInsert}");
+                    invokerTemplate.AddDefine("isTrusted", "true");
+
                     backend = invokerTemplate.Compile();
                 }
                 else
@@ -560,6 +569,8 @@ namespace mROA.Codegen
                     invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                     invokerTemplate.AddDefine("funcInvoking",
                         $"(i as {method.ContainingType.ToUnityString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name} = {Caster((method.AssociatedSymbol as IPropertySymbol)!.Type, "parameters[0]")}");
+                    invokerTemplate.AddDefine("isTrusted", "true");
+
                     backend = invokerTemplate.Compile();
                 }
 

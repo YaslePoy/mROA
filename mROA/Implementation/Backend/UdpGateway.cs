@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using mROA.Abstract;
+using static mROA.Implementation.EMessageType;
 
 namespace mROA.Implementation.Backend
 {
@@ -56,12 +57,12 @@ namespace mROA.Implementation.Backend
                         int channelId;
                         switch (parsed.MessageType)
                         {
-                            case EMessageType.UntrustedConnect:
+                            case UntrustedConnect:
                                 channelId = BitConverter.ToInt32(parsed.Data);
                                 _reservedPorts[incoming.RemoteEndPoint] = channelId;
                                 _ = UntrustedSend(_hub.GetInteraction(channelId), incoming.RemoteEndPoint);
                                 break;
-                            default: 
+                            default:
                                 channelId = _reservedPorts[incoming.RemoteEndPoint];
                                 var interaction = _hub.GetInteraction(channelId);
                                 await interaction.ReceiveChanel.Writer.WriteAsync(parsed, token);
@@ -82,6 +83,10 @@ namespace mROA.Implementation.Backend
                 {
                     await foreach (var post in interaction.UntrustedPostChanel.ReadAllAsync())
                     {
+                        if (post.MessageType is not (CallRequest or EMessageType.CancelRequest
+                            or EventRequest))
+                            continue;
+
                         var parsed = _serializationToolkit.Serialize(post);
                         await _client.SendAsync(parsed, parsed.Length, endpoint);
                     }
