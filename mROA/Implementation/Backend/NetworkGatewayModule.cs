@@ -75,17 +75,14 @@ namespace mROA.Implementation.Backend
 
                 interaction!.Inject(_serialization);
 
-                
-                var streamExtractor = new StreamExtractor(client.GetStream(), _serialization);
-                interaction.IsConnected = () =>  streamExtractor.IsConnected;
-                streamExtractor.MessageReceived = message =>
-                {
-                    interaction.ReceiveChanel.Writer.WriteAsync(message);
-                }; 
+
+                var streamExtractor = new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization);
+                interaction.IsConnected = () => streamExtractor.IsConnected;
+                streamExtractor.MessageReceived = message => { interaction.ReceiveChanel.Writer.WriteAsync(message); };
                 streamExtractor.SingleReceive();
                 var connectionRequest = interaction.GetNextMessageReceiving(false)
                     .GetAwaiter().GetResult()!;
-                
+
                 switch (connectionRequest.MessageType)
                 {
                     case EMessageType.ClientConnect:
@@ -101,10 +98,13 @@ namespace mROA.Implementation.Backend
                         var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
                         
+                        recoveryInteraction.IsConnected = () => streamExtractor.IsConnected;
                         streamExtractor.MessageReceived = message =>
                         {
                             recoveryInteraction.ReceiveChanel.Writer.WriteAsync(message);
                         };
+                        Task.Run(async () => await streamExtractor.LoopedReceive());
+
 
                         recoveryInteraction.Restart(false);
                         Console.WriteLine("Connection recovery for client {0} finished", recoveryRequest.Id);
@@ -116,7 +116,7 @@ namespace mROA.Implementation.Backend
                 }
             }
         }
-        
+
         private void ThrowIfNotInjected()
         {
             if (_hub is null)

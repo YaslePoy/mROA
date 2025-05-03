@@ -17,7 +17,7 @@ namespace mROA.Implementation.Frontend
         private TcpClient _tcpClient = new();
         private IChannelInteractionModule? _interactionModule;
         private ISerializationToolkit? _serialization;
-        private StreamExtractor _currentExtractor;
+        private ChannelInteractionModule.StreamExtractor _currentExtractor;
         private CancellationTokenSource _rawExtractorCancellation;
 
         public NetworkFrontendBridge(IPEndPoint serverEndPoint)
@@ -50,7 +50,7 @@ namespace mROA.Implementation.Frontend
 
             PrepareExtractor();
             _interactionModule.IsConnected = () => _currentExtractor.IsConnected;
-            _interactionModule.OnDisconnected += id => { Reconnect(); };
+            _interactionModule.OnDisconnected += _ => { Reconnect(); };
 
             _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect())).Wait();
 
@@ -64,8 +64,7 @@ namespace mROA.Implementation.Frontend
             }
 
 
-            var stopToken = _rawExtractorCancellation.Token;
-            Task.Run(async () => await _currentExtractor.LoopedReceive(stopToken));
+            Task.Run(async () => await _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token));
 
             var assignment = _serialization.Deserialize<IdAssignment>(idMessage.Data)!;
             _interactionModule.ConnectionId = -assignment.Id;
@@ -74,9 +73,9 @@ namespace mROA.Implementation.Frontend
 
         private void PrepareExtractor()
         {
-            _currentExtractor = new StreamExtractor(_tcpClient.GetStream(), _serialization);
+            _currentExtractor = new ChannelInteractionModule.StreamExtractor(_tcpClient.GetStream(), _serialization!);
 
-            _ = _currentExtractor.SendFromChannel(_interactionModule.TrustedPostChanel,
+            _ = _currentExtractor.SendFromChannel(_interactionModule!.TrustedPostChanel,
                 _rawExtractorCancellation.Token);
             _currentExtractor.MessageReceived = message =>
             {
@@ -94,7 +93,7 @@ namespace mROA.Implementation.Frontend
 
             PrepareExtractor();
 
-            _ = _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token);
+            Task.Run(async () => await _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token));
 
             await _interactionModule.Restart(true);
         }
