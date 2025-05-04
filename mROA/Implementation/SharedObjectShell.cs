@@ -63,8 +63,8 @@ namespace mROA.Implementation
         {
             RealRepository = TransmissionConfig.RealContextRepository,
             RemoteRepository = TransmissionConfig.RemoteEndpointContextRepository,
-            HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(),
-            OwnerFunc = TransmissionConfig.OwnershipRepository.GetOwnershipId
+            HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(), 
+            OwnerId = 0
         };
 
         public ComplexObjectIdentifier Identifier

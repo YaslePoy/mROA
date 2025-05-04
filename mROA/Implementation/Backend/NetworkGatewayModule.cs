@@ -18,8 +18,6 @@ namespace mROA.Implementation.Backend
         private IContextualSerializationToolKit? _serialization;
         private Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
 
-        
-        
         public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType,
             IInjectableModule[] injectableModules)
         {
@@ -82,8 +80,9 @@ namespace mROA.Implementation.Backend
 
                 //TODO сделать контекст
                 var context = new EndPointContext();
-                
-                var streamExtractor = new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
+
+                var streamExtractor =
+                    new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
                 interaction.IsConnected = () => streamExtractor.IsConnected;
                 streamExtractor.MessageReceived = message => { interaction.ReceiveChanel.Writer.WriteAsync(message); };
                 streamExtractor.SingleReceive();
@@ -94,6 +93,8 @@ namespace mROA.Implementation.Backend
                 switch (connectionRequest.MessageType)
                 {
                     case EMessageType.ClientConnect:
+                        context.HostId = 0;
+                        context.OwnerId = interaction.ConnectionId;
                         Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
                         _ = streamExtractor.SendFromChannel(interaction.TrustedPostChanel, cts.Token);
                         interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
@@ -129,7 +130,7 @@ namespace mROA.Implementation.Backend
                 }
             }
         }
-        
+
         private void ThrowIfNotInjected()
         {
             if (_hub is null)

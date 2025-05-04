@@ -22,7 +22,7 @@ class Program
         new RemoteTypeBinder();
         // builder.Modules.Add(new JsonSerializationToolkit());
         builder.Modules.Add(new CborSerializationToolkit());
-
+        builder.Modules.Add(new EndPointContext());
         builder.Modules.Add(new RemoteContextRepository());
         builder.Modules.Add(new ChannelInteractionModule());
         builder.Modules.Add(new UdpUntrustedInteraction());

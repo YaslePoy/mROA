@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
-using mROA.Implementation.Backend;
 
 // ReSharper disable MethodHasAsyncOverload
 
@@ -14,9 +13,11 @@ namespace mROA.Implementation.Frontend
     public class RequestExtractor : IRequestExtractor
     {
         private IExecuteModule? _executeModule;
+
         private IMethodRepository? _methodRepository;
-        private IContextRepository? _realContextRepository;
-        private IContextRepository? _remoteContextRepository;
+
+        // private IContextRepository? _realContextRepository;
+        // private IContextRepository? _remoteContextRepository;
         private IRepresentationModule? _representationModule;
         private IContextualSerializationToolKit? _serializationToolkit;
         private IEndPointContext _context;
@@ -27,13 +28,6 @@ namespace mROA.Implementation.Frontend
             {
                 case IExecuteModule executeModule:
                     _executeModule = executeModule;
-                    break;
-                case MultiClientContextRepository:
-                case ContextRepository:
-                    _realContextRepository = dependency as IContextRepository;
-                    break;
-                case RemoteContextRepository remoteContextRepository:
-                    _remoteContextRepository = remoteContextRepository;
                     break;
                 case IMethodRepository methodRepository:
                     _methodRepository = methodRepository;
@@ -54,14 +48,6 @@ namespace mROA.Implementation.Frontend
         {
             ThrowIfNotInjected();
 
-
-            var multiClientOwnershipRepository =
-                TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
-            multiClientOwnershipRepository?.RegisterOwnership(_representationModule!.Id);
-            if (multiClientOwnershipRepository is not null)
-            {
-                TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(_representationModule.Id);
-            }
 
             try
             {
@@ -117,7 +103,6 @@ namespace mROA.Implementation.Frontend
             }
             catch
             {
-                multiClientOwnershipRepository?.FreeOwnership();
             }
         }
 
@@ -127,8 +112,6 @@ namespace mROA.Implementation.Frontend
                 throw new NullReferenceException("Serializing toolkit is null.");
             if (_executeModule == null)
                 throw new NullReferenceException("Execute module is null.");
-            if (_realContextRepository == null)
-                throw new NullReferenceException("Context repository is null.");
             if (_representationModule == null)
                 throw new NullReferenceException("Representation module is null.");
             if (_methodRepository == null)
@@ -137,12 +120,12 @@ namespace mROA.Implementation.Frontend
 
         private void HandleCancelRequest(CancelRequest req)
         {
-            _executeModule!.Execute(req, _realContextRepository!, _representationModule!, _context);
+            _executeModule!.Execute(req, _context.RealRepository, _representationModule!, _context);
         }
 
         private void HandleCallRequest(DefaultCallRequest request)
         {
-            var result = _executeModule!.Execute(request, _realContextRepository!, _representationModule!, _context);
+            var result = _executeModule!.Execute(request, _context.RealRepository, _representationModule!, _context);
 
             var resultType = result.MessageType;
 
@@ -156,7 +139,7 @@ namespace mROA.Implementation.Frontend
 
         private void HandleEventRequest(DefaultCallRequest request)
         {
-            _executeModule!.Execute(request, _remoteContextRepository!, _representationModule!, _context);
+            _executeModule!.Execute(request, _context.RemoteRepository, _representationModule!, _context);
         }
     }
 }
