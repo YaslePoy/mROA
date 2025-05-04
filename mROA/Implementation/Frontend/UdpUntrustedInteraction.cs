@@ -11,7 +11,7 @@ namespace mROA.Implementation.Frontend
     {
         private IContextualSerializationToolKit _serializationToolkit;
         private IChannelInteractionModule _channelInteractionModule;
-        private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _tokenSource = new();
 
         public void Dispose()
         {

@@ -1,5 +1,7 @@
 using System;
+#if TRACE
 using System.Diagnostics;
+#endif
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -18,6 +20,7 @@ namespace mROA.Implementation.Frontend
         private IRepresentationModule? _representationModule;
         private IContextualSerializationToolKit? _serializationToolkit;
         private IEndPointContext _context;
+
         public void Inject<T>(T dependency)
         {
             switch (dependency)
@@ -70,7 +73,8 @@ namespace mROA.Implementation.Frontend
 
                 var query = _representationModule!.GetStream(m =>
                         m.MessageType is EMessageType.CallRequest or EMessageType.CancelRequest
-                            or EMessageType.EventRequest or EMessageType.ClientDisconnect, _context, streamTokenSource.Token,
+                            or EMessageType.EventRequest or EMessageType.ClientDisconnect, _context,
+                    streamTokenSource.Token,
                     m => m.MessageType == EMessageType.CallRequest ? typeof(DefaultCallRequest) : null,
                     m => m.MessageType == EMessageType.CancelRequest ? typeof(CancelRequest) : null,
                     m => m.MessageType == EMessageType.EventRequest ? typeof(DefaultCallRequest) : null,

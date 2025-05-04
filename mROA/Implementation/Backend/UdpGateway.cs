@@ -17,7 +17,7 @@ namespace mROA.Implementation.Backend
         private Dictionary<IPEndPoint, int> _reservedPorts = new();
         private CancellationTokenSource _tokenSource = new();
         private IContextualSerializationToolKit _serializationToolkit;
-
+        private IEndPointContext _context;
         public UdpGateway(IPEndPoint listeningEndpoint)
         {
             _client = new UdpClient(listeningEndpoint);
@@ -33,6 +33,9 @@ namespace mROA.Implementation.Backend
                     break;
                 case IContextualSerializationToolKit serializationToolkit:
                     _serializationToolkit = serializationToolkit;
+                    break;
+                case IEndPointContext context:
+                    _context = context;
                     break;
             }
         }
@@ -51,7 +54,7 @@ namespace mROA.Implementation.Backend
                 while (token.IsCancellationRequested == false)
                 {
                     var incoming = await _client.ReceiveAsync();
-                    var parsed = _serializationToolkit.Deserialize<NetworkMessageHeader>(incoming.Buffer);
+                    var parsed = _serializationToolkit.Deserialize<NetworkMessageHeader>(incoming.Buffer, _context);
                     try
                     {
                         int channelId;
@@ -87,7 +90,7 @@ namespace mROA.Implementation.Backend
                             or EventRequest))
                             continue;
 
-                        var parsed = _serializationToolkit.Serialize(post);
+                        var parsed = _serializationToolkit.Serialize(post, _context);
                         await _client.SendAsync(parsed, parsed.Length, endpoint);
                     }
                 }
