@@ -12,6 +12,7 @@ namespace mROA.Implementation
     public abstract class RemoteObjectBase : IDisposable
     {
         private readonly IEndPointContext _context;
+
         public bool Equals(RemoteObjectBase other)
         {
             return _identifier.Equals(other._identifier);
@@ -59,12 +60,12 @@ namespace mROA.Implementation
                 CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
 
-            await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request);
+            await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request, _context);
 
             var localTokenSource = new CancellationTokenSource();
 
             var responseRequestTask = _representationModule.GetSingle(
-                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution,
+                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution, _context,
                 localTokenSource.Token,
                 m => m.MessageType is EMessageType.FinishedCommandExecution ? typeof(FinalCommandExecution<T>) : null,
                 m => m.MessageType is EMessageType.ExceptionCommandExecution
@@ -80,7 +81,7 @@ namespace mROA.Implementation
                     new CancelRequest
                     {
                         Id = request.Id
-                    }).ContinueWith(_ => localTokenSource.Cancel());
+                    }, _context).ContinueWith(_ => localTokenSource.Cancel());
             });
 
             var response = await responseRequestTask;
@@ -102,12 +103,12 @@ namespace mROA.Implementation
             {
                 CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
-            await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request);
+            await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request, _context);
 
             var localTokenSource = new CancellationTokenSource();
 
             var responseRequestTask = _representationModule.GetSingle(
-                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution,
+                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution, _context,
                 localTokenSource.Token,
                 m => m.MessageType is EMessageType.FinishedCommandExecution ? typeof(FinalCommandExecution) : null,
                 m => m.MessageType is EMessageType.ExceptionCommandExecution
@@ -124,7 +125,7 @@ namespace mROA.Implementation
                     new CancelRequest
                     {
                         Id = request.Id
-                    }).ContinueWith(_ => localTokenSource.Cancel());
+                    }, _context).ContinueWith(_ => localTokenSource.Cancel());
             });
 
             var responseRequest = await responseRequestTask;
@@ -146,7 +147,8 @@ namespace mROA.Implementation
             {
                 CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
-            await _representationModule.PostCallMessageUntrustedAsync(request.Id, EMessageType.CallRequest, request);
+            await _representationModule.PostCallMessageUntrustedAsync(request.Id, EMessageType.CallRequest, request,
+                _context);
         }
 
         public override string ToString()
