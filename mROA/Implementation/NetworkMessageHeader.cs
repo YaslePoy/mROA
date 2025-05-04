@@ -34,10 +34,11 @@ namespace mROA.Implementation
             MessageType = EMessageType.Unknown;
             Data = Array.Empty<byte>();
         }
-        public NetworkMessageHeader(IContextualSerializationToolKit serializationToolkit, INetworkMessage networkMessage)
+        public NetworkMessageHeader(IContextualSerializationToolKit serializationToolkit,
+            INetworkMessage networkMessage, IEndPointContext context)
         {
             MessageType = networkMessage.MessageType;
-            Data = serializationToolkit.Serialize(networkMessage);
+            Data = serializationToolkit.Serialize(networkMessage, context);
             Id = Guid.NewGuid();
         }
         public Guid Id { get; set; }

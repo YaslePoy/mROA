@@ -94,7 +94,7 @@ namespace mROA.Implementation.Backend
                         Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
                         _ = streamExtractor.SendFromChannel(interaction.TrustedPostChanel, cts.Token);
                         interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
-                            new IdAssignment { Id = -interaction.ConnectionId }));
+                            new IdAssignment { Id = -interaction.ConnectionId }, TODO));
                         _extractorsCTS[interaction.ConnectionId] = cts;
                         _hub!.RegisterInteraction(interaction);
                         Console.WriteLine("Client registered");

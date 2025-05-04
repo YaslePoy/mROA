@@ -129,7 +129,7 @@ namespace mROA.Implementation
             if (sendRecovery)
             {
                 await PostMessageAsync(
-                    new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId))));
+                    new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId)), Context));
                 var ping = await ReceiveChanel.Reader.ReadAsync();
                 Console.WriteLine($"Ping received {ping.Id}");
             }

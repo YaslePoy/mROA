@@ -17,7 +17,7 @@ namespace mROA.Implementation.Frontend
         private IContextRepository? _remoteContextRepository;
         private IRepresentationModule? _representationModule;
         private IContextualSerializationToolKit? _serializationToolkit;
-
+        private IEndPointContext _context;
         public void Inject<T>(T dependency)
         {
             switch (dependency)
@@ -40,6 +40,9 @@ namespace mROA.Implementation.Frontend
                     break;
                 case IContextualSerializationToolKit serializationToolkit:
                     _serializationToolkit = serializationToolkit;
+                    break;
+                case IEndPointContext remoteContext:
+                    _context = remoteContext;
                     break;
             }
         }
@@ -67,7 +70,7 @@ namespace mROA.Implementation.Frontend
 
                 var query = _representationModule!.GetStream(m =>
                         m.MessageType is EMessageType.CallRequest or EMessageType.CancelRequest
-                            or EMessageType.EventRequest or EMessageType.ClientDisconnect, streamTokenSource.Token,
+                            or EMessageType.EventRequest or EMessageType.ClientDisconnect, _context, streamTokenSource.Token,
                     m => m.MessageType == EMessageType.CallRequest ? typeof(DefaultCallRequest) : null,
                     m => m.MessageType == EMessageType.CancelRequest ? typeof(CancelRequest) : null,
                     m => m.MessageType == EMessageType.EventRequest ? typeof(DefaultCallRequest) : null,
@@ -144,7 +147,7 @@ namespace mROA.Implementation.Frontend
                 return;
             }
 
-            _representationModule!.PostCallMessage(request.Id, resultType, result, result.GetType());
+            _representationModule!.PostCallMessage(request.Id, resultType, result, _context);
         }
 
         private void HandleEventRequest(DefaultCallRequest request)
