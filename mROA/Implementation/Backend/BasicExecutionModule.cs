@@ -9,7 +9,7 @@ namespace mROA.Implementation.Backend
     {
         private ICancellationRepository? _cancellationRepo;
         private IMethodRepository? _methodRepo;
-        private ISerializationToolkit? _serialization;
+        private IContextualSerializationToolKit? _serialization;
 
         public void Inject<T>(T dependency)
         {
@@ -21,7 +21,7 @@ namespace mROA.Implementation.Backend
                 case ICancellationRepository cancellationRepo:
                     _cancellationRepo = cancellationRepo;
                     break;
-                case ISerializationToolkit serializationToolkit:
+                case IContextualSerializationToolKit serializationToolkit:
                     _serialization = serializationToolkit;
                     break;
             }

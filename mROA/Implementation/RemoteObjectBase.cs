@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -10,6 +11,7 @@ namespace mROA.Implementation
 {
     public abstract class RemoteObjectBase : IDisposable
     {
+        private readonly IEndPointContext _context;
         public bool Equals(RemoteObjectBase other)
         {
             return _identifier.Equals(other._identifier);
@@ -31,10 +33,11 @@ namespace mROA.Implementation
         private readonly ComplexObjectIdentifier _identifier;
         private readonly IRepresentationModule _representationModule;
 
-        protected RemoteObjectBase(int id, IRepresentationModule representationModule)
+        protected RemoteObjectBase(int id, IRepresentationModule representationModule, IEndPointContext context)
         {
             _identifier = new ComplexObjectIdentifier { ContextId = id, OwnerId = representationModule.Id };
             _representationModule = representationModule;
+            _context = context;
         }
 
         public int Id => _identifier.ContextId;

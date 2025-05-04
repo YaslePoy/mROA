@@ -34,7 +34,7 @@ namespace mROA.Implementation
             MessageType = EMessageType.Unknown;
             Data = Array.Empty<byte>();
         }
-        public NetworkMessageHeader(ISerializationToolkit serializationToolkit, INetworkMessage networkMessage)
+        public NetworkMessageHeader(IContextualSerializationToolKit serializationToolkit, INetworkMessage networkMessage)
         {
             MessageType = networkMessage.MessageType;
             Data = serializationToolkit.Serialize(networkMessage);

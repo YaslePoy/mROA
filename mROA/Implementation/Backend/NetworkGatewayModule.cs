@@ -15,7 +15,7 @@ namespace mROA.Implementation.Backend
         private readonly Type? _interactionModuleType;
         private readonly TcpListener _tcpListener;
         private IConnectionHub? _hub;
-        private ISerializationToolkit? _serialization;
+        private IContextualSerializationToolKit? _serialization;
         private Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
 
         
@@ -58,7 +58,7 @@ namespace mROA.Implementation.Backend
                 case IConnectionHub interactionModule:
                     _hub = interactionModule;
                     break;
-                case ISerializationToolkit serializationToolkit:
+                case IContextualSerializationToolKit serializationToolkit:
                     _serialization = serializationToolkit;
                     break;
             }

@@ -11,15 +11,20 @@ namespace mROA.Abstract
         int Id { get; }
 
         Task<(object? Deserialized, EMessageType MessageType)> GetSingle(Predicate<NetworkMessageHeader> rule,
-            CancellationToken token,
-            params Func<NetworkMessageHeader, Type?>[] converter);
-        
-        IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(Predicate<NetworkMessageHeader> rule, CancellationToken token,
+            IEndPointContext? context, CancellationToken token = default,
             params Func<NetworkMessageHeader, Type?>[] converter);
 
-        Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
-        void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
-        Task PostCallMessageUntrustedAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull;
-        void PostCallMessage(Guid id, EMessageType eMessageType, object payload, Type payloadType);
+        IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(Predicate<NetworkMessageHeader> rule,
+            IEndPointContext? context, CancellationToken token = default,
+            params Func<NetworkMessageHeader, Type?>[] converter);
+
+        Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context)
+            where T : notnull;
+
+        void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context)
+            where T : notnull;
+
+        Task PostCallMessageUntrustedAsync<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context)
+            where T : notnull;
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -16,13 +14,12 @@ namespace mROA.Implementation
         private readonly ChannelWriter<NetworkMessageHeader> _untrustedWriter;
         private readonly Channel<NetworkMessageHeader> _outputTrustedChannel;
         private readonly Channel<NetworkMessageHeader> _outputUntrustedChannel;
-        private readonly List<NetworkMessageHeader> _messageBuffer = new(128);
         private Task<NetworkMessageHeader>? _currentReceiving;
-        private ISerializationToolkit? _serialization;
+        private IContextualSerializationToolKit? _serialization;
         private bool _isConnected = true;
         private bool _isActive = true;
         private TaskCompletionSource<Stream> _reconnection;
-
+        public IEndPointContext Context { get; set; }
         public ChannelInteractionModule()
         {
             ReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
@@ -58,11 +55,14 @@ namespace mROA.Implementation
         {
             switch (dependency)
             {
-                case ISerializationToolkit toolkit:
+                case IContextualSerializationToolKit toolkit:
                     _serialization = toolkit;
                     break;
                 case IIdentityGenerator identityGenerator:
                     ConnectionId = identityGenerator.GetNextIdentity();
+                    break;
+                case IEndPointContext endpointContext:
+                    Context = endpointContext;
                     break;
             }
         }
@@ -120,11 +120,6 @@ namespace mROA.Implementation
         public async Task PostMessageUntrustedAsync(NetworkMessageHeader messageHeader)
         {
             await _untrustedWriter.WriteAsync(messageHeader);
-        }
-
-        public NetworkMessageHeader? FirstByFilter(Predicate<NetworkMessageHeader> predicate)
-        {
-            return _messageBuffer.FirstOrDefault(m => predicate(m));
         }
 
         public event Action<int>? OnDisconnected;
@@ -189,17 +184,18 @@ namespace mROA.Implementation
         public class StreamExtractor
         {
             private readonly Stream _ioStream;
-            private readonly ISerializationToolkit _serializationToolkit;
+            private readonly IContextualSerializationToolKit _serializationToolkit;
             private const int BufferSize = ushort.MaxValue;
             private readonly Memory<byte> _buffer = new byte[BufferSize];
             private bool _manualConnectionState = true;
-
+            private IEndPointContext Context;
             public readonly int Id = new Random().Next();
 
-            public StreamExtractor(Stream ioStream, ISerializationToolkit serializationToolkit)
+            public StreamExtractor(Stream ioStream, IContextualSerializationToolKit serializationToolkit, IEndPointContext context)
             {
                 _ioStream = ioStream;
                 _serializationToolkit = serializationToolkit;
+                Context = context;
             }
 
             public Action<NetworkMessageHeader> MessageReceived = _ => { };
@@ -231,7 +227,7 @@ namespace mROA.Implementation
 
                 await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: Token);
 
-                var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan.Span);
+                var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan, Context);
 #if TRACE
                 Console.WriteLine(
                     $"{DateTime.Now.TimeOfDay} [{Id}] Received Message {message.Id} - {message.MessageType}");
@@ -254,9 +250,10 @@ namespace mROA.Implementation
 
             public async Task Send(NetworkMessageHeader message, CancellationToken token = default)
             {
+                
                 try
                 {
-                    var rawMessage = _serializationToolkit.Serialize(message);
+                    var rawMessage = _serializationToolkit.Serialize(message, Context);
                     var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
 
 #if TRACE

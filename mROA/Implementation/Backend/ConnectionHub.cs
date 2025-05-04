@@ -7,7 +7,7 @@ namespace mROA.Implementation.Backend
     public class ConnectionHub : IConnectionHub
     {
         private readonly Dictionary<int, IChannelInteractionModule> _connections = new();
-        private ISerializationToolkit? _serializationToolkit;
+        private IContextualSerializationToolKit? _serializationToolkit;
 
         public void RegisterInteraction(IChannelInteractionModule interaction)
         {
@@ -31,7 +31,7 @@ namespace mROA.Implementation.Backend
 
         public void Inject<T>(T dependency)
         {
-            if (dependency is ISerializationToolkit serializationToolkit)
+            if (dependency is IContextualSerializationToolKit serializationToolkit)
                 _serializationToolkit = serializationToolkit;
         }
     }

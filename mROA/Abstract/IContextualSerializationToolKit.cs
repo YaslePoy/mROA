@@ -1,9 +1,8 @@
 ﻿using System;
-using mROA.Abstract;
 
-namespace mROA.Cbor
+namespace mROA.Abstract
 {
-    public interface IContextualSerializationToolKit : ISerializationToolkit
+    public interface IContextualSerializationToolKit
     {
         byte[] Serialize(object objectToSerialize, IEndPointContext? context);
         void Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext? context);

@@ -1,6 +1,6 @@
 ﻿namespace mROA.Abstract
 {
-    public interface IEndPointContext
+    public interface IEndPointContext : IInjectableModule
     {
         IContextRepository RealRepository { get; }
         IContextRepository RemoteRepository { get; }

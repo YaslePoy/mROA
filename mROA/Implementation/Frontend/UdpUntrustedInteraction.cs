@@ -9,7 +9,7 @@ namespace mROA.Implementation.Frontend
 {
     public class UdpUntrustedInteraction : IUntrustedInteractionModule
     {
-        private ISerializationToolkit _serializationToolkit;
+        private IContextualSerializationToolKit _serializationToolkit;
         private IChannelInteractionModule _channelInteractionModule;
         private CancellationTokenSource _tokenSource = new CancellationTokenSource();
 
@@ -77,7 +77,7 @@ namespace mROA.Implementation.Frontend
                 case IChannelInteractionModule channelModule:
                     _channelInteractionModule = channelModule;
                     break;
-                case ISerializationToolkit serializationToolkit:
+                case IContextualSerializationToolKit serializationToolkit:
                     _serializationToolkit = serializationToolkit;
                     break;
             }

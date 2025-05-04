@@ -16,7 +16,7 @@ namespace mROA.Implementation.Backend
         private UdpClient _client;
         private Dictionary<IPEndPoint, int> _reservedPorts = new();
         private CancellationTokenSource _tokenSource = new();
-        private ISerializationToolkit _serializationToolkit;
+        private IContextualSerializationToolKit _serializationToolkit;
 
         public UdpGateway(IPEndPoint listeningEndpoint)
         {
@@ -31,7 +31,7 @@ namespace mROA.Implementation.Backend
                 case IConnectionHub hub:
                     _hub = hub;
                     break;
-                case ISerializationToolkit serializationToolkit:
+                case IContextualSerializationToolKit serializationToolkit:
                     _serializationToolkit = serializationToolkit;
                     break;
             }

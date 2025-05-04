@@ -10,7 +10,7 @@ namespace mROA.Implementation.Backend
         private IContextRepository? _contextRepository;
         private IContextRepository? _remoteContextRepository;
         private IMethodRepository? _methodRepository;
-        private ISerializationToolkit? _serializationToolkit;
+        private IContextualSerializationToolKit? _serializationToolkit;
         private IExecuteModule? _executeModule;
         private readonly Type _extractorType;
 
@@ -37,7 +37,7 @@ namespace mROA.Implementation.Backend
                 case IMethodRepository methodRepository:
                     _methodRepository = methodRepository;
                     break;
-                case ISerializationToolkit serializationToolkit:
+                case IContextualSerializationToolKit serializationToolkit:
                     _serializationToolkit = serializationToolkit;
                     break;
                 case IExecuteModule executeModule:

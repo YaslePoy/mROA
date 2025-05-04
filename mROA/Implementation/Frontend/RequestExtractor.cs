@@ -16,7 +16,7 @@ namespace mROA.Implementation.Frontend
         private IContextRepository? _realContextRepository;
         private IContextRepository? _remoteContextRepository;
         private IRepresentationModule? _representationModule;
-        private ISerializationToolkit? _serializationToolkit;
+        private IContextualSerializationToolKit? _serializationToolkit;
 
         public void Inject<T>(T dependency)
         {
@@ -38,7 +38,7 @@ namespace mROA.Implementation.Frontend
                 case IRepresentationModule representationModule:
                     _representationModule = representationModule;
                     break;
-                case ISerializationToolkit serializationToolkit:
+                case IContextualSerializationToolKit serializationToolkit:
                     _serializationToolkit = serializationToolkit;
                     break;
             }

@@ -16,7 +16,7 @@ namespace mROA.Implementation.Frontend
         private readonly IPEndPoint _serverEndPoint;
         private TcpClient _tcpClient = new();
         private IChannelInteractionModule? _interactionModule;
-        private ISerializationToolkit? _serialization;
+        private IContextualSerializationToolKit? _serialization;
         private ChannelInteractionModule.StreamExtractor _currentExtractor;
         private CancellationTokenSource _rawExtractorCancellation;
 
@@ -33,7 +33,7 @@ namespace mROA.Implementation.Frontend
                 case ChannelInteractionModule interactionModule:
                     _interactionModule = interactionModule;
                     break;
-                case ISerializationToolkit toolkit:
+                case IContextualSerializationToolKit toolkit:
                     _serialization = toolkit;
                     break;
             }

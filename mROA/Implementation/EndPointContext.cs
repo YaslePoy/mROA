@@ -16,5 +16,9 @@ namespace mROA.Implementation
             // ReSharper disable once UnusedMember.Global
             set { OwnerFunc = () => value; }
         }
+
+        public void Inject<T>(T dependency)
+        {
+        }
     }
 }
