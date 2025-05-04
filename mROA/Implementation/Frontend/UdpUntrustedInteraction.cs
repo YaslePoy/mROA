@@ -12,7 +12,7 @@ namespace mROA.Implementation.Frontend
         private IContextualSerializationToolKit _serializationToolkit;
         private IChannelInteractionModule _channelInteractionModule;
         private CancellationTokenSource _tokenSource = new();
-
+        private IEndPointContext _context;
         public void Dispose()
         {
             _tokenSource.Cancel();
@@ -35,7 +35,7 @@ namespace mROA.Implementation.Frontend
             while (token.IsCancellationRequested == false)
             {
                 var message = new Memory<byte>((await udpClient.ReceiveAsync()).Buffer);
-                var parsed = _serializationToolkit.Deserialize<NetworkMessageHeader>(message.Span)!;
+                var parsed = _serializationToolkit.Deserialize<NetworkMessageHeader>(message, _context);
 
                 await writer.WriteAsync(parsed, token);
             }
@@ -49,7 +49,7 @@ namespace mROA.Implementation.Frontend
                 Data = BitConverter.GetBytes(Math.Abs(_channelInteractionModule.ConnectionId))
             };
 
-            var initParsed = _serializationToolkit.Serialize(initMessage);
+            var initParsed = _serializationToolkit.Serialize(initMessage, _context);
 
             await udpClient.SendAsync(initParsed, initParsed.Length);
 
@@ -59,7 +59,7 @@ namespace mROA.Implementation.Frontend
                     or EMessageType.EventRequest))
                     continue;
 
-                var serialized = _serializationToolkit.Serialize(post);
+                var serialized = _serializationToolkit.Serialize(post, _context);
 #if TRACE
                 Console.WriteLine("Untrusted write start");
 #endif
@@ -79,6 +79,9 @@ namespace mROA.Implementation.Frontend
                     break;
                 case IContextualSerializationToolKit serializationToolkit:
                     _serializationToolkit = serializationToolkit;
+                    break;
+                case IEndPointContext endPointContext:
+                    _context = endPointContext;
                     break;
             }
         }

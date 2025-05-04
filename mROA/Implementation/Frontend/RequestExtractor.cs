@@ -137,12 +137,12 @@ namespace mROA.Implementation.Frontend
 
         private void HandleCancelRequest(CancelRequest req)
         {
-            _executeModule!.Execute(req, _realContextRepository!, _representationModule!);
+            _executeModule!.Execute(req, _realContextRepository!, _representationModule!, _context);
         }
 
         private void HandleCallRequest(DefaultCallRequest request)
         {
-            var result = _executeModule!.Execute(request, _realContextRepository!, _representationModule!);
+            var result = _executeModule!.Execute(request, _realContextRepository!, _representationModule!, _context);
 
             var resultType = result.MessageType;
 
@@ -156,7 +156,7 @@ namespace mROA.Implementation.Frontend
 
         private void HandleEventRequest(DefaultCallRequest request)
         {
-            _executeModule!.Execute(request, _remoteContextRepository!, _representationModule!);
+            _executeModule!.Execute(request, _remoteContextRepository!, _representationModule!, _context);
         }
     }
 }
