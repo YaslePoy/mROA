@@ -73,7 +73,6 @@ namespace mROA.Implementation.Frontend
 
             var assignment = _serialization.Deserialize<IdAssignment>(idMessage.Data, _context);
             _interactionModule.ConnectionId = -assignment.Id;
-            TransmissionConfig.OwnershipRepository = new StaticOwnershipRepository(assignment.Id);
             _context.HostId = assignment.Id;
             _context.OwnerId = assignment.Id;
         }

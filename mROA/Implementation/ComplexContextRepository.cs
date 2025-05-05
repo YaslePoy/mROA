@@ -47,7 +47,7 @@ namespace mROA.Implementation
             return placedIndex;
         }
 
-        public void ClearObject(ComplexObjectIdentifier id)
+        public void ClearObject(ComplexObjectIdentifier id, IEndPointContext context)
         {
             _storages.Find(i => i.Key == id.OwnerId).Value.Free(id.ContextId);
         }
@@ -57,7 +57,7 @@ namespace mROA.Implementation
             throw new NotImplementedException();
         }
 
-        public object GetSingleObject(Type type, int ownerId)
+        public object GetSingleObject(Type type, IEndPointContext context)
         {
             throw new NotImplementedException();
         }

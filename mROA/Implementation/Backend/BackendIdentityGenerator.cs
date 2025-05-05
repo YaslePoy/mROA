@@ -8,7 +8,7 @@ namespace mROA.Implementation.Backend
 
         public int GetNextIdentity()
         {
-            return ++_currentId;
+            return -++_currentId;
         }
 
         public void Inject<T>(T dependency)

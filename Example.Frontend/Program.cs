@@ -37,21 +37,17 @@ class Program
         builder.Modules.Add(new CancellationRepository());
 
         builder.Build();
-
-
-        TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>();
-        TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
-
+        
         var frontendBridge = builder.GetModule<IFrontendBridge>()!;
         frontendBridge.Connect();
         _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
         _ = builder.GetModule<UdpUntrustedInteraction>().Start(serverEndPoint);
-        Console.WriteLine(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+        Console.WriteLine(builder.GetModule<IEndPointContext>().HostId);
         var context = builder.GetModule<RemoteContextRepository>();
 
         var factory =
             context.GetSingleObject(typeof(IPrinterFactory),
-                -TransmissionConfig.OwnershipRepository.GetHostOwnershipId()) as IPrinterFactory;
+                builder.GetModule<IEndPointContext>()) as IPrinterFactory;
 
         using (var disposingPrinter = factory.Create("Test"))
         {
@@ -89,7 +85,7 @@ class Program
             var names = factory.CollectAllNames();
             Thread.Sleep(100);
 
-            Console.WriteLine(string.Join(", ", names));
+            Console.WriteLine("Names: " + string.Join(", ", names));
 
             var page = disposingPrinter.Print("Test Page", false, default, CancellationToken.None).GetAwaiter()
                 .GetResult();
@@ -114,7 +110,7 @@ class Program
         DemoCheck.Dispose = true;
 
 
-        var loadSingleton = context.GetSingleObject(typeof(ILoadTest), 0) as ILoadTest;
+        var loadSingleton = context.GetSingleObject(typeof(ILoadTest), builder.GetModule<IEndPointContext>()) as ILoadTest;
 
 
         var cts = new CancellationTokenSource();

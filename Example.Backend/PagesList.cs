@@ -8,7 +8,7 @@ namespace Example.Backend
 {
     public class PagesList : RemoteObjectBase, IPagesList
     {
-        public PagesList(int id, IRepresentationModule representationModule) : base(id, representationModule)
+        public PagesList(int id, IRepresentationModule representationModule,IEndPointContext context) : base(id, representationModule, context)
         {
         }
 

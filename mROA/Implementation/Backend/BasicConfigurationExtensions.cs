@@ -23,7 +23,6 @@ namespace mROA.Implementation.Backend
         {
             var repo = new ContextRepository();
             repo.FillSingletons(assemblies);
-            TransmissionConfig.RealContextRepository = repo;
             builder.Modules.Add(repo);
         }
 

@@ -22,31 +22,31 @@ namespace mROA.Implementation.Backend
 
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
-            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            var repository = GetRepositoryByClientId(context.OwnerId);
             return repository.ResisterObject<T>(o, context);
         }
 
-        public void ClearObject(ComplexObjectIdentifier id)
+        public void ClearObject(ComplexObjectIdentifier id, IEndPointContext context)
         {
-            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            repository.ClearObject(id);
+            var repository = GetRepositoryByClientId(context.OwnerId);
+            repository.ClearObject(id, context);
         }
 
         public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)
         {
-            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            var repository = GetRepositoryByClientId(context.OwnerId);
             return repository.GetObject<T>(id, context);
         }
 
-        public object GetSingleObject(Type type, int ownerId)
+        public object GetSingleObject(Type type, IEndPointContext context)
         {
-            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            return repository.GetSingleObject(type, ownerId);
+            var repository = GetRepositoryByClientId(context.OwnerId);
+            return repository.GetSingleObject(type, context);
         }
 
         public int GetObjectIndex<T>(object o, IEndPointContext context)
         {
-            var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+            var repository = GetRepositoryByClientId(context.OwnerId);
             return repository.GetObjectIndex<T>(o, context);
         }
 

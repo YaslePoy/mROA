@@ -55,7 +55,8 @@ namespace mROA.Implementation
         }
 
         public async IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(
-            Predicate<NetworkMessageHeader> rule, IEndPointContext? context, [EnumeratorCancellation] CancellationToken token = default,
+            Predicate<NetworkMessageHeader> rule, IEndPointContext? context,
+            [EnumeratorCancellation] CancellationToken token = default,
             params Func<NetworkMessageHeader, Type?>[] converter)
         {
             var writer = _interaction?.ReceiveChanel.Writer;
@@ -72,15 +73,14 @@ namespace mROA.Implementation
                 yield return (deserialized, message.MessageType)!;
             }
         }
-
-        public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload,
-            IEndPointContext? context) where T : notnull
-        {
-            await PostCallMessageAsync(id, eMessageType, payload, context);
-        }
         
-        public async Task PostCallMessageAsync(Guid id, EMessageType eMessageType, object payload,
-            IEndPointContext? context)
+        // public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload,
+        //     IEndPointContext? context) where T : notnull
+        // {
+        //     await this.PostCallMessageAsync(id, eMessageType, payload, context);
+        // }
+
+        public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context) where T : notnull
         {
             if (_interaction == null)
                 throw new NullReferenceException("Interaction toolkit is not initialized");
@@ -92,7 +92,8 @@ namespace mROA.Implementation
                 { Id = id, MessageType = eMessageType, Data = serialized });
         }
 
-        public void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context) where T : notnull
+        public void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context)
+            where T : notnull
         {
             PostCallMessageAsync(id, eMessageType, payload, context).GetAwaiter().GetResult();
         }

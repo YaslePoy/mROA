@@ -9,14 +9,14 @@ namespace mROA.Implementation
         public static Dictionary<Type, Type> RemoteTypes = new();
         private IRepresentationModuleProducer? _representationProducer;
 
-        public T Produce<T>(ComplexObjectIdentifier id)
+        public T Produce<T>(ComplexObjectIdentifier id, IEndPointContext context)
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
 
             if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
             var representationModule =
-                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+                _representationProducer.Produce(context.OwnerId);
             var remote = (T)Activator.CreateInstance(remoteType, id.ContextId,
                 representationModule)!;
             return remote;

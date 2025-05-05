@@ -39,7 +39,7 @@ namespace mROA.Implementation.Backend
             return last;
         }
 
-        public void ClearObject(ComplexObjectIdentifier id)
+        public void ClearObject(ComplexObjectIdentifier id, IEndPointContext context)
         {
             _storage.Free(id.ContextId);
         }
@@ -56,7 +56,7 @@ namespace mROA.Implementation.Backend
             return (T)value;
         }
 
-        public object GetSingleObject(Type type, int ownerId)
+        public object GetSingleObject(Type type, IEndPointContext context)
         {
             return _singletons.GetValueOrDefault(type.GetHashCode()) ??
                    throw new ArgumentException("Unregistered singleton type");

@@ -44,10 +44,7 @@ class Program
 
         builder.Build();
         new RemoteTypeBinder();
-
-        TransmissionConfig.RealContextRepository = builder.GetModule<MultiClientContextRepository>()!;
-        TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>()!;
-        TransmissionConfig.OwnershipRepository = new MultiClientOwnershipRepository();
+        
 
         _ = builder.GetModule<UdpGateway>()!.Start();
         var gateway = builder.GetModule<IGatewayModule>();

@@ -216,10 +216,8 @@ namespace mROA.Cbor
                 var generic = obj.GetType().GetInterfaces().FirstOrDefault(i => typeof(IShared).IsAssignableFrom(i));
                 var sharedShell = typeof(SharedObjectShellShell<>).MakeGenericType(generic);
                 var so =
-                    Activator.CreateInstance(sharedShell, obj) as
+                    Activator.CreateInstance(sharedShell, obj, context) as
                         ISharedObjectShell;
-                if (context != null)
-                    so.EndPointContext = context;
 
                 writer.WriteStartArray(1);
                 writer.WriteUInt64(so.Identifier.Flat);

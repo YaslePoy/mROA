@@ -18,7 +18,7 @@ namespace mROA.Implementation
             throw new NotSupportedException();
         }
 
-        public void ClearObject(ComplexObjectIdentifier id)
+        public void ClearObject(ComplexObjectIdentifier id, IEndPointContext context)
         {
             throw new NotSupportedException();
         }
@@ -33,7 +33,7 @@ namespace mROA.Implementation
 
             if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
             var representationModule =
-                _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
+                _representationProducer.Produce(context.OwnerId);
             var remote = (T)Activator.CreateInstance(remoteType, id.ContextId,
                 representationModule, context)!;
 
@@ -42,16 +42,16 @@ namespace mROA.Implementation
             return remote;
         }
 
-        public object GetSingleObject(Type type, int ownerId)
+        public object GetSingleObject(Type type, IEndPointContext context)
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
 
             var representationModule =
-                _representationProducer.Produce(ownerId);
+                _representationProducer.Produce(context.OwnerId);
 
             _producedRemoteEndpoints.Add((Activator.CreateInstance(RemoteTypes[type], -1,
-                representationModule) as RemoteObjectBase)!);
+                representationModule, context) as RemoteObjectBase)!);
 
             return _producedRemoteEndpoints.Last();
         }

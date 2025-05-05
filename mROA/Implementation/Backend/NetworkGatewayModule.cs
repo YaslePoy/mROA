@@ -94,11 +94,11 @@ namespace mROA.Implementation.Backend
                 {
                     case EMessageType.ClientConnect:
                         context.HostId = 0;
-                        context.OwnerId = interaction.ConnectionId;
+                        context.OwnerId = -interaction.ConnectionId;
                         Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
                         _ = streamExtractor.SendFromChannel(interaction.TrustedPostChanel, cts.Token);
                         interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
-                            new IdAssignment { Id = -interaction.ConnectionId }, null));
+                            new IdAssignment { Id = interaction.ConnectionId }, null));
                         _extractorsCTS[interaction.ConnectionId] = cts;
                         _hub!.RegisterInteraction(interaction);
                         Console.WriteLine("Client registered");
@@ -108,7 +108,7 @@ namespace mROA.Implementation.Backend
                         var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data, null);
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
 
-                        _extractorsCTS[recoveryRequest.Id].Cancel();
+                        _extractorsCTS[-recoveryRequest.Id].Cancel();
 
                         recoveryInteraction.IsConnected = () => streamExtractor.IsConnected;
                         streamExtractor.MessageReceived = message =>

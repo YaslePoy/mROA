@@ -4,7 +4,7 @@ using mROA.Abstract;
 using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedMember.Global
-#pragma warning disable CS8618, CS9264
+// #pragma warning disable CS8618, CS9264
 
 namespace mROA.Implementation
 {
@@ -30,8 +30,9 @@ namespace mROA.Implementation
 
         // ReSharper disable once UnusedMember.Global
         // ReSharper disable once MemberCanBePrivate.Global
-        public SharedObjectShellShell(T value)
+        public SharedObjectShellShell(T value, IEndPointContext endPointContext)
         {
+            EndPointContext = endPointContext;
             Value = value;
         }
 
@@ -57,15 +58,7 @@ namespace mROA.Implementation
             }
         }
 
-        [SerializationIgnore]
-        [JsonIgnore]
-        public IEndPointContext EndPointContext { get; set; } = new EndPointContext
-        {
-            RealRepository = TransmissionConfig.RealContextRepository,
-            RemoteRepository = TransmissionConfig.RemoteEndpointContextRepository,
-            HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(), 
-            OwnerId = 0
-        };
+        [SerializationIgnore] [JsonIgnore] public IEndPointContext EndPointContext { get; set; }
 
         public ComplexObjectIdentifier Identifier
         {
@@ -96,7 +89,7 @@ namespace mROA.Implementation
 
         public static implicit operator T(SharedObjectShellShell<T> value) => value.Value;
 
-        public static implicit operator SharedObjectShellShell<T>(T value) =>
-            new(value);
+        // public static implicit operator SharedObjectShellShell<T>(T value) =>
+        //     new(value);
     }
 }

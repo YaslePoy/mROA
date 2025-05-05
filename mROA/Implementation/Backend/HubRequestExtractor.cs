@@ -57,16 +57,17 @@ namespace mROA.Implementation.Backend
             var extractor = new RequestExtractor();
             var context = new EndPointContext
             {
-                HostId = 0, OwnerId = interaction.Id
+                HostId = 0, OwnerId = -interaction.Id
             };
             extractor.Inject(interaction);
-            
             if (_contextRepository is IContextRepositoryHub contextHub)
                 context.RealRepository = contextHub.GetRepository(interaction.Id);
             else
                 context.RealRepository = _contextRepository!;
             
             context.RemoteRepository = _remoteContextRepository!;
+            
+            extractor.Inject(context);
             extractor.Inject(_methodRepository);
             extractor.Inject(_serializationToolkit);
             extractor.Inject(_executeModule);
