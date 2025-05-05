@@ -49,7 +49,7 @@ namespace mROA.Implementation.Backend
                 if (invoker == null)
                     throw new Exception($"Command {command.CommandId} not found");
 
-                var context = GetContext(command, contextRepository, invoker);
+                var context = GetContext(command, contextRepository, invoker, endPointContext);
 
                 if (context == null)
                     throw new NullReferenceException("Instance can't be null");
@@ -96,10 +96,10 @@ namespace mROA.Implementation.Backend
         }
 
         private static object GetContext(ICallRequest command, IContextRepository contextRepository,
-            IMethodInvoker invoker)
+            IMethodInvoker invoker, IEndPointContext endPointContext)
         {
             var context = command.ObjectId.ContextId != -1
-                ? contextRepository.GetObject<object>(command.ObjectId)
+                ? contextRepository.GetObject<object>(command.ObjectId, endPointContext)
                 : contextRepository.GetSingleObject(invoker.SuitableType, command.ObjectId.OwnerId);
             return context;
         }
@@ -152,8 +152,8 @@ namespace mROA.Implementation.Backend
                 {
                     return new AsyncCommandExecution();
                 }
-                
-                if (invoker.IsVoid )
+
+                if (invoker.IsVoid)
                 {
                     return new FinalCommandExecution
                     {

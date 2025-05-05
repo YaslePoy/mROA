@@ -77,7 +77,7 @@ namespace mROA.Implementation
             set
             {
                 _identifier = value;
-                Value = GetDefaultContextRepository().GetObject<T>(Identifier);
+                Value = GetDefaultContextRepository().GetObject<T>(Identifier, EndPointContext);
             }
         }
 

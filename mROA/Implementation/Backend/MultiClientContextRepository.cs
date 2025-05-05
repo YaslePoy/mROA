@@ -32,10 +32,10 @@ namespace mROA.Implementation.Backend
             repository.ClearObject(id);
         }
 
-        public T GetObject<T>(ComplexObjectIdentifier id)
+        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)
         {
             var repository = GetRepositoryByClientId(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-            return repository.GetObject<T>(id);
+            return repository.GetObject<T>(id, context);
         }
 
         public object GetSingleObject(Type type, int ownerId)

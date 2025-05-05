@@ -7,7 +7,6 @@ using mROA.Codegen;
 using mROA.Implementation;
 using mROA.Implementation.Backend;
 using mROA.Implementation.Bootstrap;
-using mROA.Implementation.Frontend;
 
 class Program
 {
@@ -24,11 +23,11 @@ class Program
             builder.GetModule<IIdentityGenerator>()!);
         builder.Modules.Add(new UdpGateway(listening));
         builder.Modules.Add(new ConnectionHub());
-        builder.Modules.Add(new HubRequestExtractor(typeof(RequestExtractor)));
+        builder.Modules.Add(new HubRequestExtractor());
 
         builder.UseBasicExecution();
         builder.Modules.Add(new CreativeRepresentationModuleProducer(
-            new IInjectableModule[] { builder.GetModule<ISerializationToolkit>()! },
+            new IInjectableModule[] { builder.GetModule<IContextualSerializationToolKit>()! },
             typeof(RepresentationModule)));
         builder.Modules.Add(new RemoteContextRepository());
 // builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);

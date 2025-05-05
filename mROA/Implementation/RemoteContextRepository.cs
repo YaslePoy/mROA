@@ -23,7 +23,7 @@ namespace mROA.Implementation
             throw new NotSupportedException();
         }
 
-        public T GetObject<T>(ComplexObjectIdentifier id)
+        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)
         {
             var index = _producedRemoteEndpoints.Find(i => i.Identifier.Equals(id));
             if (index is not null)
@@ -35,7 +35,7 @@ namespace mROA.Implementation
             var representationModule =
                 _representationProducer.Produce(TransmissionConfig.OwnershipRepository.GetOwnershipId());
             var remote = (T)Activator.CreateInstance(remoteType, id.ContextId,
-                representationModule)!;
+                representationModule, context)!;
 
             _producedRemoteEndpoints.Add((remote as RemoteObjectBase)!);
 

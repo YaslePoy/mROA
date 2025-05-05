@@ -1,5 +1,5 @@
-using System;
 using mROA.Abstract;
+using mROA.Implementation.Frontend;
 
 namespace mROA.Implementation.Backend
 {
@@ -12,12 +12,6 @@ namespace mROA.Implementation.Backend
         private IMethodRepository? _methodRepository;
         private IContextualSerializationToolKit? _serializationToolkit;
         private IExecuteModule? _executeModule;
-        private readonly Type _extractorType;
-
-        public HubRequestExtractor(Type extractorType)
-        {
-            _extractorType = extractorType;
-        }
 
         public void Inject<T>(T dependency)
         {
@@ -49,7 +43,7 @@ namespace mROA.Implementation.Backend
         private void HubOnOnConnected(IRepresentationModule interaction)
         {
             var extractor = CreateExtractor(interaction);
-            extractor.StartExtraction().ContinueWith(t => OnDisconnected(interaction));
+            extractor.StartExtraction().ContinueWith(_ => OnDisconnected(interaction));
         }
 
         private void OnDisconnected(IRepresentationModule representationModule)
@@ -60,16 +54,22 @@ namespace mROA.Implementation.Backend
         
         private IRequestExtractor CreateExtractor(IRepresentationModule interaction)
         {
-            var extractor = (IRequestExtractor)Activator.CreateInstance(_extractorType)!;
+            var extractor = new RequestExtractor();
+            var context = new EndPointContext
+            {
+                HostId = 0, OwnerId = interaction.Id
+            };
             extractor.Inject(interaction);
+            
             if (_contextRepository is IContextRepositoryHub contextHub)
-                extractor.Inject(contextHub.GetRepository(interaction.Id));
+                context.RealRepository = contextHub.GetRepository(interaction.Id);
             else
-                extractor.Inject(interaction);
+                context.RealRepository = _contextRepository!;
+            
+            context.RemoteRepository = _remoteContextRepository!;
             extractor.Inject(_methodRepository);
             extractor.Inject(_serializationToolkit);
             extractor.Inject(_executeModule);
-            extractor.Inject(_remoteContextRepository);
             return extractor;
         }
     }

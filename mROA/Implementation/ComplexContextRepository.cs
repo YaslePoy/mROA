@@ -52,7 +52,7 @@ namespace mROA.Implementation
             _storages.Find(i => i.Key == id.OwnerId).Value.Free(id.ContextId);
         }
 
-        public T GetObject<T>(ComplexObjectIdentifier id)
+        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)
         {
             throw new NotImplementedException();
         }
