@@ -20,6 +20,7 @@ namespace mROA.Implementation
         private bool _isActive = true;
         private TaskCompletionSource<Stream> _reconnection;
         public IEndPointContext Context { get; set; }
+
         public ChannelInteractionModule()
         {
             ReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
@@ -50,7 +51,7 @@ namespace mROA.Implementation
         public ChannelReader<NetworkMessageHeader> TrustedPostChanel => _outputTrustedChannel.Reader;
         public ChannelReader<NetworkMessageHeader> UntrustedPostChanel => _outputUntrustedChannel.Reader;
         public Func<bool> IsConnected { get; set; }
-        
+
         public void Inject<T>(T dependency)
         {
             switch (dependency)
@@ -100,7 +101,9 @@ namespace mROA.Implementation
             {
                 if (withError)
                 {
+#if TRACE
                     Console.WriteLine("Post again");
+#endif
                 }
 
                 if (await PostMessageInternal(messageHeader))
@@ -131,19 +134,24 @@ namespace mROA.Implementation
                 await PostMessageAsync(
                     new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId)), Context));
                 var ping = await ReceiveChanel.Reader.ReadAsync();
+#if TRACE
                 Console.WriteLine($"Ping received {ping.Id}");
+#endif
             }
             else
             {
                 await _trustedWriter.WriteAsync(new NetworkMessageHeader());
             }
 
+#if TRACE
             Console.WriteLine("Setting result for reconnection");
+#endif
             var setting = _reconnection.TrySetResult(null);
             // _isInReconnectionState = false;
             _isConnected = true;
+#if true
             Console.WriteLine($"Set result for reconnection {setting}");
-
+#endif
             _reconnection = new TaskCompletionSource<Stream>();
         }
 
@@ -151,29 +159,40 @@ namespace mROA.Implementation
         {
             //TODO переделать реконнект
 
+#if TRACE
             Console.WriteLine("Staring recovery from {0}", source);
+#endif
 
             lock (_reconnection)
             {
+#if TRACE
                 Console.WriteLine("Got lock from {0}", source);
 
                 Console.WriteLine("Call OnDisconnected from {0}", source);
+#endif
                 OnDisconnected?.Invoke(ConnectionId);
             }
 
+#if TRACE
             Console.WriteLine("Waiting for reconnect from {0}", source);
+#endif
             if (!_reconnection.Task.IsCompleted && !_isConnected)
             {
+#if TRACE
                 Console.WriteLine("Current connection state {0} from {1}", _isConnected, source);
+#endif
                 await _reconnection.Task;
             }
-
+#if TRACE
             Console.WriteLine("Reconnect finished from {0}", source);
+#endif
         }
 
         public void Dispose()
         {
+#if TRACE
             Console.WriteLine("Interaction module disposed");
+#endif
             _isActive = false;
             if (_currentReceiving is { IsCompleted: true })
             {
@@ -191,7 +210,8 @@ namespace mROA.Implementation
             private IEndPointContext Context;
             public readonly int Id = new Random().Next();
 
-            public StreamExtractor(Stream ioStream, IContextualSerializationToolKit serializationToolkit, IEndPointContext context)
+            public StreamExtractor(Stream ioStream, IContextualSerializationToolKit serializationToolkit,
+                IEndPointContext context)
             {
                 _ioStream = ioStream;
                 _serializationToolkit = serializationToolkit;
@@ -250,7 +270,6 @@ namespace mROA.Implementation
 
             public async Task Send(NetworkMessageHeader message, CancellationToken token = default)
             {
-                
                 try
                 {
                     var rawMessage = _serializationToolkit.Serialize(message, Context);

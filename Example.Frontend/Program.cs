@@ -54,7 +54,7 @@ class Program
             DemoCheck.CreatingPrinter = true;
             disposingPrinter.OnPrint += (_, _) =>
             {
-                Console.WriteLine("New page creater. Called from event!!!");
+                Console.WriteLine("New page created. Called from event!!!");
                 DemoCheck.EventCallback = true;
             };
             Console.WriteLine("Printer created");
