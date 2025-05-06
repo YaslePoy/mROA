@@ -1,7 +1,4 @@
 using System;
-#if TRACE
-using System.Diagnostics;
-#endif
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
@@ -16,8 +13,6 @@ namespace mROA.Implementation.Frontend
 
         private IMethodRepository? _methodRepository;
 
-        // private IContextRepository? _realContextRepository;
-        // private IContextRepository? _remoteContextRepository;
         private IRepresentationModule? _representationModule;
         private IContextualSerializationToolKit? _serializationToolkit;
         private IEndPointContext _context;
@@ -51,9 +46,6 @@ namespace mROA.Implementation.Frontend
 
             try
             {
-#if TRACE
-                var sw = new Stopwatch();
-#endif
 
                 var streamTokenSource = new CancellationTokenSource();
 
@@ -69,20 +61,6 @@ namespace mROA.Implementation.Frontend
 
                 await foreach (var command in query)
                 {
-#if TRACE
-                    Console.WriteLine("Waiting for request...");
-                    if (sw.IsRunning)
-                    {
-                        sw.Stop();
-                        Console.WriteLine(
-                            $"Request handling took {Math.Round(sw.Elapsed.TotalMilliseconds * 1000.0)} microseconds.");
-                    }
-#endif
-
-#if TRACE
-                    Console.WriteLine("Request received");
-                    sw.Restart();
-#endif
                     switch (command.originalType)
                     {
                         case EMessageType.CallRequest:

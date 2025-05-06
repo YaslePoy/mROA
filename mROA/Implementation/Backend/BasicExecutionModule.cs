@@ -30,18 +30,12 @@ namespace mROA.Implementation.Backend
         public ICommandExecution Execute(ICallRequest command, IContextRepository contextRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext)
         {
-#if TRACE
-            Console.WriteLine(command.GetType().Name);
-#endif
 
             try
             {
                 ThrowIfNotInjected(contextRepository);
                 if (command is CancelRequest)
                 {
-#if TRACE
-                Console.WriteLine("Final cancelling request");
-#endif
                     return CancelExecution(command);
                 }
 
@@ -76,9 +70,6 @@ namespace mROA.Implementation.Backend
                         var result = Execute((invoker as MethodInvoker)!, context, castedParams!, command, execContext);
                         if (command.CommandId == -1)
                         {
-#if TRACE
-                    Console.WriteLine("Disposing object");
-#endif
                             contextRepository.ClearObject(command.ObjectId, endPointContext);
                         }
 
@@ -189,9 +180,7 @@ namespace mROA.Implementation.Backend
             var tokenSource = new CancellationTokenSource();
             cancellationRepository.RegisterCancellation(command.Id, tokenSource);
             var token = tokenSource.Token;
-#if TRACE
-            token.Register(() => Console.WriteLine($"Cancellation requested check {command.Id}"));
-#endif
+
             try
             {
                 invoker.Invoke(instance, parameters, new object[] { executionContext, token }, _ =>

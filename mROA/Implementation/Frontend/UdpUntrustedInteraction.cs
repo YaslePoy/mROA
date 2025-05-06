@@ -60,13 +60,9 @@ namespace mROA.Implementation.Frontend
                     continue;
 
                 var serialized = _serializationToolkit.Serialize(post, _context);
-#if TRACE
-                Console.WriteLine("Untrusted write start");
-#endif
+
                 await udpClient.SendAsync(serialized, serialized.Length);
-#if TRACE
-                Console.WriteLine("Untrusted write finished");
-#endif
+
             }
         }
 

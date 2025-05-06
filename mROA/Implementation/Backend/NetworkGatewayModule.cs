@@ -33,15 +33,6 @@ namespace mROA.Implementation.Backend
             Console.WriteLine("Enter Backspace to stop");
 
             Task.Run(HandleIncomingConnections);
-
-            while (true)
-            {
-                var key = Console.ReadKey();
-                if (key.Key == ConsoleKey.Backspace)
-                    break;
-            }
-
-            Console.WriteLine("Stopping");
         }
 
         public void Dispose()
@@ -62,13 +53,13 @@ namespace mROA.Implementation.Backend
             }
         }
 
-        private void HandleIncomingConnections()
+        private async Task HandleIncomingConnections()
         {
             ThrowIfNotInjected();
 
             while (true)
             {
-                var client = _tcpListener.AcceptTcpClient();
+                var client = await _tcpListener.AcceptTcpClientAsync();
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
                 var interaction = Activator.CreateInstance(_interactionModuleType!) as IChannelInteractionModule;
 
@@ -84,10 +75,12 @@ namespace mROA.Implementation.Backend
                 var streamExtractor =
                     new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
                 interaction.IsConnected = () => streamExtractor.IsConnected;
-                streamExtractor.MessageReceived = message => { interaction.ReceiveChanel.Writer.WriteAsync(message); };
-                streamExtractor.SingleReceive();
-                var connectionRequest = interaction.GetNextMessageReceiving(false)
-                    .GetAwaiter().GetResult()!;
+                streamExtractor.MessageReceived = async message =>
+                {
+                    await interaction.ReceiveChanel.Writer.WriteAsync(message);
+                };
+                Task.Run(() => streamExtractor.SingleReceive());
+                var connectionRequest = await interaction.ReceiveChanel.Reader.ReadAsync();
                 var cts = new CancellationTokenSource();
 
                 switch (connectionRequest.MessageType)
@@ -121,7 +114,6 @@ namespace mROA.Implementation.Backend
 
 
                         recoveryInteraction.Restart(false);
-                        Console.WriteLine("Connection recovery for client {0} finished", recoveryRequest.Id);
                         break;
                     }
                     default:
