@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net;
 using Example.Backend;
 using mROA.Abstract;
@@ -44,10 +45,12 @@ class Program
 
         builder.Build();
         new RemoteTypeBinder();
-        
+
 
         _ = builder.GetModule<UdpGateway>()!.Start();
         var gateway = builder.GetModule<IGatewayModule>();
         gateway.Run();
+        
+        Console.ReadLine();
     }
 }
