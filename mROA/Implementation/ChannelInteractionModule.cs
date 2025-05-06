@@ -93,19 +93,10 @@ namespace mROA.Implementation
         {
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
-
-            // Console.WriteLine("Sending {0}", JsonSerializer.Serialize(message));
-
+            
             bool withError = false;
             while (true)
             {
-                if (withError)
-                {
-#if TRACE
-                    Console.WriteLine("Post again");
-#endif
-                }
-
                 if (await PostMessageInternal(messageHeader))
                     break;
 
@@ -134,65 +125,34 @@ namespace mROA.Implementation
                 await PostMessageAsync(
                     new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId)), Context));
                 var ping = await ReceiveChanel.Reader.ReadAsync();
-#if TRACE
-                Console.WriteLine($"Ping received {ping.Id}");
-#endif
             }
             else
             {
                 await _trustedWriter.WriteAsync(new NetworkMessageHeader());
             }
 
-#if TRACE
-            Console.WriteLine("Setting result for reconnection");
-#endif
             var setting = _reconnection.TrySetResult(null);
             // _isInReconnectionState = false;
             _isConnected = true;
-#if true
-            Console.WriteLine($"Set result for reconnection {setting}");
-#endif
             _reconnection = new TaskCompletionSource<Stream>();
         }
 
         private async Task MakeRecovery(string source)
         {
             //TODO переделать реконнект
-
-#if TRACE
-            Console.WriteLine("Staring recovery from {0}", source);
-#endif
-
             lock (_reconnection)
             {
-#if TRACE
-                Console.WriteLine("Got lock from {0}", source);
-
-                Console.WriteLine("Call OnDisconnected from {0}", source);
-#endif
                 OnDisconnected?.Invoke(ConnectionId);
             }
 
-#if TRACE
-            Console.WriteLine("Waiting for reconnect from {0}", source);
-#endif
             if (!_reconnection.Task.IsCompleted && !_isConnected)
             {
-#if TRACE
-                Console.WriteLine("Current connection state {0} from {1}", _isConnected, source);
-#endif
                 await _reconnection.Task;
             }
-#if TRACE
-            Console.WriteLine("Reconnect finished from {0}", source);
-#endif
         }
 
         public void Dispose()
         {
-#if TRACE
-            Console.WriteLine("Interaction module disposed");
-#endif
             _isActive = false;
             if (_currentReceiving is { IsCompleted: true })
             {
@@ -239,29 +199,17 @@ namespace mROA.Implementation
 
             public async Task SingleReceive(CancellationToken Token = default)
             {
-#if TRACE
-                Console.WriteLine($"[{Id}] Single receive started");
-#endif
                 var len = ReadMessageLength();
                 var localSpan = _buffer[..len];
 
                 await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: Token);
 
                 var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan, Context);
-#if TRACE
-                Console.WriteLine(
-                    $"{DateTime.Now.TimeOfDay} [{Id}] Received Message {message.Id} - {message.MessageType}");
-                TransmissionConfig.TotalTransmittedBytes += len;
-                Console.WriteLine($"Total received bytes are {TransmissionConfig.TotalTransmittedBytes}");
-#endif
                 MessageReceived(message);
             }
 
             public async Task LoopedReceive(CancellationToken token = default)
             {
-#if TRACE
-                Console.WriteLine("LoopedReceive started");
-#endif
                 while (token.IsCancellationRequested == false && IsConnected)
                 {
                     await SingleReceive(token);
@@ -270,31 +218,11 @@ namespace mROA.Implementation
 
             public async Task Send(NetworkMessageHeader message, CancellationToken token = default)
             {
-                try
-                {
-                    var rawMessage = _serializationToolkit.Serialize(message, Context);
-                    var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
+                var rawMessage = _serializationToolkit.Serialize(message, Context);
+                var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
 
-#if TRACE
-                    Console.WriteLine(
-                        $"{DateTime.Now.TimeOfDay} [{Id}] Posting Message {message.Id} - {message.MessageType}");
-                    TransmissionConfig.TotalTransmittedBytes += rawMessage.Length;
-                    Console.WriteLine($"Total received bytes are {TransmissionConfig.TotalTransmittedBytes}");
-#endif
-
-                    await _ioStream.WriteAsync(header, token);
-                    await _ioStream.WriteAsync(rawMessage, token);
-#if TRACE
-                    Console.WriteLine(
-                        $"{DateTime.Now.TimeOfDay} [{Id}] Posting finished {message.Id} - {message.MessageType}");
-
-#endif
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
+                await _ioStream.WriteAsync(header, token);
+                await _ioStream.WriteAsync(rawMessage, token);
             }
 
             public async Task SendFromChannel(ChannelReader<NetworkMessageHeader> channel,
