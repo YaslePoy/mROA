@@ -16,11 +16,11 @@ using mROA.Implementation.Frontend;
 
 class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = new FullMixBuilder();
         new RemoteTypeBinder();
-        // builder.Modules.Add(new JsonSerializationToolkit());
+
         builder.Modules.Add(new CborSerializationToolkit());
         builder.Modules.Add(new EndPointContext());
         builder.Modules.Add(new RemoteContextRepository());
@@ -39,7 +39,7 @@ class Program
         builder.Build();
         
         var frontendBridge = builder.GetModule<IFrontendBridge>()!;
-        frontendBridge.Connect();
+        await frontendBridge.Connect();
         _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
         _ = builder.GetModule<UdpUntrustedInteraction>().Start(serverEndPoint);
         Console.WriteLine(builder.GetModule<IEndPointContext>().HostId);
@@ -87,8 +87,7 @@ class Program
 
             Console.WriteLine("Names: " + string.Join(", ", names));
 
-            var page = disposingPrinter.Print("Test Page", false, default, CancellationToken.None).GetAwaiter()
-                .GetResult();
+            var page = await disposingPrinter.Print("Test Page", false, default, CancellationToken.None);
             Console.WriteLine("Page printed");
             DemoCheck.TaskExecution = true;
             Console.WriteLine(page.ToString());

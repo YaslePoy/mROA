@@ -1,10 +1,11 @@
 using System;
+using System.Threading.Tasks;
 
 namespace mROA.Abstract
 {
     public interface IFrontendBridge : IInjectableModule, IDisposable
     {
-        void Connect();
+        Task Connect();
         void Obstacle();
         void Disconnect();
     }

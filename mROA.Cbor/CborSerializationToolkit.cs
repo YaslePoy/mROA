@@ -213,7 +213,8 @@ namespace mROA.Cbor
 
             if (obj is IShared)
             {
-                var generic = obj.GetType().GetInterfaces().FirstOrDefault(i => typeof(IShared).IsAssignableFrom(i));
+                var interfaces = obj.GetType().GetInterfaces();
+                var generic = interfaces.FirstOrDefault(i => typeof(IShared).IsAssignableFrom(i));
                 var sharedShell = typeof(SharedObjectShellShell<>).MakeGenericType(generic);
                 var so =
                     Activator.CreateInstance(sharedShell, obj, context) as

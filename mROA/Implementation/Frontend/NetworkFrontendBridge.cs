@@ -40,7 +40,7 @@ namespace mROA.Implementation.Frontend
             }
         }
 
-        public void Connect()
+        public async Task Connect()
         {
             if (_interactionModule is null)
                 throw new Exception("Interaction module was not injected");
@@ -57,7 +57,7 @@ namespace mROA.Implementation.Frontend
                 .Wait();
 
             _currentExtractor.SingleReceive();
-            var idMessage = _interactionModule.GetNextMessageReceiving(false).GetAwaiter().GetResult();
+            var idMessage = await _interactionModule.GetNextMessageReceiving(false);
 
             if (idMessage.MessageType != EMessageType.IdAssigning)
             {

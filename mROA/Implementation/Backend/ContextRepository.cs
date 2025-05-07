@@ -32,9 +32,9 @@ namespace mROA.Implementation.Backend
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
             var last = _storage.Place(o);
-
-            EventBinders.OfType<IEventBinder<T>>().FirstOrDefault()
-                ?.BindEvents((T)o, context, _representationModuleProducer!, last);
+            
+            var binder = EventBinders.OfType<IEventBinder<T>>().FirstOrDefault();
+            binder?.BindEvents((T)o, context, _representationModuleProducer!, last);
 
             return last;
         }
