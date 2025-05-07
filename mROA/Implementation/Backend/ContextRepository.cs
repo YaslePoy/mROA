@@ -32,9 +32,15 @@ namespace mROA.Implementation.Backend
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
             var last = _storage.Place(o);
+
+            var sharedType = typeof(IShared);
+            var interfaces = o.GetType().GetInterfaces();
+            var generic = interfaces.Where(i => sharedType.IsAssignableFrom(i) && i != sharedType)
+                .Select(i => typeof(IEventBinder<>).MakeGenericType(i));
             
-            var binder = EventBinders.OfType<IEventBinder<T>>().FirstOrDefault();
-            binder?.BindEvents((T)o, context, _representationModuleProducer!, last);
+            var binders = EventBinders.Where(i => generic.Any(g => g.IsAssignableFrom(i.GetType())));
+            foreach (var binder in binders)
+                ((IEventBinder)binder).BindEvents(o, context, _representationModuleProducer!, last);
 
             return last;
         }
