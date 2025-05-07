@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -120,23 +121,25 @@ class Program
         Console.WriteLine($"Token state {cts.Token.IsCancellationRequested}");
         DemoCheck.TaskCancelation = true;
 
+        const int iterations = 10000;
+        var timer = Stopwatch.StartNew();
+        var x = 0;
+        for (int i = 0; i < iterations; i++)
+        {
+            x = loadSingleton.Next(x);
+        }
+        
+        timer.Stop();
+        Console.WriteLine("X is {0}", x);
+        Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
+        Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
+        
         frontendBridge.Disconnect();
 
         DemoCheck.Show();
         Console.ReadKey();
 
-        //
-        // const int iterations = 10000;
-        // var timer = Stopwatch.StartNew();
-        // var x = 0;
-        // for (int i = 0; i < iterations; i++)
-        // {
-        //     x = loadSingleton.Next(x);
-        // }
-        //
-        // timer.Stop();
-        // Console.WriteLine("X is {0}", x);
-        // Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
-        // Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
+        
+        
     }
 }
