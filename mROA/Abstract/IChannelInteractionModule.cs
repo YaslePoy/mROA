@@ -9,7 +9,6 @@ namespace mROA.Abstract
     public interface IChannelInteractionModule : IInjectableModule, IDisposable
     {
         int ConnectionId { get; set; }
-        IEndPointContext Context { get; set; }
         Channel<NetworkMessageHeader> ReceiveChanel { get; }
         ChannelReader<NetworkMessageHeader> TrustedPostChanel { get; }
         ChannelReader<NetworkMessageHeader> UntrustedPostChanel { get; }
