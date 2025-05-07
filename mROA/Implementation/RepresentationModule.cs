@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
 namespace mROA.Implementation
 {

@@ -11,11 +11,11 @@ namespace mROA.Codegen
     public sealed class RemoteTypeBinder
     {
         static RemoteTypeBinder(){
-            RemoteContextRepository.RemoteTypes = new Dictionary<Type, Type> {
+            RemoteInstanceRepository.RemoteTypes = new Dictionary<Type, Type> {
                 <!I remoteTypePair r sep typesSep><!D typesSep>,
                 <!D>
             };
-            ContextRepository.EventBinders = new object[] {
+            InstanceRepository.EventBinders = new object[] {
                 <!I eventBinder r sep typesSep>
                 <!T objectBinderTemplate>
                 new EventBinder<<!L type>>
