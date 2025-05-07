@@ -7,8 +7,8 @@ namespace mROA.Implementation.Backend
     {
         private IConnectionHub? _hub;
 
-        private IContextRepository? _contextRepository;
-        private IContextRepository? _remoteContextRepository;
+        private IInstanceRepository? _contextRepository;
+        private IInstanceRepository? _remoteContextRepository;
         private IMethodRepository? _methodRepository;
         private IContextualSerializationToolKit? _serializationToolkit;
         private IExecuteModule? _executeModule;
@@ -21,11 +21,11 @@ namespace mROA.Implementation.Backend
                     _hub = connectionHub;
                     _hub.OnConnected += HubOnOnConnected;
                     break;
-                case MultiClientContextRepository:
-                case ContextRepository:
-                    _contextRepository = dependency as IContextRepository;
+                case MultiClientInstanceRepository:
+                case InstanceRepository:
+                    _contextRepository = dependency as IInstanceRepository;
                     break;
-                case RemoteContextRepository remoteContextRepository:
+                case RemoteInstanceRepository remoteContextRepository:
                     _remoteContextRepository = remoteContextRepository;
                     break;
                 case IMethodRepository methodRepository:

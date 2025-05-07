@@ -5,7 +5,7 @@ using mROA.Abstract;
 
 namespace mROA.Implementation
 {
-    public class ComplexContextRepository : IContextRepository
+    public class ComplexInstanceRepository : IInstanceRepository
     {
         private List<KeyValuePair<int, ExtensibleStorage<object>>> _storages = new();
         public static object[] EventBinders = { };

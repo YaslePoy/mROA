@@ -5,7 +5,7 @@ using mROA.Abstract;
 
 namespace mROA.Implementation
 {
-    public class RemoteContextRepository : IContextRepository
+    public class RemoteInstanceRepository : IInstanceRepository
     {
         private List<RemoteObjectBase> _producedRemoteEndpoints = new();
         public static Dictionary<Type, Type> RemoteTypes = new();

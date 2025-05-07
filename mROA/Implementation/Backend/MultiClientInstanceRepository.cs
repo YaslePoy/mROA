@@ -4,12 +4,12 @@ using mROA.Abstract;
 
 namespace mROA.Implementation.Backend
 {
-    public class MultiClientContextRepository : IContextRepository, IContextRepositoryHub
+    public class MultiClientInstanceRepository : IInstanceRepository, IContextRepositoryHub
     {
-        private readonly Func<int, IContextRepository> _produceRepository;
-        private readonly Dictionary<int, IContextRepository> _repositories = new();
+        private readonly Func<int, IInstanceRepository> _produceRepository;
+        private readonly Dictionary<int, IInstanceRepository> _repositories = new();
 
-        public MultiClientContextRepository(Func<int, IContextRepository> produceRepository)
+        public MultiClientInstanceRepository(Func<int, IInstanceRepository> produceRepository)
         {
             _produceRepository = produceRepository;
         }
@@ -50,7 +50,7 @@ namespace mROA.Implementation.Backend
             return repository.GetObjectIndex<T>(o, context);
         }
 
-        public IContextRepository GetRepository(int clientId)
+        public IInstanceRepository GetRepository(int clientId)
         {
             var repository = GetRepositoryByClientId(clientId);
             return repository;
@@ -61,7 +61,7 @@ namespace mROA.Implementation.Backend
             _repositories.Remove(clientId);
         }
 
-        private IContextRepository GetRepositoryByClientId(int clientId)
+        private IInstanceRepository GetRepositoryByClientId(int clientId)
         {
             if (_repositories.TryGetValue(clientId, out var repository))
                 return repository;

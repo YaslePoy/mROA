@@ -23,7 +23,7 @@ class Program
 
         builder.Modules.Add(new CborSerializationToolkit());
         builder.Modules.Add(new EndPointContext());
-        builder.Modules.Add(new RemoteContextRepository());
+        builder.Modules.Add(new RemoteInstanceRepository());
         builder.Modules.Add(new ChannelInteractionModule());
         builder.Modules.Add(new UdpUntrustedInteraction());
         builder.Modules.Add(new RepresentationModule());
@@ -43,7 +43,7 @@ class Program
         _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
         _ = builder.GetModule<UdpUntrustedInteraction>().Start(serverEndPoint);
         Console.WriteLine(builder.GetModule<IEndPointContext>().HostId);
-        var context = builder.GetModule<RemoteContextRepository>();
+        var context = builder.GetModule<RemoteInstanceRepository>();
 
         var factory =
             context.GetSingleObject(typeof(IPrinterFactory),

@@ -21,7 +21,7 @@ namespace mROA.Implementation.Backend
 
         public static void UseCollectableContextRepository(this FullMixBuilder builder, params Assembly[] assemblies)
         {
-            var repo = new ContextRepository();
+            var repo = new InstanceRepository();
             repo.FillSingletons(assemblies);
             builder.Modules.Add(repo);
         }

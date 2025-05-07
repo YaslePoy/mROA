@@ -6,8 +6,8 @@ namespace mROA.Implementation
 {
     public class EndPointContext : IEndPointContext
     {
-        public IContextRepository RealRepository { get; set; }
-        public IContextRepository RemoteRepository { get; set; }
+        public IInstanceRepository RealRepository { get; set; }
+        public IInstanceRepository RemoteRepository { get; set; }
         public int HostId { get; set; }
 
         public int OwnerId { get; set; }
@@ -16,10 +16,10 @@ namespace mROA.Implementation
         {
             switch (dependency)
             {
-                case RemoteContextRepository remoteRepository:
+                case RemoteInstanceRepository remoteRepository:
                     RemoteRepository = remoteRepository;
                     break;
-                case ContextRepository realRepository:
+                case InstanceRepository realRepository:
                     RealRepository = realRepository;
                     break;
             }
