@@ -27,13 +27,13 @@ namespace mROA.Implementation.Backend
             }
         }
 
-        public ICommandExecution Execute(ICallRequest command, IContextRepository contextRepository,
+        public ICommandExecution Execute(ICallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext)
         {
 
             try
             {
-                ThrowIfNotInjected(contextRepository);
+                ThrowIfNotInjected(instanceRepository);
                 if (command is CancelRequest)
                 {
                     return CancelExecution(command);
@@ -43,7 +43,7 @@ namespace mROA.Implementation.Backend
                 if (invoker == null)
                     throw new Exception($"Command {command.CommandId} not found");
 
-                var context = GetContext(command, contextRepository, invoker, endPointContext);
+                var context = GetContext(command, instanceRepository, invoker, endPointContext);
 
                 if (context == null)
                     throw new NullReferenceException("Instance can't be null");
@@ -70,7 +70,7 @@ namespace mROA.Implementation.Backend
                         var result = Execute((invoker as MethodInvoker)!, context, castedParams!, command, execContext);
                         if (command.CommandId == -1)
                         {
-                            contextRepository.ClearObject(command.ObjectId, endPointContext);
+                            instanceRepository.ClearObject(command.ObjectId, endPointContext);
                         }
 
                         return result;
@@ -86,12 +86,12 @@ namespace mROA.Implementation.Backend
             }
         }
 
-        private static object GetContext(ICallRequest command, IContextRepository contextRepository,
+        private static object GetContext(ICallRequest command, IInstanceRepository instanceRepository,
             IMethodInvoker invoker, IEndPointContext endPointContext)
         {
             var context = command.ObjectId.ContextId != -1
-                ? contextRepository.GetObject<object>(command.ObjectId, endPointContext)
-                : contextRepository.GetSingleObject(invoker.SuitableType, endPointContext);
+                ? instanceRepository.GetObject<object>(command.ObjectId, endPointContext)
+                : instanceRepository.GetSingleObject(invoker.SuitableType, endPointContext);
             return context;
         }
 
@@ -106,7 +106,7 @@ namespace mROA.Implementation.Backend
             return castedParams;
         }
 
-        private void ThrowIfNotInjected(IContextRepository contextRepository)
+        private void ThrowIfNotInjected(IInstanceRepository instanceRepository)
         {
             if (_cancellationRepo is null)
                 throw new NullReferenceException("Method repository was not defined");
@@ -114,7 +114,7 @@ namespace mROA.Implementation.Backend
             if (_methodRepo is null)
                 throw new NullReferenceException("Method repository was not defined");
 
-            if (contextRepository is null)
+            if (instanceRepository is null)
                 throw new NullReferenceException("Context repository was not defined");
         }
 

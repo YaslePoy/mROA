@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +23,7 @@ class Program
 
         builder.Modules.Add(new CborSerializationToolkit());
         builder.Modules.Add(new EndPointContext());
-        builder.Modules.Add(new RemoteContextRepository());
+        builder.Modules.Add(new RemoteInstanceRepository());
         builder.Modules.Add(new ChannelInteractionModule());
         builder.Modules.Add(new UdpUntrustedInteraction());
         builder.Modules.Add(new RepresentationModule());
@@ -43,7 +43,7 @@ class Program
         _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
         _ = builder.GetModule<UdpUntrustedInteraction>().Start(serverEndPoint);
         Console.WriteLine(builder.GetModule<IEndPointContext>().HostId);
-        var context = builder.GetModule<RemoteContextRepository>();
+        var context = builder.GetModule<RemoteInstanceRepository>();
 
         var factory =
             context.GetSingleObject(typeof(IPrinterFactory),
@@ -126,23 +126,25 @@ class Program
         Console.WriteLine($"Token state {cts.Token.IsCancellationRequested}");
         DemoCheck.TaskCancelation = true;
 
+        const int iterations = 10000;
+        var timer = Stopwatch.StartNew();
+        var x = 0;
+        for (int i = 0; i < iterations; i++)
+        {
+            x = loadSingleton.Next(x);
+        }
+        
+        timer.Stop();
+        Console.WriteLine("X is {0}", x);
+        Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
+        Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
+        
         frontendBridge.Disconnect();
 
         DemoCheck.Show();
         Console.ReadKey();
 
-        //
-        // const int iterations = 10000;
-        // var timer = Stopwatch.StartNew();
-        // var x = 0;
-        // for (int i = 0; i < iterations; i++)
-        // {
-        //     x = loadSingleton.Next(x);
-        // }
-        //
-        // timer.Stop();
-        // Console.WriteLine("X is {0}", x);
-        // Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
-        // Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
+        
+        
     }
 }

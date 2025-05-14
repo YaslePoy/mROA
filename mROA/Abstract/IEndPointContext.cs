@@ -2,8 +2,8 @@
 {
     public interface IEndPointContext : IInjectableModule
     {
-        IContextRepository RealRepository { get; }
-        IContextRepository RemoteRepository { get; }
+        IInstanceRepository RealRepository { get; }
+        IInstanceRepository RemoteRepository { get; }
         int HostId { get; set; }
         int OwnerId { get; set; }
     }

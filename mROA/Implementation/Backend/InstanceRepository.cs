@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.Attributes;
 
 namespace mROA.Implementation.Backend
 {
-    public class ContextRepository : IContextRepository
+    public class InstanceRepository : IInstanceRepository
     {
         public static object[] EventBinders = { };
 
@@ -22,7 +21,7 @@ namespace mROA.Implementation.Backend
         private IStorage<object> _storage;
 
 
-        public ContextRepository()
+        public InstanceRepository()
         {
             _storage = new ExtensibleStorage<object>();
         }

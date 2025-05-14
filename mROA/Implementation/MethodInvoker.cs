@@ -36,7 +36,7 @@ namespace mROA.Implementation
         public bool IsTrusted { get; set; } = true;
         public Type[] ParameterTypes { get; set; } = Type.EmptyTypes;
         public Type? ReturnType { get; set; }
-        public Type SuitableType { get; set; }
+        public Type SuitableType { get; set; } = typeof(object);
 
         public Action<object, object?[]?, object[], Action<object?>> Invoking { get; set; } =
             (_, _, _, post) => { post.Invoke(null); };

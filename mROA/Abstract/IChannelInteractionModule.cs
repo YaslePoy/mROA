@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using mROA.Implementation;
@@ -9,7 +8,6 @@ namespace mROA.Abstract
     public interface IChannelInteractionModule : IInjectableModule, IDisposable
     {
         int ConnectionId { get; set; }
-        IEndPointContext Context { get; set; }
         Channel<NetworkMessageHeader> ReceiveChanel { get; }
         ChannelReader<NetworkMessageHeader> TrustedPostChanel { get; }
         ChannelReader<NetworkMessageHeader> UntrustedPostChanel { get; }

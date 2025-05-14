@@ -20,12 +20,14 @@ namespace mROA.Implementation
     {
         private ComplexObjectIdentifier _identifier = ComplexObjectIdentifier.Null;
 
-        private T _value;
+        private T? _value;
 
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once UnusedMember.Global
         public SharedObjectShellShell()
         {
+            _value = default;
+            EndPointContext = new EndPointContext();
         }
 
         // ReSharper disable once UnusedMember.Global
@@ -41,7 +43,7 @@ namespace mROA.Implementation
         // ReSharper disable once MemberCanBePrivate.Global
         public T Value
         {
-            get => _value;
+            get => _value!;
             set
             {
                 _value = value;
@@ -76,11 +78,11 @@ namespace mROA.Implementation
 
         public object UniversalValue
         {
-            get => _value;
+            get => _value!;
             set => _value = (T)value;
         }
 
-        private IContextRepository GetDefaultContextRepository() =>
+        private IInstanceRepository GetDefaultContextRepository() =>
             (_identifier.OwnerId == EndPointContext.HostId
                 ? EndPointContext.RealRepository
                 : EndPointContext.RemoteRepository) ??

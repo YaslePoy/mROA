@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Text.Json.Serialization;
 using mROA.Abstract;
-using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedMember.Global
 
@@ -9,7 +7,7 @@ namespace mROA.Implementation
 {
     public class NetworkMessageHeader
     {
-        protected bool Equals(NetworkMessageHeader other)
+        private bool Equals(NetworkMessageHeader other)
         {
             return Id.Equals(other.Id) && MessageType == other.MessageType;
         }
@@ -20,11 +18,6 @@ namespace mROA.Implementation
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
             return Equals((NetworkMessageHeader)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Id, (int)MessageType);
         }
 
         public static readonly NetworkMessageHeader Null = new();
@@ -43,13 +36,8 @@ namespace mROA.Implementation
         }
         public Guid Id { get; set; }
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public EMessageType MessageType { get; set; }
 
         public byte[] Data { get; set; }
-        
-        [JsonIgnore]
-        [SerializationIgnore]
-        public object Parced { get; set; }
     }
 }

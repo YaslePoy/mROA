@@ -14,12 +14,11 @@ namespace mROA.Implementation
         private readonly ChannelWriter<NetworkMessageHeader> _untrustedWriter;
         private readonly Channel<NetworkMessageHeader> _outputTrustedChannel;
         private readonly Channel<NetworkMessageHeader> _outputUntrustedChannel;
-        private Task<NetworkMessageHeader>? _currentReceiving;
         private IContextualSerializationToolKit? _serialization;
         private bool _isConnected = true;
         private bool _isActive = true;
         private TaskCompletionSource<Stream> _reconnection;
-        public IEndPointContext Context { get; set; }
+        private IEndPointContext? _context;
 
         public ChannelInteractionModule()
         {
@@ -50,7 +49,7 @@ namespace mROA.Implementation
 
         public ChannelReader<NetworkMessageHeader> TrustedPostChanel => _outputTrustedChannel.Reader;
         public ChannelReader<NetworkMessageHeader> UntrustedPostChanel => _outputUntrustedChannel.Reader;
-        public Func<bool> IsConnected { get; set; }
+        public Func<bool> IsConnected { get; set; } = () => false; 
 
         public void Inject<T>(T dependency)
         {
@@ -63,7 +62,7 @@ namespace mROA.Implementation
                     ConnectionId = identityGenerator.GetNextIdentity();
                     break;
                 case IEndPointContext endpointContext:
-                    Context = endpointContext;
+                    _context = endpointContext;
                     break;
             }
         }
@@ -93,8 +92,7 @@ namespace mROA.Implementation
         {
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
-            
-            bool withError = false;
+
             while (true)
             {
                 if (await PostMessageInternal(messageHeader))
@@ -106,8 +104,7 @@ namespace mROA.Implementation
                 }
 
                 _isConnected = false;
-                withError = true;
-                await MakeRecovery("OUT");
+                await MakeRecovery();
             }
         }
 
@@ -123,23 +120,21 @@ namespace mROA.Implementation
             if (sendRecovery)
             {
                 await PostMessageAsync(
-                    new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId)), Context));
-                var ping = await ReceiveChanel.Reader.ReadAsync();
+                    new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId)), _context));
+                await ReceiveChanel.Reader.ReadAsync();
             }
             else
             {
                 await _trustedWriter.WriteAsync(new NetworkMessageHeader());
             }
 
-            var setting = _reconnection.TrySetResult(null);
-            // _isInReconnectionState = false;
+            _reconnection.TrySetResult(Stream.Null);
             _isConnected = true;
             _reconnection = new TaskCompletionSource<Stream>();
         }
 
-        private async Task MakeRecovery(string source)
+        private async Task MakeRecovery()
         {
-            //TODO переделать реконнект
             lock (_reconnection)
             {
                 OnDisconnected?.Invoke(ConnectionId);
@@ -154,10 +149,6 @@ namespace mROA.Implementation
         public void Dispose()
         {
             _isActive = false;
-            if (_currentReceiving is { IsCompleted: true })
-            {
-                _currentReceiving?.Dispose();
-            }
         }
 
         public class StreamExtractor
@@ -167,15 +158,14 @@ namespace mROA.Implementation
             private const int BufferSize = ushort.MaxValue;
             private readonly Memory<byte> _buffer = new byte[BufferSize];
             private bool _manualConnectionState = true;
-            private IEndPointContext Context;
-            public readonly int Id = new Random().Next();
+            private readonly IEndPointContext _context;
 
             public StreamExtractor(Stream ioStream, IContextualSerializationToolKit serializationToolkit,
                 IEndPointContext context)
             {
                 _ioStream = ioStream;
                 _serializationToolkit = serializationToolkit;
-                Context = context;
+                _context = context;
             }
 
             public Action<NetworkMessageHeader> MessageReceived = _ => { };
@@ -197,14 +187,14 @@ namespace mROA.Implementation
                 return len;
             }
 
-            public async Task SingleReceive(CancellationToken Token = default)
+            public async Task SingleReceive(CancellationToken token = default)
             {
                 var len = ReadMessageLength();
                 var localSpan = _buffer[..len];
 
-                await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: Token);
+                await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: token);
 
-                var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan, Context);
+                var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan, _context);
                 MessageReceived(message);
             }
 
@@ -216,9 +206,9 @@ namespace mROA.Implementation
                 }
             }
 
-            public async Task Send(NetworkMessageHeader message, CancellationToken token = default)
+            private async Task Send(NetworkMessageHeader message, CancellationToken token = default)
             {
-                var rawMessage = _serializationToolkit.Serialize(message, Context);
+                var rawMessage = _serializationToolkit.Serialize(message, _context);
                 var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
 
                 await _ioStream.WriteAsync(header, token);

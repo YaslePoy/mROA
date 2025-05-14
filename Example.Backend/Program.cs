@@ -30,11 +30,11 @@ class Program
         builder.Modules.Add(new CreativeRepresentationModuleProducer(
             new IInjectableModule[] { builder.GetModule<IContextualSerializationToolKit>()! },
             typeof(RepresentationModule)));
-        builder.Modules.Add(new RemoteContextRepository());
+        builder.Modules.Add(new RemoteInstanceRepository());
 // builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
-        builder.Modules.Add(new MultiClientContextRepository(i =>
+        builder.Modules.Add(new MultiClientInstanceRepository(i =>
         {
-            var repo = new ContextRepository();
+            var repo = new InstanceRepository();
             repo.FillSingletons(typeof(PrinterFactory).Assembly);
             repo.Inject(builder.Modules.OfType<CreativeRepresentationModuleProducer>().First());
             return repo;
