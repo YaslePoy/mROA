@@ -76,6 +76,7 @@ class Program
             Console.WriteLine("Approaching detected");
             
             factory.Register(new ClientBasedPrinter());
+            factory.Register(disposingPrinter);
             DemoCheck.ClientBasedImplementation = true;
             Console.WriteLine("Registered printer");
             Thread.Sleep(100);

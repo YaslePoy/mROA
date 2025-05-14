@@ -83,7 +83,7 @@ namespace mROA.Implementation
         }
 
         private IInstanceRepository GetDefaultContextRepository() =>
-            (_identifier.OwnerId == EndPointContext.HostId
+            (_identifier.OwnerId == EndPointContext.OwnerId
                 ? EndPointContext.RealRepository
                 : EndPointContext.RemoteRepository) ??
             throw new NullReferenceException(
