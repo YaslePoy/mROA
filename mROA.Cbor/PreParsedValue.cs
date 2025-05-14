@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using mROA.Abstract;
 using mROA.Implementation;
 
@@ -34,6 +36,19 @@ namespace mROA.Cbor
                 return so.UniversalValue;
             }
 
+
+            if (type is { IsArray: true })
+            {
+                var elementType = type.GetElementType(); 
+                var array = Array.CreateInstance(elementType, _properties.Count);
+                Array.Copy(_properties.Select(i => Convert.ChangeType(i,elementType)).ToArray(), array, _properties.Count);
+                return array;
+            }
+
+            
+            if (typeof(IList).IsAssignableFrom(type))
+                return Convert.ChangeType(_properties.Select(i => Convert.ChangeType(i, type.GetElementType())).ToList(), type);
+            
             var instance = Activator.CreateInstance(type);
             if (instance == null)
                 return null;

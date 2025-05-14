@@ -15,6 +15,12 @@ namespace Example.Backend
             Console.WriteLine(humanName + " is approaching");
         }
 
+        public Task SetFingerPrint(int[] fingerPrint)
+        {
+            Console.WriteLine(fingerPrint.Length);
+            return Task.CompletedTask;
+        }
+
         public void OnPrintExternal(IPage p0, RequestContext ro)
         {
             OnPrint?.Invoke(p0, ro);

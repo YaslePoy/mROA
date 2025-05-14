@@ -51,6 +51,11 @@ class Program
 
         using (var disposingPrinter = factory.Create("Test"))
         {
+            disposingPrinter.SetFingerPrint(new[] { 1, 2, 3 }).ContinueWith(r =>
+            {
+                Console.WriteLine(r.Status);
+            });
+            
             DemoCheck.CreatingPrinter = true;
             disposingPrinter.OnPrint += (_, _) =>
             {

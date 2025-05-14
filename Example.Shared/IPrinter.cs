@@ -15,5 +15,6 @@ namespace Example.Shared
         event Action<IPage, RequestContext> OnPrint;
         [Untrusted]
         Task SomeoneIsApproaching(string humanName);
+        Task SetFingerPrint(int[] fingerPrint);
     }
 }

@@ -13,6 +13,11 @@ namespace Example.Frontend
             return Task.CompletedTask;
         }
 
+        public Task SetFingerPrint(int[] fingerPrint)
+        {
+            return Task.CompletedTask;
+        }
+
         public void OnPrintExternal(IPage p0, RequestContext ro)
         {
         }
