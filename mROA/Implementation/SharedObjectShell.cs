@@ -4,7 +4,7 @@ using mROA.Abstract;
 using mROA.Implementation.Attributes;
 
 // ReSharper disable UnusedMember.Global
-#pragma warning disable CS8618, CS9264
+// #pragma warning disable CS8618, CS9264
 
 namespace mROA.Implementation
 {
@@ -20,18 +20,21 @@ namespace mROA.Implementation
     {
         private ComplexObjectIdentifier _identifier = ComplexObjectIdentifier.Null;
 
-        private T _value;
+        private T? _value;
 
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once UnusedMember.Global
         public SharedObjectShellShell()
         {
+            _value = default;
+            EndPointContext = new EndPointContext();
         }
 
         // ReSharper disable once UnusedMember.Global
         // ReSharper disable once MemberCanBePrivate.Global
-        public SharedObjectShellShell(T value)
+        public SharedObjectShellShell(T value, IEndPointContext endPointContext)
         {
+            EndPointContext = endPointContext;
             Value = value;
         }
 
@@ -40,7 +43,7 @@ namespace mROA.Implementation
         // ReSharper disable once MemberCanBePrivate.Global
         public T Value
         {
-            get => _value;
+            get => _value!;
             set
             {
                 _value = value;
@@ -57,15 +60,7 @@ namespace mROA.Implementation
             }
         }
 
-        [SerializationIgnore]
-        [JsonIgnore]
-        public IEndPointContext EndPointContext { get; set; } = new EndPointContext
-        {
-            RealRepository = TransmissionConfig.RealContextRepository,
-            RemoteRepository = TransmissionConfig.RemoteEndpointContextRepository,
-            HostId = TransmissionConfig.OwnershipRepository.GetHostOwnershipId(),
-            OwnerFunc = TransmissionConfig.OwnershipRepository.GetOwnershipId
-        };
+        [SerializationIgnore] [JsonIgnore] public IEndPointContext EndPointContext { get; set; }
 
         public ComplexObjectIdentifier Identifier
         {
@@ -77,18 +72,18 @@ namespace mROA.Implementation
             set
             {
                 _identifier = value;
-                Value = GetDefaultContextRepository().GetObject<T>(Identifier);
+                Value = GetDefaultContextRepository().GetObject<T>(Identifier, EndPointContext);
             }
         }
 
         public object UniversalValue
         {
-            get => _value;
+            get => _value!;
             set => _value = (T)value;
         }
 
-        private IContextRepository GetDefaultContextRepository() =>
-            (_identifier.OwnerId == EndPointContext.HostId
+        private IInstanceRepository GetDefaultContextRepository() =>
+            (_identifier.OwnerId == EndPointContext.OwnerId
                 ? EndPointContext.RealRepository
                 : EndPointContext.RemoteRepository) ??
             throw new NullReferenceException(
@@ -96,7 +91,7 @@ namespace mROA.Implementation
 
         public static implicit operator T(SharedObjectShellShell<T> value) => value.Value;
 
-        public static implicit operator SharedObjectShellShell<T>(T value) =>
-            new(value);
+        // public static implicit operator SharedObjectShellShell<T>(T value) =>
+        //     new(value);
     }
 }

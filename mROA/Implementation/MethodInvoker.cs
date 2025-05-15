@@ -6,6 +6,7 @@ namespace mROA.Implementation
     public class MethodInvoker : IMethodInvoker
     {
         public bool IsVoid { get; set; }
+        public bool IsTrusted { get; set; } = true;
         public Type[] ParameterTypes { get; set; } = Type.EmptyTypes;
         public Type? ReturnType { get; set; }
         public Func<object, object?[]?, object[], object?> Invoking { get; set; } = (_, _, _) => null;
@@ -32,9 +33,10 @@ namespace mROA.Implementation
     public class AsyncMethodInvoker : IMethodInvoker
     {
         public bool IsVoid { get; set; }
+        public bool IsTrusted { get; set; } = true;
         public Type[] ParameterTypes { get; set; } = Type.EmptyTypes;
         public Type? ReturnType { get; set; }
-        public Type SuitableType { get; set; }
+        public Type SuitableType { get; set; } = typeof(object);
 
         public Action<object, object?[]?, object[], Action<object?>> Invoking { get; set; } =
             (_, _, _, post) => { post.Invoke(null); };

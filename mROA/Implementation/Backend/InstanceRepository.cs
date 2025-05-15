@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.Attributes;
 
 namespace mROA.Implementation.Backend
 {
-    public class ContextRepository : IContextRepository
+    public class InstanceRepository : IInstanceRepository
     {
         public static object[] EventBinders = { };
 
@@ -22,7 +21,7 @@ namespace mROA.Implementation.Backend
         private IStorage<object> _storage;
 
 
-        public ContextRepository()
+        public InstanceRepository()
         {
             _storage = new ExtensibleStorage<object>();
         }
@@ -33,18 +32,24 @@ namespace mROA.Implementation.Backend
         {
             var last = _storage.Place(o);
 
-            EventBinders.OfType<IEventBinder<T>>().FirstOrDefault()
-                ?.BindEvents((T)o, context, _representationModuleProducer!, last);
+            var sharedType = typeof(IShared);
+            var interfaces = o.GetType().GetInterfaces();
+            var generic = interfaces.Where(i => sharedType.IsAssignableFrom(i) && i != sharedType)
+                .Select(i => typeof(IEventBinder<>).MakeGenericType(i));
+            
+            var binders = EventBinders.Where(i => generic.Any(g => g.IsAssignableFrom(i.GetType())));
+            foreach (var binder in binders)
+                ((IEventBinder)binder).BindEvents(o, context, _representationModuleProducer!, last);
 
             return last;
         }
 
-        public void ClearObject(ComplexObjectIdentifier id)
+        public void ClearObject(ComplexObjectIdentifier id, IEndPointContext context)
         {
             _storage.Free(id.ContextId);
         }
 
-        public T GetObject<T>(ComplexObjectIdentifier id)
+        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)
         {
             var value = _storage.GetValue(id.ContextId);
 
@@ -56,7 +61,13 @@ namespace mROA.Implementation.Backend
             return (T)value;
         }
 
-        public object GetSingleObject(Type type, int ownerId)
+        public T GetSingletonObject<T>(IEndPointContext context) where T : class, IShared
+        {
+            return GetSingletonObject(typeof(T), context) as T ??
+                   throw new ArgumentException("Unregistered singleton type");
+        }
+
+        public object GetSingletonObject(Type type, IEndPointContext context)
         {
             return _singletons.GetValueOrDefault(type.GetHashCode()) ??
                    throw new ArgumentException("Unregistered singleton type");

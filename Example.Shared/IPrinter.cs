@@ -13,5 +13,8 @@ namespace Example.Shared
         string GetName();
         Task<IPage> Print(string text, bool someParameter, RequestContext context, CancellationToken cancellationToken);
         event Action<IPage, RequestContext> OnPrint;
+        [Untrusted]
+        Task SomeoneIsApproaching(string humanName);
+        Task SetFingerPrint(int[] fingerPrint);
     }
 }

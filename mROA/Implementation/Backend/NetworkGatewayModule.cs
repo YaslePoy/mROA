@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
 
@@ -12,7 +14,8 @@ namespace mROA.Implementation.Backend
         private readonly Type? _interactionModuleType;
         private readonly TcpListener _tcpListener;
         private IConnectionHub? _hub;
-        private ISerializationToolkit? _serialization;
+        private IContextualSerializationToolKit? _serialization;
+        private Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
 
         public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType,
             IInjectableModule[] injectableModules)
@@ -29,15 +32,6 @@ namespace mROA.Implementation.Backend
             Console.WriteLine("Enter Backspace to stop");
 
             Task.Run(HandleIncomingConnections);
-
-            while (true)
-            {
-                var key = Console.ReadKey();
-                if (key.Key == ConsoleKey.Backspace)
-                    break;
-            }
-
-            Console.WriteLine("Stopping");
         }
 
         public void Dispose()
@@ -52,49 +46,73 @@ namespace mROA.Implementation.Backend
                 case IConnectionHub interactionModule:
                     _hub = interactionModule;
                     break;
-                case ISerializationToolkit serializationToolkit:
+                case IContextualSerializationToolKit serializationToolkit:
                     _serialization = serializationToolkit;
                     break;
             }
         }
 
-        private void HandleIncomingConnections()
+        private async Task HandleIncomingConnections()
         {
             ThrowIfNotInjected();
 
             while (true)
             {
-                var client = _tcpListener.AcceptTcpClient();
+                var client = await _tcpListener.AcceptTcpClientAsync();
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
-                var interaction = Activator.CreateInstance(_interactionModuleType!) as INextGenerationInteractionModule;
-                
+                var interaction = Activator.CreateInstance(_interactionModuleType!) as IChannelInteractionModule;
+
                 foreach (var injectableModule in _injectableModules!)
                     interaction!.Inject(injectableModule);
 
                 interaction!.Inject(_serialization);
-                interaction.BaseStream = client.GetStream();
 
-                var connectionRequest = interaction.GetNextMessageReceiving(false)
-                    .GetAwaiter().GetResult()!;
+
+                //TODO сделать контекст
+                var context = new EndPointContext();
+
+                var streamExtractor =
+                    new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
+                interaction.IsConnected = () => streamExtractor.IsConnected;
+                streamExtractor.MessageReceived = async message =>
+                {
+                    await interaction.ReceiveChanel.Writer.WriteAsync(message);
+                };
+                Task.Run(() => streamExtractor.SingleReceive());
+                var connectionRequest = await interaction.ReceiveChanel.Reader.ReadAsync();
+                var cts = new CancellationTokenSource();
 
                 switch (connectionRequest.MessageType)
                 {
                     case EMessageType.ClientConnect:
+                        context.HostId = 0;
+                        context.OwnerId = -interaction.ConnectionId;
+                        Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
+                        _ = streamExtractor.SendFromChannel(interaction.TrustedPostChanel, cts.Token);
                         interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
-                            new IdAssignment { Id = -interaction.ConnectionId }));
+                            new IdAssignment { Id = interaction.ConnectionId }, null));
+                        _extractorsCTS[interaction.ConnectionId] = cts;
                         _hub!.RegisterInteraction(interaction);
                         Console.WriteLine("Client registered");
                         break;
                     case EMessageType.ClientRecovery:
                     {
-
-                        interaction.BaseStream = null;
-                        var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data)!;
+                        var recoveryRequest = _serialization!.Deserialize<ClientRecovery>(connectionRequest.Data, null);
                         var recoveryInteraction = _hub.GetInteraction(recoveryRequest.Id);
-                        recoveryInteraction.BaseStream = client.GetStream();
-                        
+
+                        _extractorsCTS[-recoveryRequest.Id].Cancel();
+
+                        recoveryInteraction.IsConnected = () => streamExtractor.IsConnected;
+                        streamExtractor.MessageReceived = message =>
+                        {
+                            recoveryInteraction.ReceiveChanel.Writer.WriteAsync(message);
+                        };
+                        _ = streamExtractor.SendFromChannel(recoveryInteraction.TrustedPostChanel, cts.Token);
+
+                        Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
+
+
                         recoveryInteraction.Restart(false);
-                        Console.WriteLine("Connection recovery for client {0} finished", recoveryRequest.Id);
                         break;
                     }
                     default:

@@ -1,111 +1,110 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
 namespace mROA.Implementation
 {
     public class RepresentationModule : IRepresentationModule
     {
-        private INextGenerationInteractionModule? _interaction;
-        private ISerializationToolkit? _serialization;
+        private IChannelInteractionModule? _interaction;
+        private IContextualSerializationToolKit? _serialization;
 
         public void Inject<T>(T dependency)
         {
             switch (dependency)
             {
-                case ISerializationToolkit toolkit:
+                case IContextualSerializationToolKit toolkit:
                     _serialization = toolkit;
                     break;
-                case INextGenerationInteractionModule interactionModule:
+                case IChannelInteractionModule interactionModule:
                     _interaction = interactionModule;
                     break;
             }
         }
 
-        
-        
+
         public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized"))
             .ConnectionId;
 
-        public async Task<T> GetMessageAsync<T>(Guid? requestId, EMessageType? messageType,
-            CancellationToken token = default)
+        public async Task<(object? Deserialized, EMessageType MessageType)> GetSingle(
+            Predicate<NetworkMessageHeader> rule, IEndPointContext? context,
+            CancellationToken token = default, params Func<NetworkMessageHeader, Type?>[] converter)
         {
-            if (_serialization == null)
-                throw new NullReferenceException("Serialization toolkit is not initialized");
+            var writer = _interaction.ReceiveChanel.Writer;
+            var reader = _interaction.ReceiveChanel.Reader;
 
-            var rawMessage = await GetRawMessage(requestId, messageType, token);
-            return _serialization.Deserialize<T>(rawMessage)!;
-        }
 
-        public T GetMessage<T>(Guid? requestId = null, EMessageType? messageType = null)
-        {
-            if (_serialization == null)
-                throw new NullReferenceException("Serialization toolkit is not initialized");
-
-            var rawMessage = GetRawMessage(requestId, messageType).GetAwaiter().GetResult();
-            return _serialization.Deserialize<T>(rawMessage)!;
-        }
-
-        public async Task<byte[]> GetRawMessage(Guid? requestId = null, EMessageType? messageType = null,
-            CancellationToken token = default)
-        {
-            if (_interaction == null)
-                throw new NullReferenceException("Interaction toolkit is not initialized");
-
-            var fromBuffer =
-                _interaction.FirstByFilter(message =>
-                    (requestId is null || message.Id == requestId) &&
-                    (messageType is null || message.MessageType == messageType));
-
-            if (fromBuffer == null)
+            await foreach (var message in reader.ReadAllAsync(token))
             {
-                while (token.IsCancellationRequested == false)
+                if (!rule(message))
                 {
-                    var message = await _interaction.GetNextMessageReceiving();
-                    if ((requestId is not null && message.Id != requestId) ||
-                        (messageType is not null && message.MessageType != messageType))
-                        continue;
-
-                    _interaction.HandleMessage(message);
-                    return message.Data;
+                    await writer.WriteAsync(message, token);
+                    continue;
                 }
+
+                var type = converter.Select(i => i(message)).First(i => i != null)!;
+                var deserialized = _serialization.Deserialize(message.Data, type, context);
+                return (deserialized, message.MessageType);
             }
 
-            if (fromBuffer == null)
-            {
-                return Array.Empty<byte>();
-            }
-
-            _interaction.HandleMessage(fromBuffer);
-            return fromBuffer.Data;
+            return (null, EMessageType.Unknown);
         }
 
-        public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull
+        public async IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(
+            Predicate<NetworkMessageHeader> rule, IEndPointContext? context,
+            [EnumeratorCancellation] CancellationToken token = default,
+            params Func<NetworkMessageHeader, Type?>[] converter)
         {
-            await PostCallMessageAsync(id, eMessageType, payload, typeof(T));
-        }
+            var writer = _interaction?.ReceiveChanel.Writer;
+            await foreach (var message in _interaction.ReceiveChanel.Reader.ReadAllAsync(token))
+            {
+                if (!rule(message))
+                {
+                    await writer.WriteAsync(message, token);
+                    continue;
+                }
 
-        public async Task PostCallMessageAsync(Guid id, EMessageType eMessageType, object payload, Type payloadType)
+                var type = converter.Select(i => i(message)).First(i => i != null)!;
+                var deserialized = _serialization.Deserialize(message.Data, type, context);
+                yield return (deserialized, message.MessageType)!;
+            }
+        }
+        
+        // public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload,
+        //     IEndPointContext? context) where T : notnull
+        // {
+        //     await this.PostCallMessageAsync(id, eMessageType, payload, context);
+        // }
+
+        public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context) where T : notnull
         {
             if (_interaction == null)
                 throw new NullReferenceException("Interaction toolkit is not initialized");
             if (_serialization == null)
                 throw new NullReferenceException("Serialization toolkit is not initialized");
 
-            var serialized = _serialization.Serialize(payload, payloadType);
+            var serialized = _serialization.Serialize(payload, context);
             await _interaction.PostMessageAsync(new NetworkMessageHeader
                 { Id = id, MessageType = eMessageType, Data = serialized });
         }
 
-        public void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload) where T : notnull
+        public void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context)
+            where T : notnull
         {
-            PostCallMessageAsync(id, eMessageType, payload).GetAwaiter().GetResult();
+            PostCallMessageAsync(id, eMessageType, payload, context).GetAwaiter().GetResult();
         }
 
-        public void PostCallMessage(Guid id, EMessageType eMessageType, object payload, Type payloadType)
+        public async Task PostCallMessageUntrustedAsync<T>(Guid id, EMessageType eMessageType, T payload,
+            IEndPointContext? context) where T : notnull
         {
-            PostCallMessageAsync(id, eMessageType, payload, payloadType).GetAwaiter().GetResult();
+            var serialized = _serialization.Serialize(payload, context);
+            await _interaction.PostMessageUntrustedAsync(new NetworkMessageHeader
+                { Id = id, MessageType = eMessageType, Data = serialized });
         }
     }
 }

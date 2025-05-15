@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -15,17 +16,19 @@ using mROA.Implementation.Frontend;
 
 class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = new FullMixBuilder();
         new RemoteTypeBinder();
-        // builder.Modules.Add(new JsonSerializationToolkit());
-        builder.Modules.Add(new CborSerializationToolkit());
 
-        builder.Modules.Add(new RemoteContextRepository());
-        builder.Modules.Add(new NextGenerationInteractionModule());
+        builder.Modules.Add(new CborSerializationToolkit());
+        builder.Modules.Add(new EndPointContext());
+        builder.Modules.Add(new RemoteInstanceRepository());
+        builder.Modules.Add(new ChannelInteractionModule());
+        builder.Modules.Add(new UdpUntrustedInteraction());
         builder.Modules.Add(new RepresentationModule());
-        builder.Modules.Add(new NetworkFrontendBridge(new IPEndPoint(IPAddress.Loopback, 4567)));
+        var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
+        builder.Modules.Add(new NetworkFrontendBridge(serverEndPoint));
         builder.Modules.Add(new StaticRepresentationModuleProducer());
         builder.Modules.Add(new RequestExtractor());
         builder.Modules.Add(new BasicExecutionModule());
@@ -34,25 +37,29 @@ class Program
         builder.Modules.Add(new CancellationRepository());
 
         builder.Build();
-
-
-        TransmissionConfig.RealContextRepository = builder.GetModule<ContextRepository>();
-        TransmissionConfig.RemoteEndpointContextRepository = builder.GetModule<RemoteContextRepository>();
-
+        
         var frontendBridge = builder.GetModule<IFrontendBridge>()!;
-        frontendBridge.Connect();
+        await frontendBridge.Connect();
         _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
-        Console.WriteLine(TransmissionConfig.OwnershipRepository.GetOwnershipId());
-        var context = builder.GetModule<RemoteContextRepository>();
+        _ = builder.GetModule<UdpUntrustedInteraction>().Start(serverEndPoint);
+        Console.WriteLine(builder.GetModule<IEndPointContext>().HostId);
+        var context = builder.GetModule<RemoteInstanceRepository>();
 
-        var factory = context.GetSingleObject(typeof(IPrinterFactory), 0) as IPrinterFactory;
+        var factory =
+            context.GetSingletonObject<IPrinterFactory>(
+                builder.GetModule<IEndPointContext>());
 
         using (var disposingPrinter = factory.Create("Test"))
         {
+            disposingPrinter.SetFingerPrint(new[] { 1, 2, 3 }).ContinueWith(r =>
+            {
+                Console.WriteLine(r.Status);
+            });
+            
             DemoCheck.CreatingPrinter = true;
             disposingPrinter.OnPrint += (_, _) =>
             {
-                Console.WriteLine("New page creater. Called from event!!!");
+                Console.WriteLine("New page created. Called from event!!!");
                 DemoCheck.EventCallback = true;
             };
             Console.WriteLine("Printer created");
@@ -65,7 +72,11 @@ class Program
 
             Thread.Sleep(100);
 
+            disposingPrinter.SomeoneIsApproaching("Mikhail");
+            Console.WriteLine("Approaching detected");
+            
             factory.Register(new ClientBasedPrinter());
+            factory.Register(disposingPrinter);
             DemoCheck.ClientBasedImplementation = true;
             Console.WriteLine("Registered printer");
             Thread.Sleep(100);
@@ -80,10 +91,9 @@ class Program
             var names = factory.CollectAllNames();
             Thread.Sleep(100);
 
-            Console.WriteLine(string.Join(", ", names));
+            Console.WriteLine("Names: " + string.Join(", ", names));
 
-            var page = disposingPrinter.Print("Test Page", false, default, CancellationToken.None).GetAwaiter()
-                .GetResult();
+            var page = await disposingPrinter.Print("Test Page", false, default, CancellationToken.None);
             Console.WriteLine("Page printed");
             DemoCheck.TaskExecution = true;
             Console.WriteLine(page.ToString());
@@ -101,10 +111,11 @@ class Program
 
             Console.WriteLine("Dispose printer");
         }
+
         DemoCheck.Dispose = true;
 
 
-        var loadSingleton = context.GetSingleObject(typeof(ILoadTest), 0) as ILoadTest;
+        var loadSingleton = context.GetSingletonObject<ILoadTest>(builder.GetModule<IEndPointContext>());
 
 
         var cts = new CancellationTokenSource();
@@ -115,23 +126,26 @@ class Program
         cts.Cancel();
         Console.WriteLine($"Token state {cts.Token.IsCancellationRequested}");
         DemoCheck.TaskCancelation = true;
+
+        const int iterations = 10000;
+        var timer = Stopwatch.StartNew();
+        var x = 0;
+        for (int i = 0; i < iterations; i++)
+        {
+            x = loadSingleton.Next(x);
+        }
+        
+        timer.Stop();
+        Console.WriteLine("X is {0}", x);
+        Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
+        Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
         
         frontendBridge.Disconnect();
-        
+
         DemoCheck.Show();
         Console.ReadKey();
-        //
-        // const int iterations = 10000;
-        // var timer = Stopwatch.StartNew();
-        // var x = 0;
-        // for (int i = 0; i < iterations; i++)
-        // {
-        //     x = loadSingleton.Next(x);
-        // }
-        //
-        // timer.Stop();
-        // Console.WriteLine("X is {0}", x);
-        // Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
-        // Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
+
+        
+        
     }
 }

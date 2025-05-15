@@ -9,7 +9,7 @@ namespace mROA.Implementation.Backend
     {
         private ICancellationRepository? _cancellationRepo;
         private IMethodRepository? _methodRepo;
-        private ISerializationToolkit? _serialization;
+        private IContextualSerializationToolKit? _serialization;
 
         public void Inject<T>(T dependency)
         {
@@ -21,27 +21,21 @@ namespace mROA.Implementation.Backend
                 case ICancellationRepository cancellationRepo:
                     _cancellationRepo = cancellationRepo;
                     break;
-                case ISerializationToolkit serializationToolkit:
+                case IContextualSerializationToolKit serializationToolkit:
                     _serialization = serializationToolkit;
                     break;
             }
         }
 
-        public ICommandExecution Execute(ICallRequest command, IContextRepository contextRepository,
-            IRepresentationModule representationModule)
+        public ICommandExecution Execute(ICallRequest command, IInstanceRepository instanceRepository,
+            IRepresentationModule representationModule, IEndPointContext endPointContext)
         {
-#if TRACE
-            Console.WriteLine(command.GetType().Name);
-#endif
 
             try
             {
-                ThrowIfNotInjected(contextRepository);
+                ThrowIfNotInjected(instanceRepository);
                 if (command is CancelRequest)
                 {
-#if TRACE
-                Console.WriteLine("Final cancelling request");
-#endif
                     return CancelExecution(command);
                 }
 
@@ -49,7 +43,7 @@ namespace mROA.Implementation.Backend
                 if (invoker == null)
                     throw new Exception($"Command {command.CommandId} not found");
 
-                var context = GetContext(command, contextRepository, invoker);
+                var context = GetContext(command, instanceRepository, invoker, endPointContext);
 
                 if (context == null)
                     throw new NullReferenceException("Instance can't be null");
@@ -58,7 +52,7 @@ namespace mROA.Implementation.Backend
                 object?[]? castedParams = null;
 
                 if (invoker.ParameterTypes.Length != 0)
-                    castedParams = CastedParams(command, invoker);
+                    castedParams = CastedParams(command, invoker, endPointContext);
 
 
                 var execContext = new RequestContext(command.Id, representationModule.Id);
@@ -68,18 +62,15 @@ namespace mROA.Implementation.Backend
                     case AsyncMethodInvoker { IsVoid: false } asyncNonVoidMethodInvoker:
                         return TypedExecuteAsync(asyncNonVoidMethodInvoker, context, castedParams, command,
                             _cancellationRepo!,
-                            representationModule, execContext);
+                            representationModule, execContext, endPointContext);
                     case AsyncMethodInvoker asyncMethodInvoker:
                         return ExecuteAsync(asyncMethodInvoker, context, castedParams, command, _cancellationRepo!,
-                            representationModule, execContext);
+                            representationModule, execContext, endPointContext);
                     default:
                         var result = Execute((invoker as MethodInvoker)!, context, castedParams!, command, execContext);
                         if (command.CommandId == -1)
                         {
-#if TRACE
-                    Console.WriteLine("Disposing object");
-#endif
-                            contextRepository.ClearObject(command.ObjectId);
+                            instanceRepository.ClearObject(command.ObjectId, endPointContext);
                         }
 
                         return result;
@@ -95,26 +86,27 @@ namespace mROA.Implementation.Backend
             }
         }
 
-        private static object GetContext(ICallRequest command, IContextRepository contextRepository, IMethodInvoker invoker)
+        private static object GetContext(ICallRequest command, IInstanceRepository instanceRepository,
+            IMethodInvoker invoker, IEndPointContext endPointContext)
         {
             var context = command.ObjectId.ContextId != -1
-                ? contextRepository.GetObject<object>(command.ObjectId)
-                : contextRepository.GetSingleObject(invoker.SuitableType, command.ObjectId.OwnerId);
+                ? instanceRepository.GetObject<object>(command.ObjectId, endPointContext)
+                : instanceRepository.GetSingletonObject(invoker.SuitableType, endPointContext);
             return context;
         }
 
-        private object?[] CastedParams(ICallRequest command, IMethodInvoker invoker)
+        private object?[] CastedParams(ICallRequest command, IMethodInvoker invoker, IEndPointContext context)
         {
             object?[] castedParams = new object[invoker.ParameterTypes.Length];
             for (var i = 0; i < castedParams.Length; i++)
             {
-                castedParams[i] = _serialization!.Cast(command.Parameters![i], invoker.ParameterTypes[i]);
+                castedParams[i] = _serialization!.Cast(command.Parameters![i], invoker.ParameterTypes[i], context);
             }
 
             return castedParams;
         }
 
-        private void ThrowIfNotInjected(IContextRepository contextRepository)
+        private void ThrowIfNotInjected(IInstanceRepository instanceRepository)
         {
             if (_cancellationRepo is null)
                 throw new NullReferenceException("Method repository was not defined");
@@ -122,7 +114,7 @@ namespace mROA.Implementation.Backend
             if (_methodRepo is null)
                 throw new NullReferenceException("Method repository was not defined");
 
-            if (contextRepository is null)
+            if (instanceRepository is null)
                 throw new NullReferenceException("Context repository was not defined");
         }
 
@@ -147,6 +139,11 @@ namespace mROA.Implementation.Backend
             {
                 var finalResult = invoker.Invoke(instance, parameter, new object[] { executionContext });
 
+                if (!invoker.IsTrusted)
+                {
+                    return new AsyncCommandExecution();
+                }
+
                 if (invoker.IsVoid)
                 {
                     return new FinalCommandExecution
@@ -163,24 +160,27 @@ namespace mROA.Implementation.Backend
             }
             catch (Exception e)
             {
-                return new ExceptionCommandExecution
+                if (invoker.IsTrusted)
+                    return new ExceptionCommandExecution
+                    {
+                        Id = command.Id,
+                        Exception = e.ToString()
+                    };
+                return new AsyncCommandExecution
                 {
-                    Id = command.Id,
-                    Exception = e.ToString()
+                    Id = command.Id
                 };
             }
         }
 
         private ICommandExecution ExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
             ICallRequest command, ICancellationRepository cancellationRepository,
-            IRepresentationModule representationModule, RequestContext executionContext)
+            IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)
         {
             var tokenSource = new CancellationTokenSource();
             cancellationRepository.RegisterCancellation(command.Id, tokenSource);
             var token = tokenSource.Token;
-#if TRACE
-            token.Register(() => Console.WriteLine($"Cancellation requested check {command.Id}"));
-#endif
+
             try
             {
                 invoker.Invoke(instance, parameters, new object[] { executionContext, token }, _ =>
@@ -194,12 +194,10 @@ namespace mROA.Implementation.Backend
                     };
                     _cancellationRepo?.FreeCancelation(command.Id);
 
-                    var multiClientOwnershipRepository =
-                        TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
-
-                    multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
-                    representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution, payload);
-                    multiClientOwnershipRepository?.FreeOwnership();
+            
+                    if (invoker.IsTrusted)
+                        representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
+                            payload, context);
                 });
 
                 return new AsyncCommandExecution
@@ -209,17 +207,22 @@ namespace mROA.Implementation.Backend
             }
             catch (Exception e)
             {
-                return new ExceptionCommandExecution
+                if (invoker.IsTrusted)
+                    return new ExceptionCommandExecution
+                    {
+                        Id = command.Id,
+                        Exception = e.ToString()
+                    };
+                return new AsyncCommandExecution
                 {
-                    Id = command.Id,
-                    Exception = e.ToString()
+                    Id = command.Id
                 };
             }
         }
 
         private ICommandExecution TypedExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
             ICallRequest command, ICancellationRepository cancellationRepository,
-            IRepresentationModule representationModule, RequestContext executionContext)
+            IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)
         {
             var tokenSource = new CancellationTokenSource();
             cancellationRepository.RegisterCancellation(command.Id, tokenSource);
@@ -236,13 +239,9 @@ namespace mROA.Implementation.Backend
                             Result = finalResult
                         };
                         _cancellationRepo!.FreeCancelation(command.Id);
-
-                        var multiClientOwnershipRepository =
-                            TransmissionConfig.OwnershipRepository as MultiClientOwnershipRepository;
-                        multiClientOwnershipRepository?.RegisterOwnership(representationModule.Id);
+                        
                         representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
-                            payload);
-                        multiClientOwnershipRepository?.FreeOwnership();
+                            payload, context);
                     });
 
                 return new AsyncCommandExecution

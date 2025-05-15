@@ -1,20 +1,27 @@
-using System;
 using mROA.Abstract;
+using mROA.Implementation.Backend;
 
 namespace mROA.Implementation
 {
     public class EndPointContext : IEndPointContext
     {
-        public Func<int> OwnerFunc;
-        public IContextRepository RealRepository { get; set; }
-        public IContextRepository RemoteRepository { get; set; }
+        public IInstanceRepository RealRepository { get; set; }
+        public IInstanceRepository RemoteRepository { get; set; }
         public int HostId { get; set; }
 
-        public int OwnerId
+        public int OwnerId { get; set; }
+
+        public void Inject<T>(T dependency)
         {
-            get => OwnerFunc();
-            // ReSharper disable once UnusedMember.Global
-            set { OwnerFunc = () => value; }
+            switch (dependency)
+            {
+                case RemoteInstanceRepository remoteRepository:
+                    RemoteRepository = remoteRepository;
+                    break;
+                case InstanceRepository realRepository:
+                    RealRepository = realRepository;
+                    break;
+            }
         }
     }
 }

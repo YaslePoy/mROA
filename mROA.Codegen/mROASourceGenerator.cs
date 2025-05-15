@@ -291,23 +291,38 @@ namespace mROA.Codegen
                           $"{method.ReturnType.ToUnityString()} {method.Name}({string.Join(", ", method.Parameters.Select(ToFullString))}){{");
 
 
+            var isUntrusted = method.GetAttributes().Any(i => i.AttributeClass.Name == "UntrustedAttribute");
+
             var prefix = isAsync ? "await " : "";
             var postfix = !isAsync ? isVoid ? ".Wait()" : ".GetAwaiter().GetResult()" : "";
             var parameterLink = isParametrized
                 ? ", new System.Object[] { " + string.Join(", ", parameters.Select(i => i.Name)) + " }"
                 : string.Empty;
-            var tokenInsert = isAsync && method.Parameters.FirstOrDefault(i => i.Type.Name == "CancellationToken") is
-                { } tokenSymbol
-                ? ", cancellationToken : " + tokenSymbol.Name
-                : string.Empty;
-            var caller = isVoid
-                ? $"CallAsync({index}{parameterLink}{tokenInsert})"
-                : isAsync
-                    ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>({index}{parameterLink}{tokenInsert})"
-                    : $"GetResultAsync<{ToFullString(method.ReturnType)}>({index}{parameterLink}{tokenInsert})";
 
-            if (!isVoid)
-                prefix = "return " + prefix;
+            string caller;
+
+            if (isUntrusted)
+            {
+                caller = $"CallUntrustedAsync({index}{parameterLink})";
+            }
+            else
+            {
+                var tokenInsert = isAsync &&
+                                  method.Parameters.FirstOrDefault(i => i.Type.Name == "CancellationToken") is
+                                      { } tokenSymbol
+                    ? ", cancellationToken : " + tokenSymbol.Name
+                    : string.Empty;
+
+                caller = isVoid
+                    ? $"CallAsync({index}{parameterLink}{tokenInsert})"
+                    : isAsync
+                        ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>({index}{parameterLink}{tokenInsert})"
+                        : $"GetResultAsync<{ToFullString(method.ReturnType)}>({index}{parameterLink}{tokenInsert})";
+
+                if (!isVoid)
+                    prefix = "return " + prefix;
+
+            }
 
             sb.AppendLine("\t\t\t" + prefix + caller + postfix + ";");
 
@@ -365,6 +380,7 @@ namespace mROA.Codegen
                 invokerTemplate.AddDefine("parametersType", parameterTypes);
                 invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                 invokerTemplate.AddDefine("funcInvoking", funcInvoking);
+                invokerTemplate.AddDefine("isTrusted", (!isUntrusted).ToString().ToLower());
                 backend = invokerTemplate.Compile();
             }
             else
@@ -375,6 +391,7 @@ namespace mROA.Codegen
                 invokerTemplate.AddDefine("parametersType", parameterTypes);
                 invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                 invokerTemplate.AddDefine("funcInvoking", funcInvoking);
+                invokerTemplate.AddDefine("isTrusted", (!isUntrusted).ToString().ToLower());
                 backend = invokerTemplate.Compile();
             }
 
@@ -394,9 +411,11 @@ namespace mROA.Codegen
             var parametersDeclaration = string.Join(", ",
                 JoinWithComa(Enumerable.Range(0, parameters.Count).Select(i => "p" + i)));
 
+            
+            int pi = 0;
             var transferParameters =
-                JoinWithComa(parameters.Where(i => !ParameterFilterForType(i))
-                    .Select(i => "p" + parameters.IndexOf(i)));
+                JoinWithComa(parameters.Select(i => (i, pi++)).Where(i => !ParameterFilterForType(i.i))
+                    .Select(i => "p" + i.Item2));
 
             var requestIndex = parameters.FindIndex(i => i.Name == "RequestContext");
             if (requestIndex != -1)
@@ -423,15 +442,16 @@ namespace mROA.Codegen
         {
             var level = "\t\t\t";
 
-            var parameters = ((INamedTypeSymbol)eventSymbol.Type).TypeArguments;
-            var parsingParameters = parameters.RemoveAll(ParameterFilterForType).ToList();
+            int pi = 0;
+            var parameters = ((INamedTypeSymbol)eventSymbol.Type).TypeArguments.Select(i => (i, pi++)).ToImmutableArray();
+            var parsingParameters = parameters.RemoveAll(i => ParameterFilterForType(i.i)).ToList();
             var parameterTypes = string.Join(", ",
-                $"{string.Join(", ", parsingParameters.Select(p => $"typeof({p.ToUnityString()})"))}");
+                $"{string.Join(", ", parsingParameters.Select(p => $"typeof({p.i.ToUnityString()})"))}");
 
             var parametersInsertList = new List<string>();
 
             foreach (var parameter in parameters)
-                switch (parameter.Name)
+                switch (parameter.i.Name)
                 {
                     case "CancellationToken":
                         parametersInsertList.Add("(CancellationToken)special[1]");
@@ -440,8 +460,8 @@ namespace mROA.Codegen
                         parametersInsertList.Add("special[0] as RequestContext");
                         break;
                     default:
-                        parametersInsertList.Add(Caster(parameter,
-                            $"parameters[{parameters.IndexOf(parameter)}]"));
+                        parametersInsertList.Add(Caster(parameter.i,
+                            $"parameters[{parameter.Item2}]"));
                         break;
                 }
 
@@ -459,6 +479,7 @@ namespace mROA.Codegen
             invokerTemplate.AddDefine("parametersType", parameterTypes);
             invokerTemplate.AddDefine("suitableType", baseInterface.ToUnityString());
             invokerTemplate.AddDefine("funcInvoking", funcInvoking);
+            invokerTemplate.AddDefine("isTrusted", "true");
             var backend = invokerTemplate.Compile();
             _methodRepoTemplate.Insert("invoker", backend);
 
@@ -482,8 +503,8 @@ namespace mROA.Codegen
                     var parameterTypes = string.Join(", ",
                         $"{string.Join(", ", method.Parameters.Select(p => "typeof(" + p.Type.ToUnityString() + ")"))}");
                     var parameterInserts = string.Join(", ",
-                        method.Parameters.Select(
-                            p => Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
+                        method.Parameters.Select(p =>
+                            Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
 
                     var invokerTemplate = (TemplateDocument)_methodInvokerOriginal.Clone();
                     invokerTemplate.AddDefine("isVoid", "false");
@@ -492,6 +513,8 @@ namespace mROA.Codegen
                     invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                     invokerTemplate.AddDefine("funcInvoking",
                         $"(i as {method.ContainingType.ToUnityString()})[{parameterInserts}]");
+                    invokerTemplate.AddDefine("isTrusted", "true");
+
                     backend = invokerTemplate.Compile();
                 }
                 else
@@ -502,6 +525,8 @@ namespace mROA.Codegen
                     invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                     invokerTemplate.AddDefine("funcInvoking",
                         $"(i as {method.ContainingType.ToUnityString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name}");
+                    invokerTemplate.AddDefine("isTrusted", "true");
+
                     backend = invokerTemplate.Compile();
                 }
 
@@ -532,6 +557,8 @@ namespace mROA.Codegen
                     invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                     invokerTemplate.AddDefine("funcInvoking",
                         $"(i as {method.ContainingType.ToUnityString()})[{parameterInserts}] = {valueInsert}");
+                    invokerTemplate.AddDefine("isTrusted", "true");
+
                     backend = invokerTemplate.Compile();
                 }
                 else
@@ -545,6 +572,8 @@ namespace mROA.Codegen
                     invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                     invokerTemplate.AddDefine("funcInvoking",
                         $"(i as {method.ContainingType.ToUnityString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name} = {Caster((method.AssociatedSymbol as IPropertySymbol)!.Type, "parameters[0]")}");
+                    invokerTemplate.AddDefine("isTrusted", "true");
+
                     backend = invokerTemplate.Compile();
                 }
 
@@ -612,7 +641,6 @@ namespace mROA.Codegen
                 return parts.ToUnityString();
 
             return type.ToDisplayString();
-            
         }
 
         public static string ToUnityString(this IParameterSymbol parameter)

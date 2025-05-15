@@ -4,6 +4,6 @@ namespace mROA.Abstract
 {
     public interface IRemoteObjectFactory : IInjectableModule
     {
-        T Produce<T>(ComplexObjectIdentifier id);
+        T Produce<T>(ComplexObjectIdentifier id, IEndPointContext context);
     }
 }
