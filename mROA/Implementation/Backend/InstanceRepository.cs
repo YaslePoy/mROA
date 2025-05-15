@@ -61,7 +61,13 @@ namespace mROA.Implementation.Backend
             return (T)value;
         }
 
-        public object GetSingleObject(Type type, IEndPointContext context)
+        public T GetSingletonObject<T>(IEndPointContext context) where T : class, IShared
+        {
+            return GetSingletonObject(typeof(T), context) as T ??
+                   throw new ArgumentException("Unregistered singleton type");
+        }
+
+        public object GetSingletonObject(Type type, IEndPointContext context)
         {
             return _singletons.GetValueOrDefault(type.GetHashCode()) ??
                    throw new ArgumentException("Unregistered singleton type");

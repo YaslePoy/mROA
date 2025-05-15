@@ -46,8 +46,8 @@ class Program
         var context = builder.GetModule<RemoteInstanceRepository>();
 
         var factory =
-            context.GetSingleObject(typeof(IPrinterFactory),
-                builder.GetModule<IEndPointContext>()) as IPrinterFactory;
+            context.GetSingletonObject<IPrinterFactory>(
+                builder.GetModule<IEndPointContext>());
 
         using (var disposingPrinter = factory.Create("Test"))
         {
@@ -115,7 +115,7 @@ class Program
         DemoCheck.Dispose = true;
 
 
-        var loadSingleton = context.GetSingleObject(typeof(ILoadTest), builder.GetModule<IEndPointContext>()) as ILoadTest;
+        var loadSingleton = context.GetSingletonObject<ILoadTest>(builder.GetModule<IEndPointContext>());
 
 
         var cts = new CancellationTokenSource();

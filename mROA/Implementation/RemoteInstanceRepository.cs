@@ -42,7 +42,12 @@ namespace mROA.Implementation
             return remote;
         }
 
-        public object GetSingleObject(Type type, IEndPointContext context)
+        public T GetSingletonObject<T>(IEndPointContext context) where T : class, IShared
+        {
+            return GetSingletonObject(typeof(T), context) as T;
+        }
+
+        public object GetSingletonObject(Type type, IEndPointContext context)
         {
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");

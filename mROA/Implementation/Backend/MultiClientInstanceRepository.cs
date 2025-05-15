@@ -38,10 +38,16 @@ namespace mROA.Implementation.Backend
             return repository.GetObject<T>(id, context);
         }
 
-        public object GetSingleObject(Type type, IEndPointContext context)
+        public T GetSingletonObject<T>(IEndPointContext context) where T : class, IShared
         {
             var repository = GetRepositoryByClientId(context.OwnerId);
-            return repository.GetSingleObject(type, context);
+            return repository.GetSingletonObject<T>(context);
+        }
+
+        public object GetSingletonObject(Type type, IEndPointContext context)
+        {
+            var repository = GetRepositoryByClientId(context.OwnerId);
+            return repository.GetSingletonObject(type, context);
         }
 
         public int GetObjectIndex<T>(object o, IEndPointContext context)

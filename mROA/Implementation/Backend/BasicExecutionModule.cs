@@ -91,7 +91,7 @@ namespace mROA.Implementation.Backend
         {
             var context = command.ObjectId.ContextId != -1
                 ? instanceRepository.GetObject<object>(command.ObjectId, endPointContext)
-                : instanceRepository.GetSingleObject(invoker.SuitableType, endPointContext);
+                : instanceRepository.GetSingletonObject(invoker.SuitableType, endPointContext);
             return context;
         }
 

@@ -411,9 +411,11 @@ namespace mROA.Codegen
             var parametersDeclaration = string.Join(", ",
                 JoinWithComa(Enumerable.Range(0, parameters.Count).Select(i => "p" + i)));
 
+            
+            int pi = 0;
             var transferParameters =
-                JoinWithComa(parameters.Where(i => !ParameterFilterForType(i))
-                    .Select(i => "p" + parameters.IndexOf(i)));
+                JoinWithComa(parameters.Select(i => (i, pi++)).Where(i => !ParameterFilterForType(i.i))
+                    .Select(i => "p" + i.Item2));
 
             var requestIndex = parameters.FindIndex(i => i.Name == "RequestContext");
             if (requestIndex != -1)
@@ -440,15 +442,16 @@ namespace mROA.Codegen
         {
             var level = "\t\t\t";
 
-            var parameters = ((INamedTypeSymbol)eventSymbol.Type).TypeArguments;
-            var parsingParameters = parameters.RemoveAll(ParameterFilterForType).ToList();
+            int pi = 0;
+            var parameters = ((INamedTypeSymbol)eventSymbol.Type).TypeArguments.Select(i => (i, pi++)).ToImmutableArray();
+            var parsingParameters = parameters.RemoveAll(i => ParameterFilterForType(i.i)).ToList();
             var parameterTypes = string.Join(", ",
-                $"{string.Join(", ", parsingParameters.Select(p => $"typeof({p.ToUnityString()})"))}");
+                $"{string.Join(", ", parsingParameters.Select(p => $"typeof({p.i.ToUnityString()})"))}");
 
             var parametersInsertList = new List<string>();
 
             foreach (var parameter in parameters)
-                switch (parameter.Name)
+                switch (parameter.i.Name)
                 {
                     case "CancellationToken":
                         parametersInsertList.Add("(CancellationToken)special[1]");
@@ -457,8 +460,8 @@ namespace mROA.Codegen
                         parametersInsertList.Add("special[0] as RequestContext");
                         break;
                     default:
-                        parametersInsertList.Add(Caster(parameter,
-                            $"parameters[{parameters.IndexOf(parameter)}]"));
+                        parametersInsertList.Add(Caster(parameter.i,
+                            $"parameters[{parameter.Item2}]"));
                         break;
                 }
 
