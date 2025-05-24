@@ -28,10 +28,10 @@ namespace mROA.Implementation
                 SingleWriter = false,
             });
             _receiveReader = ReceiveChanel.Reader;
-            _outputTrustedChannel = Channel.CreateBounded<NetworkMessageHeader>(new BoundedChannelOptions(1)
+            _outputTrustedChannel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
             {
                 SingleReader = true,
-                SingleWriter = true,
+                SingleWriter = true
             });
             _trustedWriter = _outputTrustedChannel.Writer;
             _outputUntrustedChannel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
@@ -49,7 +49,7 @@ namespace mROA.Implementation
 
         public ChannelReader<NetworkMessageHeader> TrustedPostChanel => _outputTrustedChannel.Reader;
         public ChannelReader<NetworkMessageHeader> UntrustedPostChanel => _outputUntrustedChannel.Reader;
-        public Func<bool> IsConnected { get; set; } = () => false; 
+        public Func<bool> IsConnected { get; set; } = () => false;
 
         public void Inject<T>(T dependency)
         {
@@ -121,12 +121,8 @@ namespace mROA.Implementation
             {
                 await PostMessageAsync(
                     new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId)), _context));
-                await ReceiveChanel.Reader.ReadAsync();
             }
-            else
-            {
-                await _trustedWriter.WriteAsync(new NetworkMessageHeader());
-            }
+
 
             _reconnection.TrySetResult(Stream.Null);
             _isConnected = true;
