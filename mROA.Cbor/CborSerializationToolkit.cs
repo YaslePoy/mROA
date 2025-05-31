@@ -19,11 +19,11 @@ namespace mROA.Cbor
             return writer.Encode();
         }
 
-        public void Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext context)
+        public int Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext context)
         {
             var writer = new CborWriter();
             WriteData(objectToSerialize, writer, context);
-            writer.Encode(destination);
+            return writer.Encode(destination);
         }
 
         public T Deserialize<T>(byte[] rawData, IEndPointContext? context)

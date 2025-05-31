@@ -39,5 +39,10 @@ namespace mROA.Implementation
         public EMessageType MessageType { get; set; }
 
         public byte[] Data { get; set; }
+
+        public override string ToString()
+        {
+            return $" {Id}:{MessageType} [{Data.Length}]";
+        }
     }
 }

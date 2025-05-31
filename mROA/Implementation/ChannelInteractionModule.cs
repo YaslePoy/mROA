@@ -121,6 +121,11 @@ namespace mROA.Implementation
             {
                 await PostMessageAsync(
                     new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId)), _context));
+                await ReceiveChanel.Reader.ReadAsync();
+            }
+            else
+            {
+                await _trustedWriter.WriteAsync(new NetworkMessageHeader());
             }
 
 

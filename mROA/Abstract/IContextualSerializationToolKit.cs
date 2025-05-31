@@ -5,7 +5,7 @@ namespace mROA.Abstract
     public interface IContextualSerializationToolKit : IInjectableModule
     {
         byte[] Serialize(object objectToSerialize, IEndPointContext? context);
-        void Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext? context);
+        int Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext? context);
         T Deserialize<T>(byte[] rawData, IEndPointContext? context);
         object? Deserialize(byte[] rawData, Type type, IEndPointContext? context);
         T Deserialize<T>(ReadOnlyMemory<byte> rawMemory, IEndPointContext? context);
