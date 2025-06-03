@@ -17,5 +17,6 @@ namespace mROA.Abstract
         Task PostMessageUntrustedAsync(NetworkMessageHeader messageHeader);
         event Action<int> OnDisconnected;
         Task Restart(bool sendRecovery);
+        void PassReconnection();
     }
 }

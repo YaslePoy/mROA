@@ -128,7 +128,11 @@ namespace mROA.Implementation
                 await _trustedWriter.WriteAsync(new NetworkMessageHeader());
             }
 
+            PassReconnection();
+        }
 
+        public void PassReconnection()
+        {
             _reconnection.TrySetResult(Stream.Null);
             _isConnected = true;
             _reconnection = new TaskCompletionSource<Stream>();

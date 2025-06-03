@@ -25,20 +25,20 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false"/>
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
 
     <ItemGroup>
-        <EmbeddedResource Include="PartialInterface.cstmpl"/>
-        <EmbeddedResource Include="RemoteEndpoint.cstmpl"/>
-        <EmbeddedResource Include="RemoteTypeBinder.cstmpl"/>
-        <None Remove="MethodRepo.cstmpl"/>
-        <EmbeddedResource Include="MethodRepo.cstmpl"/>
+        <EmbeddedResource Include="PartialInterface.cstmpl" />
+        <EmbeddedResource Include="RemoteEndpoint.cstmpl" />
+        <EmbeddedResource Include="RemoteTypeBinder.cstmpl" />
+        <None Remove="MethodRepo.cstmpl" />
+        <EmbeddedResource Include="MethodRepo.cstmpl" />
     </ItemGroup>
 
 

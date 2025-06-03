@@ -37,7 +37,7 @@ class Program
         builder.Modules.Add(new CancellationRepository());
 
         builder.Build();
-        
+
         var frontendBridge = builder.GetModule<IFrontendBridge>()!;
         await frontendBridge.Connect();
         _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
@@ -51,11 +51,9 @@ class Program
 
         using (var disposingPrinter = factory.Create("Test"))
         {
-            disposingPrinter.SetFingerPrint(new[] { 1, 2, 3 }).ContinueWith(r =>
-            {
-                Console.WriteLine(r.Status);
-            });
-            
+            disposingPrinter.SetFingerPrint(new[] { 1, 2, 3 }).ContinueWith(r => { Console.WriteLine(r.Status); });
+
+            await disposingPrinter.IntTest(new MyData { Id = 5, Score = 7, Name = "Test" });
             DemoCheck.CreatingPrinter = true;
             disposingPrinter.OnPrint += (_, _) =>
             {
@@ -74,7 +72,7 @@ class Program
 
             disposingPrinter.SomeoneIsApproaching("Mikhail");
             Console.WriteLine("Approaching detected");
-            
+
             factory.Register(new ClientBasedPrinter());
             factory.Register(disposingPrinter);
             DemoCheck.ClientBasedImplementation = true;
@@ -134,18 +132,15 @@ class Program
         {
             x = loadSingleton.Next(x);
         }
-        
+
         timer.Stop();
         Console.WriteLine("X is {0}", x);
         Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
         Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
-        
+
         frontendBridge.Disconnect();
 
         DemoCheck.Show();
         Console.ReadKey();
-
-        
-        
     }
 }

@@ -18,6 +18,11 @@ namespace Example.Frontend
             return Task.CompletedTask;
         }
 
+        public Task IntTest(MyData data)
+        {
+            throw new NotImplementedException();
+        }
+
         public void OnPrintExternal(IPage p0, RequestContext ro)
         {
         }

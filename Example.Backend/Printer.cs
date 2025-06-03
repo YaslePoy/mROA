@@ -21,6 +21,12 @@ namespace Example.Backend
             return Task.CompletedTask;
         }
 
+        public Task IntTest(MyData data)
+        {
+            Console.WriteLine(data);
+            return Task.CompletedTask;
+        }
+
         public void OnPrintExternal(IPage p0, RequestContext ro)
         {
             OnPrint?.Invoke(p0, ro);

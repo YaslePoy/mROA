@@ -65,7 +65,7 @@ namespace mROA.Cbor
                 property.SetValue(instance,
                     _properties[index] is IPreParsedValue ppv
                         ? ppv.ToObject(property.PropertyType, context)
-                        : _properties[index]);
+                        : Convert.ChangeType(_properties[index], property.PropertyType));
             }
 
             return instance;
