@@ -55,8 +55,11 @@ namespace mROA.Implementation
             var representationModule =
                 _representationProducer.Produce(context.OwnerId);
 
-            _producedRemoteEndpoints.Add((Activator.CreateInstance(RemoteTypes[type], -1,
-                representationModule, context) as RemoteObjectBase)!);
+            var instance = Activator.CreateInstance(RemoteTypes[type], -1, representationModule, context);
+            
+            var remoteObjectBase = (RemoteObjectBase)instance;
+            
+            _producedRemoteEndpoints.Add(remoteObjectBase);
 
             return _producedRemoteEndpoints.Last();
         }

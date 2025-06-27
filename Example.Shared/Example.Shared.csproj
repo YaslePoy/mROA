@@ -13,4 +13,8 @@
 
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="mROA.Codegen" Version="2.0.4" />
+    </ItemGroup>
+
 </Project>

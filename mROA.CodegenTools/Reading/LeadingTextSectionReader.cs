@@ -33,9 +33,8 @@ namespace mROA.CodegenTools.Reading
         protected string GetTagValue(int from, int to)
         {
             var realStart = from + 4;
-            var span = TemplateText.AsSpan();
-            var slice = span.Slice(realStart, to - realStart);
-            return new string(slice.ToArray());
+            var span = TemplateText.Substring(realStart, to - realStart);
+            return span;
         }
     }
 }

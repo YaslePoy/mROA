@@ -8,8 +8,8 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using mROA.Codegen.Tools;
-using mROA.Codegen.Tools.Reading;
+using mROA.CodegenTools;
+using mROA.CodegenTools.Reading;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
@@ -40,16 +40,25 @@ namespace mROA.Codegen
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            _methodRepoTemplate = TemplateReader.FromEmbeddedResource("MethodRepo.cstmpl");
-            _methodInvokerOriginal =
-                ((InnerTemplateSection)_methodRepoTemplate["syncInvoker"]!).InnerTemplate;
-            _classTemplateOriginal = TemplateReader.FromEmbeddedResource("RemoteEndpoint.cstmpl");
-            _binderTemplate = TemplateReader.FromEmbeddedResource("RemoteTypeBinder.cstmpl");
-            _interfaceTemplateOriginal = TemplateReader.FromEmbeddedResource("PartialInterface.cstmpl");
+            try
+            {
+                
+                _methodRepoTemplate = TemplateReader.FromEmbeddedResource("MethodRepo.cstmpl");
+                _methodInvokerOriginal =
+                    ((InnerTemplateSection)_methodRepoTemplate["syncInvoker"]!).InnerTemplate;
+                _classTemplateOriginal = TemplateReader.FromEmbeddedResource("RemoteEndpoint.cstmpl");
+                _binderTemplate = TemplateReader.FromEmbeddedResource("RemoteTypeBinder.cstmpl");
+                _interfaceTemplateOriginal = TemplateReader.FromEmbeddedResource("PartialInterface.cstmpl");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
+            // return;
             try
             {
                 var trees = context.Compilation.SyntaxTrees;
