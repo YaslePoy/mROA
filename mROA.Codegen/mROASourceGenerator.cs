@@ -46,7 +46,7 @@ namespace mROA.Codegen
                 _methodRepoTemplate = TemplateReader.FromEmbeddedResource("MethodRepo.cstmpl");
                 _methodInvokerOriginal =
                     ((InnerTemplateSection)_methodRepoTemplate["syncInvoker"]!).InnerTemplate;
-                _classTemplateOriginal = TemplateReader.FromEmbeddedResource("RemoteEndpoint.cstmpl");
+                _classTemplateOriginal = TemplateReader.FromEmbeddedResource("Proxy.cstmpl");
                 _binderTemplate = TemplateReader.FromEmbeddedResource("RemoteTypeBinder.cstmpl");
                 _interfaceTemplateOriginal = TemplateReader.FromEmbeddedResource("PartialInterface.cstmpl");
             }
@@ -116,7 +116,7 @@ namespace mROA.Codegen
 
                 var originalName = className;
 
-                className = className.TrimStart('I') + "RemoteEndpoint";
+                className = className.TrimStart('I') + "Proxy";
 
                 _classTemplate = (TemplateDocument)_classTemplateOriginal.Clone();
                 var propertiesAccessMethods = new List<(string, IMethodSymbol)>();

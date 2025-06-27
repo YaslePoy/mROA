@@ -7,7 +7,7 @@ namespace mROA.Implementation
 {
     public class RemoteInstanceRepository : IInstanceRepository
     {
-        private List<RemoteObjectBase> _producedRemoteEndpoints = new();
+        private List<RemoteObjectBase> _producedProxys = new();
         public static Dictionary<Type, Type> RemoteTypes = new();
         private IRepresentationModuleProducer? _representationProducer;
 
@@ -25,7 +25,7 @@ namespace mROA.Implementation
 
         public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)
         {
-            var index = _producedRemoteEndpoints.Find(i => i.Identifier.Equals(id));
+            var index = _producedProxys.Find(i => i.Identifier.Equals(id));
             if (index is not null)
                 return (T)(index as object);
             if (_representationProducer == null)
@@ -37,7 +37,7 @@ namespace mROA.Implementation
             var remote = (T)Activator.CreateInstance(remoteType, id.ContextId,
                 representationModule, context)!;
 
-            _producedRemoteEndpoints.Add((remote as RemoteObjectBase)!);
+            _producedProxys.Add((remote as RemoteObjectBase)!);
 
             return remote;
         }
@@ -59,9 +59,9 @@ namespace mROA.Implementation
             
             var remoteObjectBase = (RemoteObjectBase)instance;
             
-            _producedRemoteEndpoints.Add(remoteObjectBase);
+            _producedProxys.Add(remoteObjectBase);
 
-            return _producedRemoteEndpoints.Last();
+            return _producedProxys.Last();
         }
 
         public int GetObjectIndex<T>(object o, IEndPointContext context)

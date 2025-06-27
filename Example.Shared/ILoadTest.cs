@@ -17,10 +17,10 @@ namespace Example.Shared
         Task AsyncTest(CancellationToken token = default);
     }
     
-    partial class LoadTestRemoteEndpoint2
+    partial class LoadTestProxy2
         : RemoteObjectBase, ILoadTest
     {
-        public LoadTestRemoteEndpoint2(int id, IRepresentationModule representationModule, IEndPointContext context) 
+        public LoadTestProxy2(int id, IRepresentationModule representationModule, IEndPointContext context) 
             : base(id, representationModule, context)
         {
         }
