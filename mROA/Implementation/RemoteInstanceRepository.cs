@@ -8,7 +8,10 @@ namespace mROA.Implementation
     public class RemoteInstanceRepository : IInstanceRepository
     {
         private List<RemoteObjectBase> _producedProxys = new();
-        public static Dictionary<Type, Type> RemoteTypes = new();
+
+        public static Dictionary<Type, Func<int, IRepresentationModule, IEndPointContext, RemoteObjectBase>>
+            RemoteTypeFactories = new();
+
         private IRepresentationModuleProducer? _representationProducer;
 
         public int HostId { get; set; }
@@ -23,7 +26,7 @@ namespace mROA.Implementation
             throw new NotSupportedException();
         }
 
-        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)
+        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context) where T : class
         {
             var index = _producedProxys.Find(i => i.Identifier.Equals(id));
             if (index is not null)
@@ -31,20 +34,20 @@ namespace mROA.Implementation
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
 
-            if (!RemoteTypes.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
+            if (!RemoteTypeFactories.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
             var representationModule =
                 _representationProducer.Produce(context.OwnerId);
-            var remote = (T)Activator.CreateInstance(remoteType, id.ContextId,
-                representationModule, context)!;
+            var remote = remoteType(id.ContextId,
+                representationModule, context);
 
-            _producedProxys.Add((remote as RemoteObjectBase)!);
+            _producedProxys.Add(remote!);
 
-            return remote;
+            return (remote as T)!;
         }
 
         public T GetSingletonObject<T>(IEndPointContext context) where T : class, IShared
         {
-            return GetSingletonObject(typeof(T), context) as T;
+            return (GetSingletonObject(typeof(T), context) as T)!;
         }
 
         public object GetSingletonObject(Type type, IEndPointContext context)
@@ -55,10 +58,10 @@ namespace mROA.Implementation
             var representationModule =
                 _representationProducer.Produce(context.OwnerId);
 
-            var instance = Activator.CreateInstance(RemoteTypes[type], -1, representationModule, context);
-            
-            var remoteObjectBase = (RemoteObjectBase)instance;
-            
+            var instance = RemoteTypeFactories[type](-1, representationModule, context)!;
+
+            var remoteObjectBase = instance;
+
             _producedProxys.Add(remoteObjectBase);
 
             return _producedProxys.Last();

@@ -6,10 +6,11 @@ namespace mROA.Implementation.Bootstrap
 {
     public class FullMixBuilder
     {
-        public List<IInjectableModule> Modules { get; } = new() { };
+        public List<IInjectableModule> Modules { get; } = new();
 
         public void Build()
         {
+            
             foreach (var module in Modules)
             foreach (var injection in Modules)
                 module.Inject(injection);

@@ -32,7 +32,7 @@ namespace mROA.Implementation.Backend
             repository.ClearObject(id, context);
         }
 
-        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)
+        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)  where T : class
         {
             var repository = GetRepositoryByClientId(context.OwnerId);
             return repository.GetObject<T>(id, context);

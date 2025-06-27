@@ -16,7 +16,7 @@ namespace mROA.Implementation
         object UniversalValue { get; set; }
     }
 
-    public class SharedObjectShellShell<T> : ISharedObjectShell where T : notnull
+    public class SharedObjectShellShell<T> : ISharedObjectShell where T : class
     {
         private ComplexObjectIdentifier _identifier = ComplexObjectIdentifier.Null;
 
@@ -26,7 +26,7 @@ namespace mROA.Implementation
         // ReSharper disable once UnusedMember.Global
         public SharedObjectShellShell()
         {
-            _value = default;
+            _value = null;
             EndPointContext = new EndPointContext();
         }
 

@@ -175,7 +175,7 @@ namespace mROA.Codegen
                 context.AddSource($"{className}.g.cs", SourceText.From(code, Encoding.UTF8));
 #endif
                 _binderTemplate.Insert("remoteTypePair",
-                    $"{{ typeof({classSymbol.ToUnityString()}), typeof({namespaceName}.{className}) }}");
+                    $"{{ typeof({classSymbol.ToUnityString()}), (i, r, c) => new {namespaceName}.{className}(i, r, c) }}");
             }
 
             if (totalMethods.Count != 0)

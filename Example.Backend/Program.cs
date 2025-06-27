@@ -13,6 +13,8 @@ class Program
 {
     public static void Main(string[] args)
     {
+        new mROA.Codegen.CoCodegenMethodRepository();
+        new CoCodegenMethodRepository();
         var builder = new FullMixBuilder();
         // builder.UseJsonSerialisation();
         builder.Modules.Add(new CborSerializationToolkit());

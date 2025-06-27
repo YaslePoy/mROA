@@ -11,7 +11,7 @@ namespace mROA.Codegen
     public sealed class RemoteTypeBinder
     {
         static RemoteTypeBinder(){
-            RemoteInstanceRepository.RemoteTypes = new Dictionary<Type, Type> {
+            RemoteInstanceRepository.RemoteTypeFactories = new Dictionary<Type, Func<int, IRepresentationModule, IEndPointContext, RemoteObjectBase>> {
                 <!I remoteTypePair r sep typesSep><!D typesSep>,
                 <!D>
             };

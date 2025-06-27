@@ -49,7 +49,7 @@ namespace mROA.Implementation.Backend
             _storage.Free(id.ContextId);
         }
 
-        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)
+        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)  where T : class
         {
             var value = _storage.GetValue(id.ContextId);
 

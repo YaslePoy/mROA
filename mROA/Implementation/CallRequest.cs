@@ -23,6 +23,7 @@ namespace mROA.Implementation
 
         public override string ToString()
         {
+            
             return $"Call request {{ Id : {Id}, CommandId : {CommandId}, ObjectId : {ObjectId} }}";
         }
     }
