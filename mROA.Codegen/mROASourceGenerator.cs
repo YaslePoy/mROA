@@ -22,7 +22,7 @@ namespace mROA.Codegen
     ///     performance overhead.
     /// </summary>
     [Generator]
-    public class mROAGenerator : ISourceGenerator
+    public class mROAGenerator : IIncrementalGenerator
     {
         private static readonly Predicate<IParameterSymbol> ParameterFilter =
             i => i.Type.Name is "CancellationToken" or "RequestContext";
@@ -56,38 +56,38 @@ namespace mROA.Codegen
             }
         }
 
-        public void Execute(GeneratorExecutionContext context)
-        {
-            // return;
-            try
-            {
-                var trees = context.Compilation.SyntaxTrees;
+        // public void Execute(GeneratorExecutionContext context)
+        // {
+        //     // return;
+        //     try
+        //     {
+        //         var trees = context.Compilation.SyntaxTrees;
+        //
+        //         var interfaces = new List<InterfaceDeclarationSyntax>();
+        //         foreach (var tree in trees)
+        //         {
+        //             var node = (CompilationUnitSyntax)tree.GetRoot();
+        //
+        //             foreach (var member in node.Members)
+        //                 if (member is InterfaceDeclarationSyntax ids)
+        //                     interfaces.Add(ids);
+        //                 else if (member is NamespaceDeclarationSyntax nds)
+        //                     foreach (var inside in nds.Members)
+        //
+        //                         if (inside is InterfaceDeclarationSyntax ids2)
+        //                             if (ContainsSoiAttribute(ids2.AttributeLists, context, ids2))
+        //                                 interfaces.Add(ids2);
+        //         }
+        //
+        //         GenerateCode(context, context.Compilation, interfaces.ToImmutableArray());
+        //     }
+        //     catch (Exception)
+        //     {
+        //         Console.WriteLine("ERROR: Unable to load method repository");
+        //     }
+        // }
 
-                var interfaces = new List<InterfaceDeclarationSyntax>();
-                foreach (var tree in trees)
-                {
-                    var node = (CompilationUnitSyntax)tree.GetRoot();
-
-                    foreach (var member in node.Members)
-                        if (member is InterfaceDeclarationSyntax ids)
-                            interfaces.Add(ids);
-                        else if (member is NamespaceDeclarationSyntax nds)
-                            foreach (var inside in nds.Members)
-
-                                if (inside is InterfaceDeclarationSyntax ids2)
-                                    if (ContainsSoiAttribute(ids2.AttributeLists, context, ids2))
-                                        interfaces.Add(ids2);
-                }
-
-                GenerateCode(context, context.Compilation, interfaces.ToImmutableArray());
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("ERROR: Unable to load method repository");
-            }
-        }
-
-        private void GenerateCode(GeneratorExecutionContext context, Compilation compilation,
+        private void GenerateCode(SourceProductionContext context, Compilation compilation,
             ImmutableArray<InterfaceDeclarationSyntax> classes)
         {
             var totalMethods = new List<IMethodSymbol>();
@@ -196,7 +196,7 @@ namespace mROA.Codegen
         }
 
         private void GenerateEventImplementation(INamedTypeSymbol classSymbol, List<string> invokers,
-            GeneratorExecutionContext context)
+            SourceProductionContext context)
         {
             var events = classSymbol.AllInterfaces.Add(classSymbol).SelectMany(i => i.GetMembers())
                 .OfType<IEventSymbol>().ToList();
@@ -610,24 +610,26 @@ namespace mROA.Codegen
             return generics.Length == 0 ? "void" : generics[0].ToUnityString();
         }
 
-        private bool ContainsSoiAttribute(SyntaxList<AttributeListSyntax> attributes, GeneratorExecutionContext context,
-            InterfaceDeclarationSyntax interfaceDeclarationSyntax)
+        private static (InterfaceDeclarationSyntax node, bool usefull) ContainsSoiAttribute(
+            GeneratorSyntaxContext context)
         {
-            foreach (var attributeSyntax in
-                     attributes.SelectMany(attributeListSyntax => attributeListSyntax.Attributes))
+            var ids = (InterfaceDeclarationSyntax)context.Node;
+
+            // Go through all attributes of the class.
+            foreach (AttributeListSyntax attributeListSyntax in ids.AttributeLists)
+            foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
             {
-                if (context.Compilation.GetSemanticModel(interfaceDeclarationSyntax.SyntaxTree)
-                        .GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
+                if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
                     continue; // if we can't get the symbol, ignore it
 
-                var attributeName = attributeSymbol.ContainingType.ToDisplayString();
+                string attributeName = attributeSymbol.ContainingType.ToDisplayString();
 
                 // Check the full name of the [Report] attribute.
-                if (attributeName == "mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
-                    return true;
+                if (attributeName == $"mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
+                    return  (ids,true);
             }
 
-            return false;
+            return (ids ,false);
         }
 
         private List<IMethodSymbol> CollectMembers(INamedTypeSymbol type)
@@ -637,6 +639,21 @@ namespace mROA.Codegen
 
             methods.RemoveAll(m => m.Name == "Dispose");
             return methods.OrderBy(i => i.Name).ToList();
+        }
+
+        public void Initialize(IncrementalGeneratorInitializationContext context)
+        {
+            _methodRepoTemplate = TemplateReader.FromEmbeddedResource("MethodRepo.cstmpl");
+            _methodInvokerOriginal =
+                ((InnerTemplateSection)_methodRepoTemplate["syncInvoker"]!).InnerTemplate;
+            _classTemplateOriginal = TemplateReader.FromEmbeddedResource("Proxy.cstmpl");
+            _binderTemplate = TemplateReader.FromEmbeddedResource("RemoteTypeBinder.cstmpl");
+            _interfaceTemplateOriginal = TemplateReader.FromEmbeddedResource("PartialInterface.cstmpl");
+            
+            var syntaxes = context.SyntaxProvider.CreateSyntaxProvider(
+                (static (node, _) => node is InterfaceDeclarationSyntax),  static (node, _) => ContainsSoiAttribute(node)).Where(i => i.usefull).Select((node, _) => node.node);
+            
+            context.RegisterSourceOutput(context.CompilationProvider.Combine(syntaxes.Collect()), (productionContext, pair) => GenerateCode(productionContext, pair.Left, pair.Right));
         }
     }
 
