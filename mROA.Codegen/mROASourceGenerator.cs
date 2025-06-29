@@ -94,7 +94,7 @@ namespace mROA.Codegen
 
 
             var invokers = new List<string>();
-            var declarations = classes.ToList().OrderBy(i => i.Identifier.Text).ToList();
+            var declarations = classes.ToList();
             foreach (var classDeclarationSyntax in declarations)
             {
                 var semanticModel = compilation.GetSemanticModel(classDeclarationSyntax.SyntaxTree);

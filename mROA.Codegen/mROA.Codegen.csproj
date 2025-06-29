@@ -42,15 +42,5 @@
         <EmbeddedResource Include="Proxy.cstmpl" />
     </ItemGroup>
 
-    <PropertyGroup>
-        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
-    </PropertyGroup>
-    
-    <Target Name="GetDependencyTargetPaths">
-        <ItemGroup>
-            <TargetPathWithTargetPlatformMoniker Include="$(PKGmROA_CodegenTools)\lib\netstandard2.0\mROA.CodegenTools.dll" IncludeRuntimeDependency="false" />
-        </ItemGroup>
-    </Target>
-
 
 </Project>
