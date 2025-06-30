@@ -45,6 +45,7 @@ class Program
         Console.WriteLine(builder.GetModule<IEndPointContext>().HostId);
         var context = builder.GetModule<RemoteInstanceRepository>();
 
+        #if !JUST_LOAD
         var factory =
             context.GetSingletonObject<IPrinterFactory>(
                 builder.GetModule<IEndPointContext>());
@@ -111,11 +112,11 @@ class Program
         }
 
         DemoCheck.Dispose = true;
-
+#endif
 
         var loadSingleton = context.GetSingletonObject<ILoadTest>(builder.GetModule<IEndPointContext>());
 
-
+#if !JUST_LOAD
         var cts = new CancellationTokenSource();
         var token = cts.Token;
         var t = Task.Run(async () => await loadSingleton!.AsyncTest(token));
@@ -124,7 +125,8 @@ class Program
         cts.Cancel();
         Console.WriteLine($"Token state {cts.Token.IsCancellationRequested}");
         DemoCheck.TaskCancelation = true;
-
+#endif
+        
         const int iterations = 10000;
         var timer = Stopwatch.StartNew();
         var x = 0;
@@ -137,6 +139,7 @@ class Program
         Console.WriteLine("X is {0}", x);
         Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
         Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
+            Console.WriteLine($"Serialization time: {CborSerializationToolkit.SerializationTime}");
 
         frontendBridge.Disconnect();
 

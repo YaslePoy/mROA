@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Formats.Cbor;
 using System.Linq;
 using System.Reflection;
@@ -12,11 +13,16 @@ namespace mROA.Cbor
 {
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
+        public static TimeSpan SerializationTime = TimeSpan.Zero;
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
+            var sw = Stopwatch.StartNew();
             var writer = new CborWriter();
             WriteData(objectToSerialize, writer, context);
-            return writer.Encode();
+            var result =  writer.Encode();
+            sw.Stop();
+            SerializationTime = SerializationTime.Add(sw.Elapsed);
+            return result;
         }
 
         public int Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext context)

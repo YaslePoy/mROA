@@ -26,7 +26,8 @@ namespace Example.Frontend
                 if (value)
                 {
                     Console.BackgroundColor = ConsoleColor.Green;
-                }else Console.BackgroundColor = ConsoleColor.Gray;
+                }
+                else Console.BackgroundColor = ConsoleColor.Gray;
 
                 Console.Write($"{field.Name}");
                 Console.BackgroundColor = ConsoleColor.Black;
