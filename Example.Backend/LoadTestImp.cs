@@ -9,9 +9,9 @@ namespace Example.Backend
     [SharedObjectSingleton]
     public class LoadTestImp : ILoadTest
     {
-        public int Next(int last)
+        public Task<int> Next(int last)
         {
-            return last + 1;
+            return Task.FromResult( last + 1);
         }
 
         public int Last(int next)

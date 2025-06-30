@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Channels;
@@ -158,6 +159,7 @@ namespace mROA.Implementation
 
         public class StreamExtractor
         {
+            private static Stopwatch profiler = new Stopwatch();
             private readonly Stream _ioStream;
             private readonly IContextualSerializationToolKit _serializationToolkit;
             private const int BufferSize = ushort.MaxValue;
@@ -171,6 +173,7 @@ namespace mROA.Implementation
                 _ioStream = ioStream;
                 _serializationToolkit = serializationToolkit;
                 _context = context;
+                profiler.Start();
             }
 
             public Action<NetworkMessageHeader> MessageReceived = _ => { };
@@ -194,11 +197,14 @@ namespace mROA.Implementation
 
             public async Task SingleReceive(CancellationToken token = default)
             {
+                Console.WriteLine($"Receive start. Time: {profiler.ElapsedMilliseconds}ms");
                 var len = ReadMessageLength();
+                Console.WriteLine($"Received len {len}. Time: {profiler.ElapsedMilliseconds}ms");
                 var localSpan = _buffer[..len];
 
                 await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: token);
-
+                Console.WriteLine($"Received. Time: {profiler.ElapsedMilliseconds}ms");
+                profiler.Restart();
                 var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan, _context);
                 MessageReceived(message);
             }
@@ -215,9 +221,13 @@ namespace mROA.Implementation
             {
                 var rawMessage = _serializationToolkit.Serialize(message, _context);
                 var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
+                Console.WriteLine($"Send start. Time: {profiler.ElapsedMilliseconds}ms");
 
                 await _ioStream.WriteAsync(header, token);
                 await _ioStream.WriteAsync(rawMessage, token);
+                Console.WriteLine($"Send. Time: {profiler.ElapsedMilliseconds}ms");
+                profiler.Restart();
+                
             }
 
             public async Task SendFromChannel(ChannelReader<NetworkMessageHeader> channel,

@@ -20,7 +20,7 @@ class Program
         builder.Modules.Add(new BackendIdentityGenerator());
         // builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567), typeof(NextGenerationInteractionModule),
         //     builder.GetModule<IIdentityGenerator>()!);
-        var listening = new IPEndPoint(IPAddress.Loopback, 4567);
+        var listening = new IPEndPoint(IPAddress.Any, 4567);
         builder.UseNetworkGateway(listening, typeof(ChannelInteractionModule),
             builder.GetModule<IIdentityGenerator>()!);
         builder.Modules.Add(new UdpGateway(listening));
