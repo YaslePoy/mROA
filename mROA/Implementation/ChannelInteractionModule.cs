@@ -166,7 +166,7 @@ namespace mROA.Implementation
             private readonly Memory<byte> _buffer = new byte[BufferSize];
             private bool _manualConnectionState = true;
             private readonly IEndPointContext _context;
-
+            private readonly byte[] _lenBuffer;
             public StreamExtractor(Stream ioStream, IContextualSerializationToolKit serializationToolkit,
                 IEndPointContext context)
             {
@@ -174,23 +174,16 @@ namespace mROA.Implementation
                 _serializationToolkit = serializationToolkit;
                 _context = context;
                 profiler.Start();
+                _lenBuffer = new byte[2];
             }
 
             public Action<NetworkMessageHeader> MessageReceived = _ => { };
 
-            private ushort ReadMessageLength()
+            private async Task<ushort> ReadMessageLength()
             {
-                var firstBit = _ioStream.ReadByte();
-                if (firstBit == -1)
-                {
-                    _manualConnectionState = false;
-                    throw new EndOfStreamException();
-                }
-
-                _manualConnectionState = true;
-                var secondBit = (byte)_ioStream.ReadByte();
-
-                var len = BitConverter.ToUInt16(new[] { (byte)firstBit, secondBit });
+                await _ioStream.ReadAsync(_lenBuffer, 0, 2);
+                
+                var len = BitConverter.ToUInt16(_lenBuffer);
 
                 return len;
             }
@@ -198,7 +191,7 @@ namespace mROA.Implementation
             public async Task SingleReceive(CancellationToken token = default)
             {
                 Console.WriteLine($"Receive start. Time: {profiler.ElapsedMilliseconds}ms");
-                var len = ReadMessageLength();
+                var len = await ReadMessageLength();
                 Console.WriteLine($"Received len {len}. Time: {profiler.ElapsedMilliseconds}ms");
                 var localSpan = _buffer[..len];
 
