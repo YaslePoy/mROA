@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
         <Title>mROA</Title>
-        <Version>2.0.6</Version>
+        <Version>2.0.7</Version>
         <Authors>YaslePoy</Authors>
         <Description>Fast and easy RPC with contex</Description>
         <RepositoryUrl>https://github.com/YaslePoy/mROA</RepositoryUrl>
@@ -14,6 +14,7 @@
         <LangVersion>9</LangVersion>
         <Configurations>Debug;Release</Configurations>
         <Platforms>AnyCPU</Platforms>
+        <PackageIcon>mroaLogo.png</PackageIcon>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -27,6 +28,13 @@
     <ItemGroup>
         <PackageReference Include="System.Text.Json" Version="9.0.5" />
         <PackageReference Include="System.Threading.Channels" Version="9.0.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="mroaLogo.png">
+        <Pack>True</Pack>
+        <PackagePath></PackagePath>
+      </None>
     </ItemGroup>
 
 </Project>
