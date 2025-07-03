@@ -168,6 +168,7 @@ namespace mROA.Implementation
             private bool _manualConnectionState = true;
             private readonly IEndPointContext _context;
             private readonly byte[] _lenBuffer;
+
             public StreamExtractor(Stream ioStream, IContextualSerializationToolKit serializationToolkit,
                 IEndPointContext context)
             {
@@ -182,8 +183,8 @@ namespace mROA.Implementation
 
             private async Task<ushort> ReadMessageLength()
             {
-                await _ioStream.ReadAsync(_lenBuffer, 0, 2);
-                
+                await _ioStream.ReadAsync(_lenBuffer);
+
                 var len = BitConverter.ToUInt16(_lenBuffer);
 
                 return len;
@@ -213,15 +214,15 @@ namespace mROA.Implementation
 
             private async Task Send(NetworkMessageHeader message, CancellationToken token = default)
             {
-                var rawMessage = _serializationToolkit.Serialize(message, _context);
-                var header = BitConverter.GetBytes((ushort)rawMessage.Length).AsMemory(0, sizeof(ushort));
+                var bodySpan = _buffer[2..];
+                var len = _serializationToolkit.Serialize(message, bodySpan.Span, _context);
+                var header = BitConverter.GetBytes((ushort)len);
+                header.CopyTo(_buffer);
                 Console.WriteLine($"Send start. Time: {profiler.ElapsedMilliseconds}ms");
-
-                await _ioStream.WriteAsync(header, token);
-                await _ioStream.WriteAsync(rawMessage, token);
+                var sendingSpan = _buffer[..(len + 2)];
+                await _ioStream.WriteAsync(sendingSpan, token);
                 Console.WriteLine($"Send. Time: {profiler.ElapsedMilliseconds}ms");
                 profiler.Restart();
-                
             }
 
             public async Task SendFromChannel(ChannelReader<NetworkMessageHeader> channel,
