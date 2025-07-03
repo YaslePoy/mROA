@@ -192,13 +192,10 @@ namespace mROA.Implementation
 
             public async Task SingleReceive(CancellationToken token = default)
             {
-                Console.WriteLine($"Receive start. Time: {profiler.ElapsedMilliseconds}ms");
                 var len = await ReadMessageLength();
-                Console.WriteLine($"Received len {len}. Time: {profiler.ElapsedMilliseconds}ms");
                 var localSpan = _buffer[..len];
 
                 await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: token);
-                Console.WriteLine($"Received. Time: {profiler.ElapsedMilliseconds}ms");
                 profiler.Restart();
                 var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan, _context);
                 MessageReceived(message);
@@ -218,10 +215,8 @@ namespace mROA.Implementation
                 var len = _serializationToolkit.Serialize(message, bodySpan.Span, _context);
                 var header = BitConverter.GetBytes((ushort)len);
                 header.CopyTo(_buffer);
-                Console.WriteLine($"Send start. Time: {profiler.ElapsedMilliseconds}ms");
                 var sendingSpan = _buffer[..(len + 2)];
                 await _ioStream.WriteAsync(sendingSpan, token);
-                Console.WriteLine($"Send. Time: {profiler.ElapsedMilliseconds}ms");
                 profiler.Restart();
             }
 

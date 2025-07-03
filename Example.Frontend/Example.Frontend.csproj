@@ -14,7 +14,7 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <DefineConstants></DefineConstants>
+      <DefineConstants>JUST_LOAD</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

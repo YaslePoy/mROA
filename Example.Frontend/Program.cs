@@ -131,7 +131,7 @@ class Program
         DemoCheck.TaskCancelation = true;
 #endif
         
-        const int iterations = 10;
+        const int iterations = 10000;
         var timer = Stopwatch.StartNew();
         var x = 0;
         for (int i = 0; i < iterations; i++)
@@ -147,7 +147,6 @@ class Program
 
         frontendBridge.Disconnect();
 
-        DemoCheck.Show();
-        Console.ReadKey();
+        // DemoCheck.Show();
     }
 }
