@@ -4,13 +4,15 @@ using System.Reflection;
 using mROA.Abstract;
 using mROA.Implementation;
 using System;
+using System.Collections;
 using System.Threading;
 
 namespace mROA.Codegen
 {
-    public class CoCodegenMethodRepository : IMethodRepository
+    public class GeneratedInvokersCollection : IReadOnlyList<IMethodInvoker>
     {
-        private readonly List<IMethodInvoker> _methods = new () {
+        private readonly List<IMethodInvoker> _invokers = new()
+        {
             <!I invoker r sep invokerSep><!D invokerSep>,
             <!D>
             <!T asyncInvoker>
@@ -32,22 +34,21 @@ namespace mROA.Codegen
                 ParameterTypes = new Type[]  { <!L parametersType> },
                 SuitableType = typeof(<!L suitableType>),
                 Invoking = (i, parameters, special) => <!L funcInvoking>,
-            }<!T>
+            }<!T>            
         };
 
-        public IMethodInvoker GetMethod(int id)
+        public IEnumerator<IMethodInvoker> GetEnumerator()
         {
-            if (id == -1)
-                return mROA.Implementation.MethodInvoker.Dispose;
-
-            if (_methods.Count <= id)
-                return null;
-            
-            return _methods[id];
+            return _invokers.GetEnumerator();
         }
 
-        public void Inject<T>(T dependency)
+        IEnumerator IEnumerable.GetEnumerator()
         {
+            return GetEnumerator();
         }
+
+        public int Count =>  _invokers.Count;
+
+        public IMethodInvoker this[int index] => _invokers[index];
     }
 }

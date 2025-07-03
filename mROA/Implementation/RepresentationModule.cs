@@ -31,6 +31,8 @@ namespace mROA.Implementation
         public int Id => (_interaction ?? throw new NullReferenceException("Interaction is not initialized"))
             .ConnectionId;
 
+        public IEndPointContext Context => _interaction.Context;
+
         public async Task<(object? Deserialized, EMessageType MessageType)> GetSingle(
             Predicate<NetworkMessageHeader> rule, IEndPointContext? context,
             CancellationToken token = default, params Func<NetworkMessageHeader, Type?>[] converter)

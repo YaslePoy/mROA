@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net;
 using Example.Backend;
+using Example.Shared;
 using mROA.Abstract;
 using mROA.Cbor;
 using mROA.Codegen;
@@ -13,7 +14,6 @@ class Program
 {
     public static void Main(string[] args)
     {
-        new CoCodegenMethodRepository();
         var builder = new FullMixBuilder();
         // builder.UseJsonSerialisation();
         builder.Modules.Add(new CborSerializationToolkit());
@@ -40,8 +40,11 @@ class Program
             repo.Inject(builder.Modules.OfType<CreativeRepresentationModuleProducer>().First());
             return repo;
         }));
-        builder.SetupMethodsRepository(new CoCodegenMethodRepository());
-
+        var methodRepo = new CollectableMethodRepository();
+        methodRepo.AppendInvokers(new GeneratedInvokersCollection());
+        builder.Modules.Add(methodRepo);
+        builder.Modules.Add(new GeneratedCallIndexProvider());
+        builder.Modules.Add(new GeneratedCallIndexProvider());
         builder.Modules.Add(new CancellationRepository());
 
         builder.Build();

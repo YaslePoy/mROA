@@ -9,7 +9,7 @@ namespace mROA.Abstract
     public interface IRepresentationModule : IInjectableModule
     {
         int Id { get; }
-
+        IEndPointContext Context { get; }
         Task<(object? Deserialized, EMessageType MessageType)> GetSingle(Predicate<NetworkMessageHeader> rule,
             IEndPointContext? context, CancellationToken token = default,
             params Func<NetworkMessageHeader, Type?>[] converter);

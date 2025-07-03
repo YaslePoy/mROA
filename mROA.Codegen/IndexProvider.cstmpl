@@ -1,0 +1,47 @@
+using System;
+using System.Linq;
+using mROA.Abstract;
+using mROA.Implementation;
+using System.Collections.Generic;
+
+
+namespace <!L namespace>
+{
+    public class GeneratedCallIndexProvider : ICallIndexProvider
+    {
+        public  Dictionary<Type, Func<int, IRepresentationModule, IEndPointContext, int[], RemoteObjectBase>> _activators = new () {
+            <!I remoteTypePair r sep typesSep><!D typesSep>,
+            <!D>
+        };
+        public  Dictionary<Type, Func<int, IRepresentationModule, IEndPointContext, int[], RemoteObjectBase>> Activators => _activators;
+        private IndexSpan _span = new ()
+        {
+            ApiLevel = <!L level>,
+            Identifier = "<!L namespace>",
+            Length = <!L len>,
+            Offset = 0,
+        };
+        
+        public IndexSpan Span => _span;
+
+        private Dictionary<Type, int[]> Indexes = new()
+        {
+            <!I indexSpan r sep nl><!D nl>
+            <!D>
+        };
+        
+        public void Inject<T>(T dependency)
+        {            
+        }
+
+        public void SetupOffset(int offset)
+        {
+            _span.Offset = offset;
+        }
+
+        public int[] GetIndices(Type type)
+        {
+            return Indexes[type].Select(i => i + _span.Offset).ToArray();
+        }
+    }
+} 

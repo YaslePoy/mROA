@@ -10,8 +10,8 @@ namespace <!L namespaceName>
     partial class <!L className>
         : RemoteObjectBase, <!L originalName>
     {
-        public <!L className>(int id, IRepresentationModule representationModule, IEndPointContext context) 
-            : base(id, representationModule, context)
+        public <!L className>(int id, IRepresentationModule representationModule, IEndPointContext context, int[] callIndices) 
+            : base(id, representationModule, context, callIndices)
         {
         }
 

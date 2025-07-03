@@ -46,6 +46,7 @@ namespace mROA.Implementation
 
         public int ConnectionId { get; set; }
 
+        public IEndPointContext Context => _context;
         public Channel<NetworkMessageHeader> ReceiveChanel { get; }
 
         public ChannelReader<NetworkMessageHeader> TrustedPostChanel => _outputTrustedChannel.Reader;

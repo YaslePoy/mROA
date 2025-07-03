@@ -10,11 +10,11 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <DefineConstants>TRACE;JUST_LOAD</DefineConstants>
+        <DefineConstants>TRACE;</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <DefineConstants>JUST_LOAD</DefineConstants>
+      <DefineConstants></DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

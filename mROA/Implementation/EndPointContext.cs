@@ -5,9 +5,9 @@ namespace mROA.Implementation
 {
     public class EndPointContext : IEndPointContext
     {
-        public IInstanceRepository RealRepository { get; set; }
+        public IInstanceRepository RealRepository { get; set; } 
         public IInstanceRepository RemoteRepository { get; set; }
-        public ICallIndexProvider CallIndexProvider { get; }
+        public ICallIndexProvider CallIndexProvider { get; set; }
         public CallIndexConfig CallIndexConfig { get; set; }
         public int HostId { get; set; }
 

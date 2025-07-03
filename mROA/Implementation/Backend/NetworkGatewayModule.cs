@@ -16,6 +16,7 @@ namespace mROA.Implementation.Backend
         private IConnectionHub? _hub;
         private IContextualSerializationToolKit? _serialization;
         private Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
+        private ICallIndexProvider _callIndexProvider;
 
         public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType,
             IInjectableModule[] injectableModules)
@@ -49,6 +50,9 @@ namespace mROA.Implementation.Backend
                 case IContextualSerializationToolKit serializationToolkit:
                     _serialization = serializationToolkit;
                     break;
+                case ICallIndexProvider callIndexProvider:
+                    _callIndexProvider = callIndexProvider;
+                    break;
             }
         }
 
@@ -70,7 +74,7 @@ namespace mROA.Implementation.Backend
 
                 //TODO сделать контекст
                 var context = new EndPointContext();
-
+                context.CallIndexProvider = _callIndexProvider;
                 var streamExtractor =
                     new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
                 interaction.IsConnected = () => streamExtractor.IsConnected;
@@ -87,6 +91,7 @@ namespace mROA.Implementation.Backend
                     case EMessageType.ClientConnect:
                         context.HostId = 0;
                         context.OwnerId = -interaction.ConnectionId;
+                        interaction.Inject(context);
                         Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
                         _ = streamExtractor.SendFromChannel(interaction.TrustedPostChanel, cts.Token);
                         interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,

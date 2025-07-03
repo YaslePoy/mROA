@@ -8,9 +8,7 @@ namespace mROA.Implementation
     public class RemoteInstanceRepository : IInstanceRepository
     {
         private List<RemoteObjectBase> _producedProxys = new();
-
-        public static Dictionary<Type, Func<int, IRepresentationModule, IEndPointContext, RemoteObjectBase>>
-            RemoteTypeFactories = new();
+        private ICallIndexProvider _callIndexProvider;
 
         private IRepresentationModuleProducer? _representationProducer;
 
@@ -34,11 +32,11 @@ namespace mROA.Implementation
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
 
-            if (!RemoteTypeFactories.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
+            if (!_callIndexProvider.Activators.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
             var representationModule =
                 _representationProducer.Produce(context.OwnerId);
             var remote = remoteType(id.ContextId,
-                representationModule, context);
+                representationModule, context, _callIndexProvider.GetIndices(typeof(T)));
 
             _producedProxys.Add(remote!);
 
@@ -58,7 +56,7 @@ namespace mROA.Implementation
             var representationModule =
                 _representationProducer.Produce(context.OwnerId);
 
-            var instance = RemoteTypeFactories[type](-1, representationModule, context)!;
+            var instance = _callIndexProvider.Activators[type](-1, representationModule, context, _callIndexProvider.GetIndices(type))!;
 
             var remoteObjectBase = instance;
 
@@ -79,8 +77,15 @@ namespace mROA.Implementation
 
         public void Inject<T>(T dependency)
         {
-            if (dependency is IRepresentationModuleProducer serialisationModule)
-                _representationProducer = serialisationModule;
+            switch (dependency)
+            {
+                case IRepresentationModuleProducer serialisationModule:
+                    _representationProducer = serialisationModule;
+                    break;
+                case ICallIndexProvider callIndexProvider:
+                    _callIndexProvider = callIndexProvider;
+                    break;
+            }
         }
     }
 }

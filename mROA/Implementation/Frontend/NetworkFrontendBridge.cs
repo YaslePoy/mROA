@@ -48,7 +48,7 @@ namespace mROA.Implementation.Frontend
                 throw new NullReferenceException("Serialization toolkit is not initialized");
 
             _tcpClient.Connect(_serverEndPoint);
-
+            _tcpClient.NoDelay = true;
             PrepareExtractor();
             _interactionModule.IsConnected = () => _currentExtractor.IsConnected;
             _interactionModule.OnDisconnected += _ => { Reconnect(); };

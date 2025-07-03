@@ -14,6 +14,7 @@ using mROA.Implementation.Backend;
 using mROA.Implementation.Bootstrap;
 using mROA.Implementation.Frontend;
 
+
 class Program
 {
     public static async Task Main(string[] args)
@@ -32,7 +33,10 @@ class Program
         builder.Modules.Add(new StaticRepresentationModuleProducer());
         builder.Modules.Add(new RequestExtractor());
         builder.Modules.Add(new BasicExecutionModule());
-        builder.Modules.Add(new CoCodegenMethodRepository());
+        var methodRepo = new CollectableMethodRepository();
+        methodRepo.AppendInvokers(new GeneratedInvokersCollection());
+        builder.Modules.Add(methodRepo);
+        builder.Modules.Add(new GeneratedCallIndexProvider());
         builder.UseCollectableContextRepository();
         builder.Modules.Add(new CancellationRepository());
 
