@@ -377,7 +377,7 @@ namespace mROA.Codegen
             var eventBinderTemplate =
                 (TemplateDocument)((InnerTemplateSection)document["eventBinderTemplate"]!).InnerTemplate.Clone();
 
-            var index = _currentInternalCallIndex - 1;
+            var index = _currentInternalCallIndex;
             var parameters = (eventSymbol.Type as INamedTypeSymbol)!.TypeArguments.ToList();
             var parametersDeclaration = string.Join(", ",
                 JoinWithComa(Enumerable.Range(0, parameters.Count).Select(i => "p" + i)));
