@@ -25,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TotalDemo", "TotalDemo", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mROA.CodegenTools", "mROA.CodegenTools\mROA.CodegenTools.csproj", "{FFB8DFAE-17F0-4335-8F17-187B3619E8F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Load", "Example.Load\Example.Load.csproj", "{930B236B-BDAA-4B8C-8054-5B992BAE6622}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{FFB8DFAE-17F0-4335-8F17-187B3619E8F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFB8DFAE-17F0-4335-8F17-187B3619E8F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFB8DFAE-17F0-4335-8F17-187B3619E8F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{930B236B-BDAA-4B8C-8054-5B992BAE6622}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{930B236B-BDAA-4B8C-8054-5B992BAE6622}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{930B236B-BDAA-4B8C-8054-5B992BAE6622}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{930B236B-BDAA-4B8C-8054-5B992BAE6622}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -76,5 +82,6 @@ Global
 		{A9BB364E-0BA6-40B9-A293-757BC48EFC06} = {FC4FA752-10A7-4D78-A7C2-9BCD8A81FB5E}
 		{9BD25A13-3165-47C0-9EAA-5C59EC490E32} = {FC4FA752-10A7-4D78-A7C2-9BCD8A81FB5E}
 		{E7703F5B-F2A6-4A88-AA57-EBB1E38D533E} = {FC4FA752-10A7-4D78-A7C2-9BCD8A81FB5E}
+		{930B236B-BDAA-4B8C-8054-5B992BAE6622} = {FC4FA752-10A7-4D78-A7C2-9BCD8A81FB5E}
 	EndGlobalSection
 EndGlobal

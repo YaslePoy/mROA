@@ -131,7 +131,7 @@ class Program
         DemoCheck.TaskCancelation = true;
 #endif
         
-        const int iterations = 10000;
+        const int iterations = 10_000;
         var timer = Stopwatch.StartNew();
         var x = 0;
         for (int i = 0; i < iterations; i++)

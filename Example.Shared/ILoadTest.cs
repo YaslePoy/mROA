@@ -13,7 +13,6 @@ namespace Example.Shared
         int Last(int next);
         void C();
         void A();
-
         Task AsyncTest(CancellationToken token = default);
     }
 }

@@ -13,7 +13,7 @@ namespace mROA.Cbor
 {
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
-        private static Dictionary<Type, List<PropertyInfo>> _propertiesCache = new();
+        private Dictionary<Type, List<PropertyInfo>> _propertiesCache = new();
         public static TimeSpan SerializationTime = TimeSpan.Zero;
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
@@ -232,7 +232,7 @@ namespace mROA.Cbor
                 return;
             }
 
-            var properties = GetAvalibleProperties(type);
+            var properties = GetAvailableProperties(type);
             var values = properties.Select(property => property.GetValue(obj)).ToList();
             WriteList(values, writer, context);
         }
@@ -403,7 +403,7 @@ namespace mROA.Cbor
 
         private void FillObject(object obj, Type type, CborReader reader, IEndPointContext? context)
         {
-            var properties = GetAvalibleProperties(type);
+            var properties = GetAvailableProperties(type);
             var length = reader.ReadStartArray();
             try
             {
@@ -441,7 +441,7 @@ namespace mROA.Cbor
             return finalProperties;
         }
 
-        private List<PropertyInfo> GetAvalibleProperties(Type type)
+        private List<PropertyInfo> GetAvailableProperties(Type type)
         {
             if (_propertiesCache.TryGetValue(type, out var properties))
             {

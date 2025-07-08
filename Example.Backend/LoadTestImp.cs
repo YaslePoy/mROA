@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Example.Shared;
@@ -21,7 +22,7 @@ namespace Example.Backend
 
         public void C()
         {
-            throw new NotImplementedException();
+            Environment.Exit(0);
         }
 
         public void A()
