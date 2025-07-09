@@ -76,12 +76,6 @@ namespace mROA.Implementation
                 yield return (deserialized, message.MessageType)!;
             }
         }
-        
-        // public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload,
-        //     IEndPointContext? context) where T : notnull
-        // {
-        //     await this.PostCallMessageAsync(id, eMessageType, payload, context);
-        // }
 
         public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context) where T : notnull
         {

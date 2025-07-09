@@ -147,6 +147,6 @@ class Program
 
         frontendBridge.Disconnect();
 
-        // DemoCheck.Show();
+        DemoCheck.Show();
     }
 }

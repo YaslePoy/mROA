@@ -8,14 +8,16 @@ using System.Reflection;
 using mROA.Abstract;
 using mROA.Implementation;
 using mROA.Implementation.Attributes;
+using mROA.Implementation.CommandExecution;
 
 namespace mROA.Cbor
 {
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
+        private Dictionary<Type, IOrdinaryStructureParser> _parsers = new(){{typeof(NetworkMessageHeader), new NetworkMessageHeaderParser()}, {typeof(DefaultCallRequest), new DefaultCallRequestParser()}, {typeof(FinalCommandExecution<object>), new FinalCommandExecutionParser()}, {typeof(FinalCommandExecution), new FinalCommandExecutionResultlessParser()}}; //
         private Dictionary<Type, List<PropertyInfo>> _propertiesCache = new();
         public static TimeSpan SerializationTime = TimeSpan.Zero;
-
+        private HashSet<int> a;
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
             var sw = Stopwatch.StartNew();
@@ -124,8 +126,14 @@ namespace mROA.Cbor
             return Cast(nonCasted: nonCasted, type: type, context: null);
         }
 
-        private void WriteData(object? obj, CborWriter writer, IEndPointContext? context)
+        public void WriteData(object? obj, CborWriter writer, IEndPointContext? context)
         {
+            if (obj is not null && _parsers.TryGetValue(obj.GetType(), out var parser))
+            {
+                parser.Write(writer, obj, context, this);
+                return;
+            }
+            
             switch (obj)
             {
                 case int i:
@@ -187,7 +195,7 @@ namespace mROA.Cbor
             }
         }
 
-        private void WriteList(IList list, CborWriter writer, IEndPointContext? context)
+        public void WriteList(IList list, CborWriter writer, IEndPointContext? context)
         {
             writer.WriteStartArray(list.Count);
 
@@ -197,7 +205,7 @@ namespace mROA.Cbor
             writer.WriteEndArray();
         }
 
-        private void WriteDictionary(IDictionary dictionary, CborWriter writer, IEndPointContext? context)
+        public void WriteDictionary(IDictionary dictionary, CborWriter writer, IEndPointContext? context)
         {
             writer.WriteStartMap(dictionary.Count);
             var keysEnumerator = dictionary.Keys.GetEnumerator();
@@ -215,7 +223,7 @@ namespace mROA.Cbor
             (valuesEnumerator as IDisposable)?.Dispose();
         }
 
-        private void WriteObject(object obj, CborWriter writer, IEndPointContext? context)
+        public void WriteObject(object obj, CborWriter writer, IEndPointContext? context)
         {
             var type = obj.GetType();
 
@@ -238,8 +246,12 @@ namespace mROA.Cbor
             WriteList(values, writer, context);
         }
 
-        private object? ReadData(CborReader reader, Type? type, IEndPointContext? context)
+        public object? ReadData(CborReader reader, Type? type, IEndPointContext? context)
         {
+            if (type is not null && _parsers.TryGetValue(type, out var parser))
+            {
+                return parser.Read(reader, context, this);
+            }
             var state = reader.PeekState();
             switch (state)
             {
@@ -296,7 +308,7 @@ namespace mROA.Cbor
         }
 
 
-        private IList ReadList(CborReader reader, Type? type, IEndPointContext? context)
+        public IList ReadList(CborReader reader, Type? type, IEndPointContext? context)
         {
             var length = reader.ReadStartArray();
             if (length != null)
@@ -340,7 +352,7 @@ namespace mROA.Cbor
             return null;
         }
 
-        private IDictionary ReadDictionary(CborReader reader, Type type, IEndPointContext? context)
+        public IDictionary ReadDictionary(CborReader reader, Type type, IEndPointContext? context)
         {
             var dictionaryInstance = (Activator.CreateInstance(type) as IDictionary)!;
             var length = reader.ReadStartArray();
@@ -357,7 +369,7 @@ namespace mROA.Cbor
             return dictionaryInstance;
         }
 
-        private object ReadObject(CborReader reader, Type type, IEndPointContext? context)
+        public object ReadObject(CborReader reader, Type type, IEndPointContext? context)
         {
             if (type == typeof(object))
             {
@@ -401,7 +413,7 @@ namespace mROA.Cbor
             return sharedObject;
         }
 
-        private void FillObject(object obj, Type type, CborReader reader, IEndPointContext? context)
+        public void FillObject(object obj, Type type, CborReader reader, IEndPointContext? context)
         {
             var properties = GetAvailableProperties(type);
             var length = reader.ReadStartArray();
