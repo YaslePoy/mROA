@@ -199,8 +199,11 @@ namespace mROA.Cbor
         {
             writer.WriteStartArray(list.Count);
 
-            foreach (var element in list)
+            for (var index = 0; index < list.Count; index++)
+            {
+                var element = list[index];
                 WriteData(element, writer, context);
+            }
 
             writer.WriteEndArray();
         }
@@ -445,10 +448,15 @@ namespace mROA.Cbor
         public static List<PropertyInfo> FilterProperties(PropertyInfo[] properties)
         {
             var finalProperties = new List<PropertyInfo>(properties.Length);
-            foreach (var property in properties.Where(i => i.CanWrite && i.CanRead))
+            
+            for (int i = 0; i < properties.Length; i++)
             {
-                if (property.GetCustomAttribute<SerializationIgnoreAttribute>() == null)
-                    finalProperties.Add(property);
+                var property = properties[i];
+                if (property is not { CanRead: true, CanWrite: true } || property.GetCustomAttribute<SerializationIgnoreAttribute>() != null)
+                    continue;
+                
+                finalProperties.Add(property);
+                
             }
 
             return finalProperties;
