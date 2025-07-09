@@ -15,12 +15,13 @@ namespace mROA.Cbor
     {
         private Dictionary<Type, List<PropertyInfo>> _propertiesCache = new();
         public static TimeSpan SerializationTime = TimeSpan.Zero;
+
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
             var sw = Stopwatch.StartNew();
-            var writer = new CborWriter();
+            var writer = new CborWriter(initialCapacity:64);
             WriteData(objectToSerialize, writer, context);
-            var result =  writer.Encode();
+            var result = writer.Encode();
             sw.Stop();
             SerializationTime = SerializationTime.Add(sw.Elapsed);
             return result;
@@ -28,7 +29,7 @@ namespace mROA.Cbor
 
         public int Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext context)
         {
-            var writer = new CborWriter();
+            var writer = new CborWriter(initialCapacity:64);
             WriteData(objectToSerialize, writer, context);
             return writer.Encode(destination);
         }
@@ -288,7 +289,6 @@ namespace mROA.Cbor
                     return ReadDictionary(reader, type, context);
             }
 
-
             if (type == typeof(DateTimeOffset))
                 return reader.ReadDateTimeOffset();
 
@@ -418,7 +418,8 @@ namespace mROA.Cbor
                     property.SetValue(obj, value);
                 }
 
-                reader.ReadEndArray();
+                if (reader.PeekState() == CborReaderState.EndArray)
+                    reader.ReadEndArray();
             }
             catch (Exception e)
             {
@@ -447,6 +448,7 @@ namespace mROA.Cbor
             {
                 return properties;
             }
+
             var propertiesList = FilterProperties(type.GetProperties());
             _propertiesCache[type] = propertiesList;
             return propertiesList;
