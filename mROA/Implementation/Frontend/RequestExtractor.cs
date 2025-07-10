@@ -17,7 +17,7 @@ namespace mROA.Implementation.Frontend
         private IContextualSerializationToolKit? _serializationToolkit;
         private IEndPointContext _context;
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             switch (dependency)
             {

@@ -16,7 +16,7 @@ namespace mROA.Implementation
         }
 
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             if (dependency is IConnectionHub interactionModule)
                 _hub = interactionModule;

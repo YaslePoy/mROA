@@ -75,7 +75,7 @@ namespace mROA.Implementation
             throw new NotSupportedException();
         }
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             switch (dependency)
             {

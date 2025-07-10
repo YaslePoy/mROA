@@ -14,7 +14,7 @@ namespace mROA.Implementation.Backend
             _produceRepository = produceRepository;
         }
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
         }
 

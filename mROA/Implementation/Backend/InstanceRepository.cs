@@ -79,7 +79,7 @@ namespace mROA.Implementation.Backend
             return index == -1 ? ResisterObject<T>(o, context) : index;
         }
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             if (dependency is IRepresentationModuleProducer moduleProducer)
             {

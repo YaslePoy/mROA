@@ -30,7 +30,7 @@ namespace <!L namespace>
             <!D>
         };
         
-        public void Inject<T>(T dependency)
+        public void Inject(T dependency)
         {            
         }
 

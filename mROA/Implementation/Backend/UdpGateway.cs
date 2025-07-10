@@ -23,7 +23,7 @@ namespace mROA.Implementation.Backend
         }
 
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             switch (dependency)
             {

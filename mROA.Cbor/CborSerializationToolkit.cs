@@ -115,7 +115,7 @@ namespace mROA.Cbor
             return Convert.ChangeType(nonCasted, type);
         }
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
         }
 

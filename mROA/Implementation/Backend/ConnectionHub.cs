@@ -29,7 +29,7 @@ namespace mROA.Implementation.Backend
         public event ConnectionHandler? OnConnected;
         public event DisconnectionHandler? OnDisconnected;
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             if (dependency is IContextualSerializationToolKit serializationToolkit)
                 _serializationToolkit = serializationToolkit;

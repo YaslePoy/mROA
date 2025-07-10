@@ -53,7 +53,7 @@ namespace mROA.Implementation
         public ChannelReader<NetworkMessageHeader> UntrustedPostChanel => _outputUntrustedChannel.Reader;
         public Func<bool> IsConnected { get; set; } = () => false;
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             switch (dependency)
             {

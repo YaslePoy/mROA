@@ -40,7 +40,7 @@ namespace mROA.Implementation.Backend
             _tcpListener.Stop();
         }
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             switch (dependency)
             {

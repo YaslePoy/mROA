@@ -6,7 +6,7 @@ namespace mROA.Implementation
     public class CollectableMethodRepository : IMethodRepository
     {
         private List<IMethodInvoker> _methods =  new();
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             
         }

@@ -25,7 +25,7 @@ namespace mROA.Implementation
             _cancellations.Remove(id, out _);
         }
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
         }
     }

@@ -11,7 +11,7 @@ namespace mROA.Implementation.Backend
         private IMethodRepository? _methodRepo;
         private IContextualSerializationToolKit? _serialization;
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             switch (dependency)
             {

@@ -24,7 +24,7 @@ namespace mROA.Implementation.Frontend
             _rawExtractorCancellation = new CancellationTokenSource();
         }
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             switch (dependency)
             {

@@ -14,7 +14,7 @@ namespace mROA.Implementation
             return _representationModule;
         }
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             if (dependency is IRepresentationModule serialisationModule)
                 _representationModule = serialisationModule;

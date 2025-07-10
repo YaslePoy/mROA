@@ -14,7 +14,7 @@ namespace mROA.Implementation
         private IChannelInteractionModule? _interaction;
         private IContextualSerializationToolKit? _serialization;
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             switch (dependency)
             {

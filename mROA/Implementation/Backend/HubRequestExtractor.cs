@@ -13,7 +13,7 @@ namespace mROA.Implementation.Backend
         private IContextualSerializationToolKit? _serializationToolkit;
         private IExecuteModule? _executeModule;
 
-        public void Inject<T>(T dependency)
+        public void Inject(object dependency)
         {
             switch (dependency)
             {
