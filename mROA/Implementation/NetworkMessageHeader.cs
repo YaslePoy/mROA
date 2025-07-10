@@ -5,7 +5,7 @@ using mROA.Abstract;
 
 namespace mROA.Implementation
 {
-    public class NetworkMessageHeader
+    public struct NetworkMessageHeader
     {
         private bool Equals(NetworkMessageHeader other)
         {
@@ -21,12 +21,10 @@ namespace mROA.Implementation
         }
 
         public static readonly NetworkMessageHeader Null = new();
-        public NetworkMessageHeader()
-        {
-            Id = Guid.NewGuid();
-            MessageType = EMessageType.Unknown;
-            Data = Array.Empty<byte>();
-        }
+        // public NetworkMessageHeader()
+        // {
+        //     Data = Array.Empty<byte>();
+        // }
         public NetworkMessageHeader(IContextualSerializationToolKit serializationToolkit,
             INetworkMessage networkMessage, IEndPointContext? context)
         {

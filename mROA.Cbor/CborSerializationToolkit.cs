@@ -14,10 +14,43 @@ namespace mROA.Cbor
 {
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
-        private Dictionary<Type, IOrdinaryStructureParser> _parsers = new(){{typeof(NetworkMessageHeader), new NetworkMessageHeaderParser()}, {typeof(DefaultCallRequest), new DefaultCallRequestParser()}, {typeof(FinalCommandExecution<object>), new FinalCommandExecutionParser()}, {typeof(FinalCommandExecution), new FinalCommandExecutionResultlessParser()}}; //
+        private readonly IOrdinaryStructureParser[] _parsers = {
+            new NetworkMessageHeaderParser(), new DefaultCallRequestParser(), new FinalCommandExecutionParser(),
+            new FinalCommandExecutionResultlessParser()
+        };
+        // private Dictionary<Type, IOrdinaryStructureParser> _parsers = new(){{typeof(NetworkMessageHeader), new NetworkMessageHeaderParser()}, {typeof(DefaultCallRequest), new DefaultCallRequestParser()}, {typeof(FinalCommandExecution<object>), new FinalCommandExecutionParser()}, {typeof(FinalCommandExecution), new FinalCommandExecutionResultlessParser()}}; //
         private Dictionary<Type, List<PropertyInfo>> _propertiesCache = new();
         public static TimeSpan SerializationTime = TimeSpan.Zero;
-        private HashSet<int> a;
+
+        private bool FindParser(Type t, out IOrdinaryStructureParser parser)
+        {
+            if (t == typeof(NetworkMessageHeader))
+            {
+                parser = _parsers[0];
+                return true;
+            }
+
+            if (t == typeof(DefaultCallRequest))
+            {
+                parser = _parsers[1];
+                return true;
+            }
+
+            if (t == typeof(FinalCommandExecution<object>))
+            {
+                parser = _parsers[2];
+                return true;
+            }
+
+            if (t == typeof(FinalCommandExecution))
+            {
+                parser = _parsers[3];
+                return true;
+            }
+
+            parser = null;
+            return false;
+        }
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
             var sw = Stopwatch.StartNew();
@@ -128,7 +161,7 @@ namespace mROA.Cbor
 
         public void WriteData(object? obj, CborWriter writer, IEndPointContext? context)
         {
-            if (obj is not null && _parsers.TryGetValue(obj.GetType(), out var parser))
+            if (obj is not null && FindParser(obj.GetType(), out var parser))
             {
                 parser.Write(writer, obj, context, this);
                 return;
@@ -251,7 +284,7 @@ namespace mROA.Cbor
 
         public object? ReadData(CborReader reader, Type? type, IEndPointContext? context)
         {
-            if (type is not null && _parsers.TryGetValue(type, out var parser))
+            if (type is not null && FindParser(type, out var parser))
             {
                 return parser.Read(reader, context, this);
             }

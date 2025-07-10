@@ -17,7 +17,7 @@ namespace mROA.Cbor
     {
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
-            var v = value as NetworkMessageHeader;
+            var v = (NetworkMessageHeader)value;
             writer.WriteStartArray(3);
             writer.WriteByteString(v.Id.ToByteArray());
             writer.WriteInt32((int)v.MessageType);
@@ -91,10 +91,10 @@ namespace mROA.Cbor
     {
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
-            var v = value as FinalCommandExecution<object>;
+            var v = (FinalCommandExecution<object>)value;
             writer.WriteStartArray(2);
-            serialization.WriteData(v.Result, writer, context);
             writer.WriteByteString(v.Id.ToByteArray());
+            serialization.WriteData(v.Result, writer, context);
             writer.WriteEndArray();
         }
 
@@ -103,8 +103,8 @@ namespace mROA.Cbor
             reader.ReadStartArray();
             var result = new FinalCommandExecution<object>
             {
+                Id = new Guid(reader.ReadByteString()),
                 Result = serialization.ReadData(reader, typeof(object), context),
-                Id = new Guid(reader.ReadByteString())
             };
              reader.ReadEndArray();
              return result;
@@ -115,7 +115,7 @@ namespace mROA.Cbor
     {
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
-            var v = value as FinalCommandExecution;
+            var v = (FinalCommandExecution)value;
             writer.WriteStartArray(1);
             writer.WriteByteString(v.Id.ToByteArray());
             writer.WriteEndArray();

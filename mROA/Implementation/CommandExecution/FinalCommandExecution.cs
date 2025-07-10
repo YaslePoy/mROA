@@ -5,14 +5,16 @@ using mROA.Abstract;
 
 namespace mROA.Implementation.CommandExecution
 {
-    public class FinalCommandExecution : ICommandExecution
+    public struct FinalCommandExecution : ICommandExecution
     {
         public Guid Id { get; set; }
         public EMessageType MessageType => EMessageType.FinishedCommandExecution;
     }
 
-    public class FinalCommandExecution<T> : FinalCommandExecution
+    public struct FinalCommandExecution<T> : ICommandExecution
     {
+        public Guid Id { get; set; }
+        public EMessageType MessageType => EMessageType.FinishedCommandExecution;
         public T? Result { get; set; }
     }
 }

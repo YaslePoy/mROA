@@ -71,9 +71,17 @@ namespace mROA.Implementation
                     continue;
                 }
 
-                var type = converter.Select(i => i(message)).First(i => i != null)!;
-                var deserialized = _serialization.Deserialize(message.Data, type, context);
-                yield return (deserialized, message.MessageType)!;
+                
+                for (int i = 0; i < converter.Length; i++)
+                {
+                    var func = converter[i];
+                    if (func(message) is {} t)
+                    {
+                        var deserialized = _serialization.Deserialize(message.Data, t, context);
+                        yield return (deserialized, message.MessageType)!;
+                        break;
+                    }
+                }
             }
         }
 

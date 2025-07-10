@@ -8,7 +8,7 @@ namespace mROA.Implementation
 {
     public class CancellationRepository : ICancellationRepository
     {
-        private ConcurrentDictionary<Guid, CancellationTokenSource> _cancellations = new();
+        private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _cancellations = new();
 
         public void RegisterCancellation(Guid id, CancellationTokenSource cts)
         {
