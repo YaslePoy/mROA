@@ -127,7 +127,7 @@ namespace mROA.Implementation
             }
             else
             {
-                await _trustedWriter.WriteAsync(new NetworkMessageHeader(){Data = Array.Empty<byte>()});
+                await _trustedWriter.WriteAsync(new NetworkMessageHeader());
             }
 
             PassReconnection();

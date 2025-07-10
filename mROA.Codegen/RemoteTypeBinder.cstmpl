@@ -31,6 +31,7 @@ namespace mROA.Codegen
                             Console.WriteLine("Sending event...");
                             var request = new DefaultCallRequest
                             {
+                                Id = Guid.NewGuid(),
                                 CommandId = <!L commandId>, 
                                 ObjectId = new ComplexObjectIdentifier(index, ownerId), 
                                 Parameters = new object[] { <!L transferParameters> }

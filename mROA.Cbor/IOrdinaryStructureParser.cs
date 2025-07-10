@@ -17,7 +17,7 @@ namespace mROA.Cbor
     {
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
-            var v = (NetworkMessageHeader)value;
+            var v = value as NetworkMessageHeader;
             writer.WriteStartArray(3);
             writer.WriteByteString(v.Id.ToByteArray());
             writer.WriteInt32((int)v.MessageType);
@@ -42,7 +42,7 @@ namespace mROA.Cbor
     {
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
-            var v = value as DefaultCallRequest;
+            var v = (DefaultCallRequest)value;
             writer.WriteStartArray(4);
             writer.WriteByteString(v.Id.ToByteArray());
             writer.WriteInt32(v.CommandId);

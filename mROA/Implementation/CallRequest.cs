@@ -13,11 +13,11 @@ namespace mROA.Implementation
         object?[]? Parameters { get; }
     }
 
-    public class DefaultCallRequest : ICallRequest
+    public struct DefaultCallRequest : ICallRequest
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; }
         public int CommandId { get; set; }
-        public ComplexObjectIdentifier ObjectId { get; set; } = ComplexObjectIdentifier.Null;
+        public ComplexObjectIdentifier ObjectId { get; set; }
 
         public object?[]? Parameters { get; set; }
 

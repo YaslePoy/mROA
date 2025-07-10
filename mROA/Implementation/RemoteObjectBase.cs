@@ -33,7 +33,9 @@ namespace mROA.Implementation
         private readonly ComplexObjectIdentifier _identifier;
         private readonly IRepresentationModule _representationModule;
         protected readonly int[] _callIndices;
-        protected RemoteObjectBase(int id, IRepresentationModule representationModule, IEndPointContext context, int[] indices)
+
+        protected RemoteObjectBase(int id, IRepresentationModule representationModule, IEndPointContext context,
+            int[] indices)
         {
             _identifier = new ComplexObjectIdentifier { ContextId = id, OwnerId = representationModule.Id };
             _representationModule = representationModule;
@@ -57,7 +59,7 @@ namespace mROA.Implementation
         {
             var request = new DefaultCallRequest
             {
-                CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+                Id = Guid.NewGuid(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
 
             await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request, _context);
@@ -65,7 +67,8 @@ namespace mROA.Implementation
             var localTokenSource = new CancellationTokenSource();
 
             var responseRequestTask = _representationModule.GetSingle(
-                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution, _context,
+                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution,
+                _context,
                 localTokenSource.Token,
                 m => m.MessageType is EMessageType.FinishedCommandExecution ? typeof(FinalCommandExecution<T>) : null,
                 m => m.MessageType is EMessageType.ExceptionCommandExecution
@@ -101,14 +104,15 @@ namespace mROA.Implementation
         {
             var request = new DefaultCallRequest
             {
-                CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+                Id = Guid.NewGuid(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
             await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request, _context);
 
             var localTokenSource = new CancellationTokenSource();
 
             var responseRequestTask = _representationModule.GetSingle(
-                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution, _context,
+                m => m.MessageType is EMessageType.FinishedCommandExecution or EMessageType.ExceptionCommandExecution,
+                _context,
                 localTokenSource.Token,
                 m => m.MessageType is EMessageType.FinishedCommandExecution ? typeof(FinalCommandExecution) : null,
                 m => m.MessageType is EMessageType.ExceptionCommandExecution
@@ -145,7 +149,7 @@ namespace mROA.Implementation
         {
             var request = new DefaultCallRequest
             {
-                CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+                Id = Guid.NewGuid(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
             await _representationModule.PostCallMessageUntrustedAsync(request.Id, EMessageType.CallRequest, request,
                 _context);

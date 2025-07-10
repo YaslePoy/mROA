@@ -64,12 +64,12 @@ namespace mROA.Implementation.Frontend
                     switch (command.originalType)
                     {
                         case EMessageType.CallRequest:
-                            HandleCallRequest((command.parced as DefaultCallRequest)!);
+                            HandleCallRequest((DefaultCallRequest)command.parced);
                             break;
                         case EMessageType.ClientDisconnect:
                             return;
                         case EMessageType.EventRequest:
-                            HandleEventRequest((command.parced as DefaultCallRequest)!);
+                            HandleEventRequest((DefaultCallRequest)command.parced);
                             break;
                         case EMessageType.CancelRequest:
                             HandleCancelRequest((command.parced as CancelRequest)!);
