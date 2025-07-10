@@ -43,44 +43,36 @@ namespace mROA.Implementation.Frontend
         {
             ThrowIfNotInjected();
 
+            var streamTokenSource = new CancellationTokenSource();
 
-            try
+            var query = _representationModule!.GetStream(m =>
+                    m.MessageType is EMessageType.CallRequest or EMessageType.CancelRequest
+                        or EMessageType.EventRequest or EMessageType.ClientDisconnect, _context,
+                streamTokenSource.Token,
+                m => m.MessageType == EMessageType.CallRequest ? typeof(DefaultCallRequest) : null,
+                m => m.MessageType == EMessageType.CancelRequest ? typeof(CancelRequest) : null,
+                m => m.MessageType == EMessageType.EventRequest ? typeof(DefaultCallRequest) : null,
+                m => m.MessageType == EMessageType.ClientDisconnect ? typeof(ClientDisconnect) : null);
+
+
+            await foreach (var command in query)
             {
-
-                var streamTokenSource = new CancellationTokenSource();
-
-                var query = _representationModule!.GetStream(m =>
-                        m.MessageType is EMessageType.CallRequest or EMessageType.CancelRequest
-                            or EMessageType.EventRequest or EMessageType.ClientDisconnect, _context,
-                    streamTokenSource.Token,
-                    m => m.MessageType == EMessageType.CallRequest ? typeof(DefaultCallRequest) : null,
-                    m => m.MessageType == EMessageType.CancelRequest ? typeof(CancelRequest) : null,
-                    m => m.MessageType == EMessageType.EventRequest ? typeof(DefaultCallRequest) : null,
-                    m => m.MessageType == EMessageType.ClientDisconnect ? typeof(ClientDisconnect) : null);
-
-
-                await foreach (var command in query)
+                switch (command.originalType)
                 {
-                    switch (command.originalType)
-                    {
-                        case EMessageType.CallRequest:
-                            HandleCallRequest((DefaultCallRequest)command.parced);
-                            break;
-                        case EMessageType.ClientDisconnect:
-                            return;
-                        case EMessageType.EventRequest:
-                            HandleEventRequest((DefaultCallRequest)command.parced);
-                            break;
-                        case EMessageType.CancelRequest:
-                            HandleCancelRequest((command.parced as CancelRequest)!);
-                            break;
-                        default:
-                            continue;
-                    }
+                    case EMessageType.CallRequest:
+                        HandleCallRequest((DefaultCallRequest)command.parced);
+                        break;
+                    case EMessageType.ClientDisconnect:
+                        return;
+                    case EMessageType.EventRequest:
+                        HandleEventRequest((DefaultCallRequest)command.parced);
+                        break;
+                    case EMessageType.CancelRequest:
+                        HandleCancelRequest((command.parced as CancelRequest)!);
+                        break;
+                    default:
+                        continue;
                 }
-            }
-            catch
-            {
             }
         }
 

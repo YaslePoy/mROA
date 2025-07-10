@@ -30,7 +30,6 @@ namespace mROA.Implementation.Backend
         public ICommandExecution Execute(ICallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext)
         {
-
             try
             {
                 ThrowIfNotInjected(instanceRepository);
@@ -194,7 +193,7 @@ namespace mROA.Implementation.Backend
                     };
                     _cancellationRepo?.FreeCancelation(command.Id);
 
-            
+
                     if (invoker.IsTrusted)
                         representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
                             payload, context);
@@ -239,7 +238,7 @@ namespace mROA.Implementation.Backend
                             Result = finalResult
                         };
                         _cancellationRepo!.FreeCancelation(command.Id);
-                        
+
                         representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
                             payload, context);
                     });

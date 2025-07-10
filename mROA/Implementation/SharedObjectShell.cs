@@ -60,7 +60,9 @@ namespace mROA.Implementation
             }
         }
 
-        [SerializationIgnore] [JsonIgnore] public IEndPointContext EndPointContext { get; set; }
+        [SerializationIgnore]
+        [JsonIgnore]
+        public IEndPointContext EndPointContext { get; set; }
 
         public ComplexObjectIdentifier Identifier
         {

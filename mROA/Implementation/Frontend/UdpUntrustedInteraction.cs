@@ -13,6 +13,7 @@ namespace mROA.Implementation.Frontend
         private IChannelInteractionModule _channelInteractionModule;
         private CancellationTokenSource _tokenSource = new();
         private IEndPointContext _context;
+
         public void Dispose()
         {
             _tokenSource.Cancel();
@@ -62,7 +63,6 @@ namespace mROA.Implementation.Frontend
                 var serialized = _serializationToolkit.Serialize(post, _context);
 
                 await udpClient.SendAsync(serialized, serialized.Length);
-
             }
         }
 

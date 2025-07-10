@@ -160,12 +160,11 @@ namespace mROA.Implementation
 
         public class StreamExtractor
         {
-            private static Stopwatch profiler = new Stopwatch();
+            private const int BufferSize = ushort.MaxValue;
+
             private readonly Stream _ioStream;
             private readonly IContextualSerializationToolKit _serializationToolkit;
-            private const int BufferSize = ushort.MaxValue;
             private readonly Memory<byte> _buffer = new byte[BufferSize];
-            private bool _manualConnectionState = true;
             private readonly IEndPointContext _context;
             private readonly byte[] _lenBuffer;
 
@@ -175,7 +174,6 @@ namespace mROA.Implementation
                 _ioStream = ioStream;
                 _serializationToolkit = serializationToolkit;
                 _context = context;
-                profiler.Start();
                 _lenBuffer = new byte[2];
             }
 
@@ -196,7 +194,6 @@ namespace mROA.Implementation
                 var localSpan = _buffer[..len];
 
                 await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: token);
-                profiler.Restart();
                 var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan, _context);
                 MessageReceived(message);
             }
@@ -217,7 +214,6 @@ namespace mROA.Implementation
                 header.CopyTo(_buffer);
                 var sendingSpan = _buffer[..(len + 2)];
                 await _ioStream.WriteAsync(sendingSpan, token);
-                profiler.Restart();
             }
 
             public async Task SendFromChannel(ChannelReader<NetworkMessageHeader> channel,
@@ -230,8 +226,7 @@ namespace mROA.Implementation
                 }
             }
 
-
-            public bool IsConnected => _ioStream is { CanRead: true, CanWrite: true } && _manualConnectionState;
+            public bool IsConnected => _ioStream is { CanRead: true, CanWrite: true };
         }
     }
 }

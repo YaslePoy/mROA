@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
+
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
 
 namespace mROA.Implementation
@@ -71,11 +72,11 @@ namespace mROA.Implementation
                     continue;
                 }
 
-                
+
                 for (int i = 0; i < converter.Length; i++)
                 {
                     var func = converter[i];
-                    if (func(message) is {} t)
+                    if (func(message) is { } t)
                     {
                         var deserialized = _serialization.Deserialize(message.Data, t, context);
                         yield return (deserialized, message.MessageType)!;
@@ -85,7 +86,8 @@ namespace mROA.Implementation
             }
         }
 
-        public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context) where T : notnull
+        public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload,
+            IEndPointContext? context) where T : notnull
         {
             if (_interaction == null)
                 throw new NullReferenceException("Interaction toolkit is not initialized");

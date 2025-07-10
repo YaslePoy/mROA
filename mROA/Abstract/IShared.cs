@@ -1,6 +1,5 @@
-﻿namespace mROA.Implementation
+﻿namespace mROA.Abstract
 {
-#pragma warning disable CS8618, CS9264
     public interface IShared
     {
     }

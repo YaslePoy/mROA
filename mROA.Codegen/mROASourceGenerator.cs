@@ -38,7 +38,7 @@ namespace mROA.Codegen
         private TemplateDocument _interfaceTemplateOriginal;
         private TemplateDocument _methodInvokerOriginal;
         private TemplateDocument _methodRepoTemplate;
-        private int _currentInternalCallIndex = 0;
+        private int _currentInternalCallIndex;
 
 
         private void GenerateCode(SourceProductionContext context, Compilation compilation,
@@ -274,7 +274,7 @@ namespace mROA.Codegen
 
             if (isUntrusted)
             {
-                caller = $"CallUntrustedAsync(_callIndices[{_currentInternalCallIndex++}]{parameterLink})";
+                caller = $"CallUntrustedAsync(CallIndices[{_currentInternalCallIndex++}]{parameterLink})";
             }
             else
             {
@@ -285,10 +285,10 @@ namespace mROA.Codegen
                     : string.Empty;
 
                 caller = isVoid
-                    ? $"CallAsync(_callIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})"
+                    ? $"CallAsync(CallIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})"
                     : isAsync
-                        ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>(_callIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})"
-                        : $"GetResultAsync<{ToFullString(method.ReturnType)}>(_callIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})";
+                        ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>(CallIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})"
+                        : $"GetResultAsync<{ToFullString(method.ReturnType)}>(CallIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})";
 
                 if (!isVoid)
                     prefix = "return " + prefix;
@@ -501,7 +501,7 @@ namespace mROA.Codegen
                 }
 
                 frontend =
-                    $"get => GetResultAsync<{method.ReturnType.ToUnityString()}>(_callIndices[{_currentInternalCallIndex++}]{parametersArray}).GetAwaiter().GetResult();";
+                    $"get => GetResultAsync<{method.ReturnType.ToUnityString()}>(CallIndices[{_currentInternalCallIndex++}]{parametersArray}).GetAwaiter().GetResult();";
             }
             else
             {
@@ -547,7 +547,7 @@ namespace mROA.Codegen
                     backend = invokerTemplate.Compile();
                 }
 
-                frontend = $"set => CallAsync(_callIndices[{_currentInternalCallIndex++}], new System.Object[] {{ {parametersArray} }}).Wait();";
+                frontend = $"set => CallAsync(CallIndices[{_currentInternalCallIndex++}], new System.Object[] {{ {parametersArray} }}).Wait();";
             }
 
             propsCollection.Add((frontend, method));

@@ -32,7 +32,7 @@ namespace mROA.Implementation
 
         private readonly ComplexObjectIdentifier _identifier;
         private readonly IRepresentationModule _representationModule;
-        protected readonly int[] _callIndices;
+        protected readonly int[] CallIndices;
 
         protected RemoteObjectBase(int id, IRepresentationModule representationModule, IEndPointContext context,
             int[] indices)
@@ -40,7 +40,7 @@ namespace mROA.Implementation
             _identifier = new ComplexObjectIdentifier { ContextId = id, OwnerId = representationModule.Id };
             _representationModule = representationModule;
             _context = context;
-            _callIndices = indices;
+            CallIndices = indices;
         }
 
         public int Id => _identifier.ContextId;

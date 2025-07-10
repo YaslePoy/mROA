@@ -21,10 +21,12 @@ namespace mROA.Implementation
         }
 
         public static readonly NetworkMessageHeader Null = new();
+
         public NetworkMessageHeader()
         {
             Data = Array.Empty<byte>();
         }
+
         public NetworkMessageHeader(IContextualSerializationToolKit serializationToolkit,
             INetworkMessage networkMessage, IEndPointContext? context)
         {
@@ -32,6 +34,7 @@ namespace mROA.Implementation
             Data = serializationToolkit.Serialize(networkMessage, context);
             Id = Guid.NewGuid();
         }
+
         public Guid Id { get; set; }
 
         public EMessageType MessageType { get; set; }

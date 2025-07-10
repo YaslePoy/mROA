@@ -17,6 +17,7 @@ namespace mROA.Implementation.Backend
         private CancellationTokenSource _tokenSource = new();
         private IContextualSerializationToolKit _serializationToolkit;
         private IEndPointContext _context;
+
         public UdpGateway(IPEndPoint listeningEndpoint)
         {
             _client = new UdpClient(listeningEndpoint);

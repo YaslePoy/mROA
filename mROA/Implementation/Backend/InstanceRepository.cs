@@ -11,15 +11,10 @@ namespace mROA.Implementation.Backend
     {
         public static object[] EventBinders = { };
 
-        private static int LastDebugId = -1;
-        private int _debugId = -1;
-
         private IRepresentationModuleProducer? _representationModuleProducer;
 
-        // [CanBeNull]
-        private Dictionary<int, object?> _singletons;
-        private IStorage<object> _storage;
-
+        private Dictionary<int, object?> _singletons = new();
+        private readonly IStorage<object> _storage;
 
         public InstanceRepository()
         {
@@ -36,7 +31,7 @@ namespace mROA.Implementation.Backend
             var interfaces = o.GetType().GetInterfaces();
             var generic = interfaces.Where(i => sharedType.IsAssignableFrom(i) && i != sharedType)
                 .Select(i => typeof(IEventBinder<>).MakeGenericType(i));
-            
+
             var binders = EventBinders.Where(i => generic.Any(g => g.IsAssignableFrom(i.GetType())));
             foreach (var binder in binders)
                 ((IEventBinder)binder).BindEvents(o, context, _representationModuleProducer!, last);
@@ -49,7 +44,7 @@ namespace mROA.Implementation.Backend
             _storage.Free(id.ContextId);
         }
 
-        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context)  where T : class
+        public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context) where T : class
         {
             var value = _storage.GetValue(id.ContextId);
 

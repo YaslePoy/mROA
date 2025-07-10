@@ -51,7 +51,7 @@ namespace mROA.Implementation.Backend
             if (_contextRepository is IContextRepositoryHub contextHub)
                 contextHub.FreeRepository(representationModule.Id);
         }
-        
+
         private IRequestExtractor CreateExtractor(IRepresentationModule interaction)
         {
             var extractor = new RequestExtractor();
@@ -61,9 +61,9 @@ namespace mROA.Implementation.Backend
                 context.RealRepository = contextHub.GetRepository(interaction.Id);
             else
                 context.RealRepository = _contextRepository!;
-            
+
             context.RemoteRepository = _remoteContextRepository!;
-            
+
             extractor.Inject(context);
             extractor.Inject(_methodRepository);
             extractor.Inject(_serializationToolkit);

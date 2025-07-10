@@ -32,7 +32,8 @@ namespace mROA.Implementation
             if (_representationProducer == null)
                 throw new NullReferenceException("representation producer is not initialized");
 
-            if (!_callIndexProvider.Activators.TryGetValue(typeof(T), out var remoteType)) throw new NotSupportedException();
+            if (!_callIndexProvider.Activators.TryGetValue(typeof(T), out var remoteType))
+                throw new NotSupportedException();
             var representationModule =
                 _representationProducer.Produce(context.OwnerId);
             var remote = remoteType(id.ContextId,
@@ -56,7 +57,8 @@ namespace mROA.Implementation
             var representationModule =
                 _representationProducer.Produce(context.OwnerId);
 
-            var instance = _callIndexProvider.Activators[type](-1, representationModule, context, _callIndexProvider.GetIndices(type))!;
+            var instance = _callIndexProvider.Activators[type](-1, representationModule, context,
+                _callIndexProvider.GetIndices(type))!;
 
             var remoteObjectBase = instance;
 

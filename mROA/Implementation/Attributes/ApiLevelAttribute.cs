@@ -2,9 +2,10 @@ using System;
 
 namespace mROA.Implementation.Attributes
 {
-    public class ApiLevelAttribute :  Attribute
+    public class ApiLevelAttribute : Attribute
     {
         public int ApiLevel { get; set; }
+
         public ApiLevelAttribute(int level)
         {
             ApiLevel = level;
@@ -12,7 +13,6 @@ namespace mROA.Implementation.Attributes
 
         public ApiLevelAttribute() : this(0)
         {
-            
         }
     }
 }

@@ -82,7 +82,7 @@ namespace mROA.Implementation.Backend
                 {
                     await interaction.ReceiveChanel.Writer.WriteAsync(message);
                 };
-                Task.Run(() => streamExtractor.SingleReceive());
+                _ = Task.Run(() => streamExtractor.SingleReceive());
                 var connectionRequest = await interaction.ReceiveChanel.Reader.ReadAsync();
                 var cts = new CancellationTokenSource();
 

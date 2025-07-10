@@ -11,6 +11,6 @@ namespace mROA.Abstract
         T Deserialize<T>(ReadOnlyMemory<byte> rawMemory, IEndPointContext? context);
         object? Deserialize(ReadOnlyMemory<byte> rawMemory, Type type, IEndPointContext? context);
         T Cast<T>(object nonCasted, IEndPointContext? context);
-        object? Cast(object nonCasted, Type type, IEndPointContext? context);
+        object? Cast(object? nonCasted, Type type, IEndPointContext? context);
     }
 }

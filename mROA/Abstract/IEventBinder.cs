@@ -5,7 +5,8 @@
         public void BindEvents(T source, IEndPointContext context,
             IRepresentationModuleProducer representationModuleProducer, int index);
 
-        void IEventBinder.BindEvents(object source, IEndPointContext context, IRepresentationModuleProducer representationModuleProducer,
+        void IEventBinder.BindEvents(object source, IEndPointContext context,
+            IRepresentationModuleProducer representationModuleProducer,
             int index)
         {
             BindEvents((T)source, context, representationModuleProducer, index);

@@ -1,5 +1,6 @@
 ﻿using System;
 using mROA.Abstract;
+using mROA.Implementation.Bootstrap;
 using mROA.Implementation.Frontend;
 
 namespace mROA.Implementation.CommandExecution

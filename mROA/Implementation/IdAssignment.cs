@@ -13,6 +13,7 @@ namespace mROA.Implementation
         {
             Id = 0;
         }
+
         public ClientRecovery(int id)
         {
             Id = id;
