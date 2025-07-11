@@ -19,9 +19,9 @@ class Program
 {
     public static async Task Main(string[] args)
     {
-        var builder = new FullMixBuilder();
         new RemoteTypeBinder();
 
+        
         builder.Modules.Add(new CborSerializationToolkit());
         builder.Modules.Add(new EndPointContext());
         builder.Modules.Add(new RemoteInstanceRepository());

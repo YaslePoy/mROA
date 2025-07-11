@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using mROA.Abstract;
 using static mROA.Implementation.EMessageType;
 
@@ -16,14 +17,12 @@ namespace mROA.Implementation.Backend
         private Dictionary<IPEndPoint, int> _reservedPorts = new();
         private CancellationTokenSource _tokenSource = new();
         private IContextualSerializationToolKit _serializationToolkit;
-        private IEndPointContext _context;
 
-        public UdpGateway(IPEndPoint listeningEndpoint, IConnectionHub hub, IContextualSerializationToolKit serializationToolkit, IEndPointContext context)
+        public UdpGateway(IOptions<GatewayOptions> options, IConnectionHub hub, IContextualSerializationToolKit serializationToolkit)
         {
             _hub = hub;
             _serializationToolkit = serializationToolkit;
-            _context = context;
-            _client = new UdpClient(listeningEndpoint);
+            _client = new UdpClient(options.Value.Endpoint);
         }
 
 
@@ -41,7 +40,7 @@ namespace mROA.Implementation.Backend
                 while (token.IsCancellationRequested == false)
                 {
                     var incoming = await _client.ReceiveAsync();
-                    var parsed = _serializationToolkit.Deserialize<NetworkMessageHeader>(incoming.Buffer, _context);
+                    var parsed = _serializationToolkit.Deserialize<NetworkMessageHeader>(incoming.Buffer, null);
                     try
                     {
                         int channelId;
@@ -77,7 +76,7 @@ namespace mROA.Implementation.Backend
                             or EventRequest))
                             continue;
 
-                        var parsed = _serializationToolkit.Serialize(post, _context);
+                        var parsed = _serializationToolkit.Serialize(post, null);
                         await _client.SendAsync(parsed, parsed.Length, endpoint);
                     }
                 }
