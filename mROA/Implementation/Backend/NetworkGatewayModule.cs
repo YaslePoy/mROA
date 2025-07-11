@@ -4,26 +4,26 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using mROA.Abstract;
 
 namespace mROA.Implementation.Backend
 {
     public class NetworkGatewayModule : IGatewayModule
     {
-        private readonly IInjectableModule[]? _injectableModules;
-        private readonly Type? _interactionModuleType;
+        private readonly IServiceProvider _serviceProvider;
         private readonly TcpListener _tcpListener;
         private IConnectionHub? _hub;
-        private IContextualSerializationToolKit? _serialization;
-        private Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
-        private ICallIndexProvider _callIndexProvider;
-
-        public NetworkGatewayModule(IPEndPoint endpoint, Type interactionModuleType,
-            IInjectableModule[] injectableModules)
+        private readonly IContextualSerializationToolKit _serialization;
+        private readonly Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
+        private ICallIndexProvider? _callIndexProvider;
+        private readonly IIdentityGenerator _identityGenerator;
+        public NetworkGatewayModule(IOptions<GatewayOptions> options, IServiceProvider service, IIdentityGenerator identityGenerator, IContextualSerializationToolKit serialization)
         {
-            _tcpListener = new(endpoint);
-            _interactionModuleType = interactionModuleType;
-            _injectableModules = injectableModules;
+            _tcpListener = new(options.Value.Endpoint);
+            _serviceProvider = service;
+            _identityGenerator = identityGenerator;
+            _serialization = serialization;
         }
 
         public void Run()
@@ -40,40 +40,15 @@ namespace mROA.Implementation.Backend
             _tcpListener.Stop();
         }
 
-        public void Inject(object dependency)
-        {
-            switch (dependency)
-            {
-                case IConnectionHub interactionModule:
-                    _hub = interactionModule;
-                    break;
-                case IContextualSerializationToolKit serializationToolkit:
-                    _serialization = serializationToolkit;
-                    break;
-                case ICallIndexProvider callIndexProvider:
-                    _callIndexProvider = callIndexProvider;
-                    break;
-            }
-        }
-
         private async Task HandleIncomingConnections()
         {
-            ThrowIfNotInjected();
-
             while (true)
             {
                 var client = await _tcpListener.AcceptTcpClientAsync();
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
-                var interaction = Activator.CreateInstance(_interactionModuleType!) as IChannelInteractionModule;
-
-                foreach (var injectableModule in _injectableModules!)
-                    interaction!.Inject(injectableModule);
-
-                interaction!.Inject(_serialization);
-
-
-                //TODO сделать контекст
-                var context = new EndPointContext();
+                var interaction = new ChannelInteractionModule(_serialization, _identityGenerator);
+                
+                var context = new EndPointContext(null, null);
                 context.CallIndexProvider = _callIndexProvider;
                 var streamExtractor =
                     new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
@@ -91,7 +66,7 @@ namespace mROA.Implementation.Backend
                     case EMessageType.ClientConnect:
                         context.HostId = 0;
                         context.OwnerId = -interaction.ConnectionId;
-                        interaction.Inject(context);
+                        interaction.Context = context;
                         Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
                         _ = streamExtractor.SendFromChannel(interaction.TrustedPostChanel, cts.Token);
                         interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
@@ -126,19 +101,11 @@ namespace mROA.Implementation.Backend
                 }
             }
         }
+    }
 
-        private void ThrowIfNotInjected()
-        {
-            if (_hub is null)
-                throw new NullReferenceException("Hub module is null");
-            if (_tcpListener == null)
-                throw new NullReferenceException("TcpListener is null");
-            if (_injectableModules is null)
-                throw new NullReferenceException("InjectableModules is null");
-            if (_interactionModuleType is null)
-                throw new NullReferenceException("InteractionModuleType is null");
-            if (_serialization is null)
-                throw new NullReferenceException("Serialization is null");
-        }
+    public class GatewayOptions
+    {
+        public IPEndPoint Endpoint { get; set; }
+        public Type InteractionModuleType { get; set; }
     }
 }

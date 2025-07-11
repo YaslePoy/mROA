@@ -1,10 +1,19 @@
 using mROA.Abstract;
-using mROA.Implementation.Backend;
 
 namespace mROA.Implementation
 {
     public class EndPointContext : IEndPointContext
     {
+        public EndPointContext()
+        {
+            
+        }
+        public EndPointContext(IInstanceRepository realRepository, IInstanceRepository remoteRepository)
+        {
+            RealRepository = realRepository;
+            RemoteRepository = remoteRepository;
+        }
+
         public IInstanceRepository RealRepository { get; set; }
         public IInstanceRepository RemoteRepository { get; set; }
         public ICallIndexProvider CallIndexProvider { get; set; }
@@ -12,19 +21,5 @@ namespace mROA.Implementation
         public int HostId { get; set; }
 
         public int OwnerId { get; set; }
-
-
-        public void Inject(object dependency)
-        {
-            switch (dependency)
-            {
-                case RemoteInstanceRepository remoteRepository:
-                    RemoteRepository = remoteRepository;
-                    break;
-                case InstanceRepository realRepository:
-                    RealRepository = realRepository;
-                    break;
-            }
-        }
     }
 }

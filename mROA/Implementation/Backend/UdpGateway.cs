@@ -18,27 +18,14 @@ namespace mROA.Implementation.Backend
         private IContextualSerializationToolKit _serializationToolkit;
         private IEndPointContext _context;
 
-        public UdpGateway(IPEndPoint listeningEndpoint)
+        public UdpGateway(IPEndPoint listeningEndpoint, IConnectionHub hub, IContextualSerializationToolKit serializationToolkit, IEndPointContext context)
         {
+            _hub = hub;
+            _serializationToolkit = serializationToolkit;
+            _context = context;
             _client = new UdpClient(listeningEndpoint);
         }
 
-
-        public void Inject(object dependency)
-        {
-            switch (dependency)
-            {
-                case IConnectionHub hub:
-                    _hub = hub;
-                    break;
-                case IContextualSerializationToolKit serializationToolkit:
-                    _serializationToolkit = serializationToolkit;
-                    break;
-                case IEndPointContext context:
-                    _context = context;
-                    break;
-            }
-        }
 
         public void Dispose()
         {

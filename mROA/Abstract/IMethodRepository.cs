@@ -1,6 +1,6 @@
 ﻿namespace mROA.Abstract
 {
-    public interface IMethodRepository : IInjectableModule
+    public interface IMethodRepository
     {
         IMethodInvoker GetMethod(int id);
     }

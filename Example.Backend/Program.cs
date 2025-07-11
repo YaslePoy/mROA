@@ -8,53 +8,61 @@ using mROA.Cbor;
 using mROA.Codegen;
 using mROA.Implementation;
 using mROA.Implementation.Backend;
-using mROA.Implementation.Bootstrap;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 class Program
 {
     public static void Main(string[] args)
     {
-        var builder = new FullMixBuilder();
-        // builder.UseJsonSerialisation();
-        builder.Modules.Add(new CborSerializationToolkit());
-        builder.Modules.Add(new BackendIdentityGenerator());
-        // builder.UseNetworkGateway(new IPEndPoint(IPAddress.Loopback, 4567), typeof(NextGenerationInteractionModule),
-        //     builder.GetModule<IIdentityGenerator>()!);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton<IContextualSerializationToolKit, CborSerializationToolkit>();
+        builder.Services.AddSingleton<IIdentityGenerator, BackendIdentityGenerator>();
+        builder.Services.AddSingleton<IGatewayModule, NetworkGatewayModule>();
+        builder.Services.AddSingleton<IUntrustedGateway, UdpGateway>();
+        builder.Services.AddSingleton<IConnectionHub, ConnectionHub>();
+        builder.Services.AddOptions();
         var listening = new IPEndPoint(IPAddress.Any, 4567);
-        builder.UseNetworkGateway(listening, typeof(ChannelInteractionModule),
-            builder.GetModule<IIdentityGenerator>()!);
-        builder.Modules.Add(new UdpGateway(listening));
-        builder.Modules.Add(new ConnectionHub());
-        builder.Modules.Add(new HubRequestExtractor());
 
-        builder.UseBasicExecution();
-        builder.Modules.Add(new CreativeRepresentationModuleProducer(
-            new IInjectableModule[] { builder.GetModule<IContextualSerializationToolKit>()! },
-            typeof(RepresentationModule)));
-        builder.Modules.Add(new RemoteInstanceRepository());
-// builder.UseCollectableContextRepository(typeof(PrinterFactory).Assembly);
-        builder.Modules.Add(new MultiClientInstanceRepository(i =>
+        builder.Services.Configure<GatewayOptions>(options => options.Endpoint = listening);
+
+        builder.Services.AddSingleton<HubRequestExtractor>();
+
+        builder.Services.AddSingleton<IExecuteModule, BasicExecutionModule>();
+        builder.Services.AddSingleton<IRepresentationModuleProducer, CreativeRepresentationModuleProducer>();
+        builder.Services.AddSingleton<IInstanceRepository, RemoteInstanceRepository>();
+        builder.Services.AddSingleton<IRealStoreInstanceRepository>(provider => new MultiClientInstanceRepository(i =>
         {
-            var repo = new InstanceRepository();
+            var producer = provider.GetService<IRepresentationModuleProducer>();
+            var repo = new InstanceRepository(producer);
             repo.FillSingletons(typeof(PrinterFactory).Assembly);
-            repo.Inject(builder.Modules.OfType<CreativeRepresentationModuleProducer>().First());
+
             return repo;
         }));
-        var methodRepo = new CollectableMethodRepository();
-        methodRepo.AppendInvokers(new GeneratedInvokersCollection());
-        builder.Modules.Add(methodRepo);
-        builder.Modules.Add(new GeneratedCallIndexProvider());
-        builder.Modules.Add(new GeneratedCallIndexProvider());
-        builder.Modules.Add(new CancellationRepository());
 
-        builder.Build();
-        new RemoteTypeBinder();
+        builder.Services.AddSingleton<IMethodRepository>(p =>
+        {
+            var methodRepo = new CollectableMethodRepository();
+            methodRepo.AppendInvokers(new GeneratedInvokersCollection());
+            return methodRepo;
+        });
+        builder.Services.AddSingleton<ICallIndexProvider, GeneratedCallIndexProvider>();
 
+        builder.Services.AddSingleton<ICancellationRepository, CancellationRepository>();
 
-        _ = builder.GetModule<UdpGateway>()!.Start();
-        var gateway = builder.GetModule<IGatewayModule>();
-        gateway.Run();
-        
-        Console.ReadLine();
+        var mroaMachine = builder.Build();
+
+        mroaMachine.StartAsync();
+//
+//         builder.Build();
+//         new RemoteTypeBinder();
+//
+//
+         _ = mroaMachine.Services.GetService<IUntrustedGateway>()!.Start();
+         var gateway = mroaMachine.Services.GetService<IGatewayModule>();
+         gateway.Run();
+         
+         Console.ReadLine();
+
     }
 }

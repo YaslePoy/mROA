@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace mROA.Abstract
 {
-    public interface IUntrustedGateway : IInjectableModule, IDisposable
+    public interface IUntrustedGateway : IDisposable
     {
         Task Start();
     }

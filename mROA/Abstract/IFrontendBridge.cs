@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace mROA.Abstract
 {
-    public interface IFrontendBridge : IInjectableModule, IDisposable
+    public interface IFrontendBridge : IDisposable
     {
         Task Connect();
         void Obstacle();

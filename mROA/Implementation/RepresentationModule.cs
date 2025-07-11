@@ -12,20 +12,13 @@ namespace mROA.Implementation
 {
     public class RepresentationModule : IRepresentationModule
     {
-        private IChannelInteractionModule? _interaction;
-        private IContextualSerializationToolKit? _serialization;
+        private IChannelInteractionModule _interaction;
+        private IContextualSerializationToolKit _serialization;
 
-        public void Inject(object dependency)
+        public RepresentationModule(IChannelInteractionModule interaction, IContextualSerializationToolKit serialization)
         {
-            switch (dependency)
-            {
-                case IContextualSerializationToolKit toolkit:
-                    _serialization = toolkit;
-                    break;
-                case IChannelInteractionModule interactionModule:
-                    _interaction = interactionModule;
-                    break;
-            }
+            _interaction = interaction;
+            _serialization = serialization;
         }
 
 

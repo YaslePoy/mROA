@@ -6,7 +6,7 @@ using mROA.Implementation;
 
 namespace mROA.Abstract
 {
-    public interface IRepresentationModule : IInjectableModule
+    public interface IRepresentationModule
     {
         int Id { get; }
         IEndPointContext Context { get; }

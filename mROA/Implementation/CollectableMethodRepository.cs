@@ -7,10 +7,6 @@ namespace mROA.Implementation
     {
         private List<IMethodInvoker> _methods = new();
 
-        public void Inject(object dependency)
-        {
-        }
-
         public void AppendInvokers(IEnumerable<IMethodInvoker> methodInvokers)
         {
             _methods.AddRange(methodInvokers);

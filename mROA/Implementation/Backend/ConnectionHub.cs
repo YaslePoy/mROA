@@ -7,7 +7,12 @@ namespace mROA.Implementation.Backend
     public class ConnectionHub : IConnectionHub
     {
         private readonly Dictionary<int, IChannelInteractionModule> _connections = new();
-        private IContextualSerializationToolKit? _serializationToolkit;
+        private IContextualSerializationToolKit _serializationToolkit;
+
+        public ConnectionHub(IContextualSerializationToolKit serializationToolkit)
+        {
+            _serializationToolkit = serializationToolkit;
+        }
 
         public void RegisterInteraction(IChannelInteractionModule interaction)
         {
@@ -15,9 +20,7 @@ namespace mROA.Implementation.Backend
                 throw new NullReferenceException("Serialization toolkit is null");
 
             _connections.Add(interaction.ConnectionId, interaction);
-            var module = new RepresentationModule();
-            module.Inject(_serializationToolkit);
-            module.Inject(interaction);
+            var module = new RepresentationModule(interaction, _serializationToolkit);
             OnConnected?.Invoke(module);
         }
 
@@ -29,11 +32,5 @@ namespace mROA.Implementation.Backend
 
         public event ConnectionHandler? OnConnected;
         public event DisconnectionHandler? OnDisconnected;
-
-        public void Inject(object dependency)
-        {
-            if (dependency is IContextualSerializationToolKit serializationToolkit)
-                _serializationToolkit = serializationToolkit;
-        }
     }
 }

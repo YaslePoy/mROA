@@ -9,10 +9,17 @@ namespace mROA.Implementation.Frontend
 {
     public class UdpUntrustedInteraction : IUntrustedInteractionModule
     {
-        private IContextualSerializationToolKit _serializationToolkit;
-        private IChannelInteractionModule _channelInteractionModule;
-        private CancellationTokenSource _tokenSource = new();
-        private IEndPointContext _context;
+        private readonly IContextualSerializationToolKit _serializationToolkit;
+        private readonly IChannelInteractionModule _channelInteractionModule;
+        private readonly CancellationTokenSource _tokenSource = new();
+        private readonly IEndPointContext _context;
+
+        public UdpUntrustedInteraction(IContextualSerializationToolKit serializationToolkit, IChannelInteractionModule channelInteractionModule, IEndPointContext context)
+        {
+            _serializationToolkit = serializationToolkit;
+            _channelInteractionModule = channelInteractionModule;
+            _context = context;
+        }
 
         public void Dispose()
         {
@@ -63,22 +70,6 @@ namespace mROA.Implementation.Frontend
                 var serialized = _serializationToolkit.Serialize(post, _context);
 
                 await udpClient.SendAsync(serialized, serialized.Length);
-            }
-        }
-
-        public void Inject(object dependency)
-        {
-            switch (dependency)
-            {
-                case IChannelInteractionModule channelModule:
-                    _channelInteractionModule = channelModule;
-                    break;
-                case IContextualSerializationToolKit serializationToolkit:
-                    _serializationToolkit = serializationToolkit;
-                    break;
-                case IEndPointContext endPointContext:
-                    _context = endPointContext;
-                    break;
             }
         }
     }

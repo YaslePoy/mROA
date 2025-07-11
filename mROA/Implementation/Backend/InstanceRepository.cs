@@ -7,17 +7,18 @@ using mROA.Implementation.Attributes;
 
 namespace mROA.Implementation.Backend
 {
-    public class InstanceRepository : IInstanceRepository
+    public class InstanceRepository : IRealStoreInstanceRepository
     {
         public static object[] EventBinders = { };
 
-        private IRepresentationModuleProducer? _representationModuleProducer;
+        private IRepresentationModuleProducer _representationModuleProducer;
 
         private Dictionary<int, object?> _singletons = new();
         private readonly IStorage<object> _storage;
 
-        public InstanceRepository()
+        public InstanceRepository(IRepresentationModuleProducer representationModuleProducer)
         {
+            _representationModuleProducer = representationModuleProducer;
             _storage = new ExtensibleStorage<object>();
         }
 
@@ -34,7 +35,7 @@ namespace mROA.Implementation.Backend
 
             var binders = EventBinders.Where(i => generic.Any(g => g.IsAssignableFrom(i.GetType())));
             foreach (var binder in binders)
-                ((IEventBinder)binder).BindEvents(o, context, _representationModuleProducer!, last);
+                ((IEventBinder)binder).BindEvents(o, context, _representationModuleProducer, last);
 
             return last;
         }
@@ -72,14 +73,6 @@ namespace mROA.Implementation.Backend
         {
             var index = _storage.GetIndex(o);
             return index == -1 ? ResisterObject<T>(o, context) : index;
-        }
-
-        public void Inject(object dependency)
-        {
-            if (dependency is IRepresentationModuleProducer moduleProducer)
-            {
-                _representationModuleProducer = moduleProducer;
-            }
         }
 
         public void FillSingletons(params Assembly[] assembly)

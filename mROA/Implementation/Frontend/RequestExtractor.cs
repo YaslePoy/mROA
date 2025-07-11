@@ -9,34 +9,21 @@ namespace mROA.Implementation.Frontend
 {
     public class RequestExtractor : IRequestExtractor
     {
-        private IExecuteModule? _executeModule;
+        private IExecuteModule _executeModule;
 
-        private IMethodRepository? _methodRepository;
+        private IMethodRepository _methodRepository;
 
-        private IRepresentationModule? _representationModule;
-        private IContextualSerializationToolKit? _serializationToolkit;
+        private IRepresentationModule _representationModule;
+        private IContextualSerializationToolKit _serializationToolkit;
         private IEndPointContext _context;
 
-        public void Inject(object dependency)
+        public RequestExtractor(IExecuteModule executeModule, IMethodRepository methodRepository, IRepresentationModule representationModule, IContextualSerializationToolKit serializationToolkit, IEndPointContext context)
         {
-            switch (dependency)
-            {
-                case IExecuteModule executeModule:
-                    _executeModule = executeModule;
-                    break;
-                case IMethodRepository methodRepository:
-                    _methodRepository = methodRepository;
-                    break;
-                case IRepresentationModule representationModule:
-                    _representationModule = representationModule;
-                    break;
-                case IContextualSerializationToolKit serializationToolkit:
-                    _serializationToolkit = serializationToolkit;
-                    break;
-                case IEndPointContext remoteContext:
-                    _context = remoteContext;
-                    break;
-            }
+            _executeModule = executeModule;
+            _methodRepository = methodRepository;
+            _representationModule = representationModule;
+            _serializationToolkit = serializationToolkit;
+            _context = context;
         }
 
         public async Task StartExtraction()
@@ -45,7 +32,7 @@ namespace mROA.Implementation.Frontend
 
             var streamTokenSource = new CancellationTokenSource();
 
-            var query = _representationModule!.GetStream(m =>
+            var query = _representationModule.GetStream(m =>
                     m.MessageType is EMessageType.CallRequest or EMessageType.CancelRequest
                         or EMessageType.EventRequest or EMessageType.ClientDisconnect, _context,
                 streamTokenSource.Token,
@@ -90,12 +77,12 @@ namespace mROA.Implementation.Frontend
 
         private void HandleCancelRequest(CancelRequest req)
         {
-            _executeModule!.Execute(req, _context.RealRepository, _representationModule!, _context);
+            _executeModule.Execute(req, _context.RealRepository, _representationModule, _context);
         }
 
         private void HandleCallRequest(DefaultCallRequest request)
         {
-            var result = _executeModule!.Execute(request, _context.RealRepository, _representationModule!, _context);
+            var result = _executeModule.Execute(request, _context.RealRepository, _representationModule, _context);
 
             var resultType = result.MessageType;
 
@@ -104,12 +91,12 @@ namespace mROA.Implementation.Frontend
                 return;
             }
 
-            _representationModule!.PostCallMessage(request.Id, resultType, result, _context);
+            _representationModule.PostCallMessage(request.Id, resultType, result, _context);
         }
 
         private void HandleEventRequest(DefaultCallRequest request)
         {
-            _executeModule!.Execute(request, _context.RemoteRepository, _representationModule!, _context);
+            _executeModule.Execute(request, _context.RemoteRepository, _representationModule, _context);
         }
     }
 }

@@ -3,7 +3,7 @@ using mROA.Implementation;
 
 namespace mROA.Abstract
 {
-    public interface IInstanceRepository : IInjectableModule
+    public interface IInstanceRepository
     {
         int ResisterObject<T>(object o, IEndPointContext context);
         void ClearObject(ComplexObjectIdentifier id, IEndPointContext context);

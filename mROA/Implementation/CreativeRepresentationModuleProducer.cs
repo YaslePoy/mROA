@@ -5,37 +5,25 @@ namespace mROA.Implementation
 {
     public class CreativeRepresentationModuleProducer : IRepresentationModuleProducer
     {
-        private Type _reprModuleType;
-        private IInjectableModule[] _creationModules;
-        private IConnectionHub? _hub;
-
-        public CreativeRepresentationModuleProducer(IInjectableModule[] creationModules, Type reprModuleType)
+        private IServiceProvider _creationModules;
+        private IConnectionHub _hub;
+        private IContextualSerializationToolKit _serialization;
+        public CreativeRepresentationModuleProducer(IServiceProvider creationModules, IConnectionHub hub, IContextualSerializationToolKit serialization)
         {
             _creationModules = creationModules;
-            _reprModuleType = reprModuleType;
+            _hub = hub;
+            _serialization = serialization;
         }
 
-
-        public void Inject(object dependency)
-        {
-            if (dependency is IConnectionHub interactionModule)
-                _hub = interactionModule;
-        }
 
         public IRepresentationModule Produce(int id)
         {
             if (_hub == null)
                 throw new NullReferenceException("Interaction module is null");
 
-            var produced =
-                Activator.CreateInstance(_reprModuleType) as IRepresentationModule ??
-                throw new Exception("Bad serialization module type");
-
-            foreach (var creationModule in _creationModules)
-                produced.Inject(creationModule);
-
             var interaction = _hub.GetInteraction(id);
-            produced.Inject(interaction);
+            
+            var produced = new RepresentationModule(interaction, _serialization);
 
             return produced;
         }

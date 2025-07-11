@@ -10,7 +10,14 @@ namespace mROA.Implementation
         private List<RemoteObjectBase> _producedProxys = new();
         private ICallIndexProvider _callIndexProvider;
 
-        private IRepresentationModuleProducer? _representationProducer;
+        private IRepresentationModuleProducer _representationProducer;
+
+        public RemoteInstanceRepository(ICallIndexProvider callIndexProvider, IRepresentationModuleProducer representationProducer, int hostId)
+        {
+            _callIndexProvider = callIndexProvider;
+            _representationProducer = representationProducer;
+            HostId = hostId;
+        }
 
         public int HostId { get; set; }
 
@@ -75,19 +82,6 @@ namespace mROA.Implementation
             }
 
             throw new NotSupportedException();
-        }
-
-        public void Inject(object dependency)
-        {
-            switch (dependency)
-            {
-                case IRepresentationModuleProducer serialisationModule:
-                    _representationProducer = serialisationModule;
-                    break;
-                case ICallIndexProvider callIndexProvider:
-                    _callIndexProvider = callIndexProvider;
-                    break;
-            }
         }
     }
 }

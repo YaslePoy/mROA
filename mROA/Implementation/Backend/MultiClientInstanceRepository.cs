@@ -4,7 +4,7 @@ using mROA.Abstract;
 
 namespace mROA.Implementation.Backend
 {
-    public class MultiClientInstanceRepository : IInstanceRepository, IContextRepositoryHub
+    public class MultiClientInstanceRepository : IRealStoreInstanceRepository, IContextRepositoryHub
     {
         private readonly Func<int, IInstanceRepository> _produceRepository;
         private readonly Dictionary<int, IInstanceRepository> _repositories = new();
@@ -12,10 +12,6 @@ namespace mROA.Implementation.Backend
         public MultiClientInstanceRepository(Func<int, IInstanceRepository> produceRepository)
         {
             _produceRepository = produceRepository;
-        }
-
-        public void Inject(object dependency)
-        {
         }
 
         public int HostId { get; set; }

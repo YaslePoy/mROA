@@ -2,7 +2,7 @@
 
 namespace mROA.Abstract
 {
-    public interface IContextualSerializationToolKit : IInjectableModule
+    public interface IContextualSerializationToolKit
     {
         byte[] Serialize(object objectToSerialize, IEndPointContext? context);
         int Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext? context);

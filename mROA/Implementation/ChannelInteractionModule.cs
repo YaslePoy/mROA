@@ -15,14 +15,17 @@ namespace mROA.Implementation
         private readonly ChannelWriter<NetworkMessageHeader> _untrustedWriter;
         private readonly Channel<NetworkMessageHeader> _outputTrustedChannel;
         private readonly Channel<NetworkMessageHeader> _outputUntrustedChannel;
-        private IContextualSerializationToolKit? _serialization;
+        private IContextualSerializationToolKit _serialization;
         private bool _isConnected = true;
         private bool _isActive = true;
         private TaskCompletionSource<Stream> _reconnection;
-        private IEndPointContext? _context;
 
-        public ChannelInteractionModule()
+        public ChannelInteractionModule(IContextualSerializationToolKit serialization,
+            IIdentityGenerator identityGenerator)
         {
+            _serialization = serialization;
+            ConnectionId = identityGenerator.GetNextIdentity();
+
             ReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
             {
                 SingleReader = false,
@@ -46,28 +49,12 @@ namespace mROA.Implementation
 
         public int ConnectionId { get; set; }
 
-        public IEndPointContext Context => _context;
+        public IEndPointContext Context { get; set; }
         public Channel<NetworkMessageHeader> ReceiveChanel { get; }
 
         public ChannelReader<NetworkMessageHeader> TrustedPostChanel => _outputTrustedChannel.Reader;
         public ChannelReader<NetworkMessageHeader> UntrustedPostChanel => _outputUntrustedChannel.Reader;
         public Func<bool> IsConnected { get; set; } = () => false;
-
-        public void Inject(object dependency)
-        {
-            switch (dependency)
-            {
-                case IContextualSerializationToolKit toolkit:
-                    _serialization = toolkit;
-                    break;
-                case IIdentityGenerator identityGenerator:
-                    ConnectionId = identityGenerator.GetNextIdentity();
-                    break;
-                case IEndPointContext endpointContext:
-                    _context = endpointContext;
-                    break;
-            }
-        }
 
         public ValueTask<NetworkMessageHeader> GetNextMessageReceiving(bool infinite = true)
         {
@@ -122,7 +109,7 @@ namespace mROA.Implementation
             if (sendRecovery)
             {
                 await PostMessageAsync(
-                    new NetworkMessageHeader(_serialization!, new ClientRecovery(Math.Abs(ConnectionId)), _context));
+                    new NetworkMessageHeader(_serialization, new ClientRecovery(Math.Abs(ConnectionId)), Context));
                 await ReceiveChanel.Reader.ReadAsync();
             }
             else

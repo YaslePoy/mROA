@@ -1,6 +1,6 @@
 ﻿namespace mROA.Abstract
 {
-    public interface IIdentityGenerator : IInjectableModule
+    public interface IIdentityGenerator
     {
         int GetNextIdentity();
     }

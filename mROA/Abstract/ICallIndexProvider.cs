@@ -5,7 +5,7 @@ using mROA.Implementation;
 
 namespace mROA.Abstract
 {
-    public interface ICallIndexProvider : IInjectableModule
+    public interface ICallIndexProvider
     {
         Dictionary<Type, Func<int, IRepresentationModule, IEndPointContext, int[], RemoteObjectBase>> Activators
         {

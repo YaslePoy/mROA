@@ -4,7 +4,7 @@
 
     public delegate void DisconnectionHandler(IRepresentationModule representationModule);
 
-    public interface IConnectionHub : IInjectableModule
+    public interface IConnectionHub
     {
         void RegisterInteraction(IChannelInteractionModule interaction);
         IChannelInteractionModule GetInteraction(int id);

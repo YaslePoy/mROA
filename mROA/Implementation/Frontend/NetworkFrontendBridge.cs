@@ -13,31 +13,17 @@ namespace mROA.Implementation.Frontend
         private readonly IPEndPoint _serverEndPoint;
         private TcpClient _tcpClient = new();
         private IChannelInteractionModule? _interactionModule;
-        private IContextualSerializationToolKit? _serialization;
-        private ChannelInteractionModule.StreamExtractor _currentExtractor;
+        private IContextualSerializationToolKit _serialization;
+        private ChannelInteractionModule.StreamExtractor? _currentExtractor;
         private CancellationTokenSource _rawExtractorCancellation;
         private IEndPointContext _context;
 
-        public NetworkFrontendBridge(IPEndPoint serverEndPoint)
+        public NetworkFrontendBridge(IPEndPoint serverEndPoint, IEndPointContext context, IContextualSerializationToolKit serialization)
         {
             _serverEndPoint = serverEndPoint;
+            _context = context;
+            _serialization = serialization;
             _rawExtractorCancellation = new CancellationTokenSource();
-        }
-
-        public void Inject(object dependency)
-        {
-            switch (dependency)
-            {
-                case ChannelInteractionModule interactionModule:
-                    _interactionModule = interactionModule;
-                    break;
-                case IContextualSerializationToolKit toolkit:
-                    _serialization = toolkit;
-                    break;
-                case IEndPointContext endPointContext:
-                    _context = endPointContext;
-                    break;
-            }
         }
 
         public async Task Connect()
@@ -77,7 +63,7 @@ namespace mROA.Implementation.Frontend
         private void PrepareExtractor()
         {
             _currentExtractor =
-                new ChannelInteractionModule.StreamExtractor(_tcpClient.GetStream(), _serialization!, _context);
+                new ChannelInteractionModule.StreamExtractor(_tcpClient.GetStream(), _serialization, _context);
 
             _ = _currentExtractor.SendFromChannel(_interactionModule!.TrustedPostChanel,
                 _rawExtractorCancellation.Token);
@@ -109,7 +95,7 @@ namespace mROA.Implementation.Frontend
 
         public void Disconnect()
         {
-            _ = _interactionModule!.PostMessageAsync(new NetworkMessageHeader(_serialization!, new ClientDisconnect(),
+            _ = _interactionModule!.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientDisconnect(),
                 _context));
             _interactionModule.Dispose();
             _tcpClient.Dispose();

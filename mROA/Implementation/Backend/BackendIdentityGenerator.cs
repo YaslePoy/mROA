@@ -10,9 +10,5 @@ namespace mROA.Implementation.Backend
         {
             return -++_currentId;
         }
-
-        public void Inject(object dependency)
-        {
-        }
     }
 }
