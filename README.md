@@ -47,5 +47,5 @@ Full example is represented in Example projects
 ## Roadmap
 
 * [ ] Encryption. RSA + AES standards
-* [ ] CBOR or another binary format serialization
+* [x] CBOR or another binary format serialization
 * [ ] Sessions for clients, tracking and clearing their remote objects
