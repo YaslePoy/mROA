@@ -22,7 +22,7 @@ class Program
     {
         new RemoteTypeBinder();
 
-        var builder = Host.CreateApplicationBuilder();
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
         builder.Services.AddSingleton<IContextualSerializationToolKit, CborSerializationToolkit>();
         builder.Services.AddSingleton<IEndPointContext, EndPointContext>();
         builder.Services.AddSingleton<IRealStoreInstanceRepository, InstanceRepository>(provider =>

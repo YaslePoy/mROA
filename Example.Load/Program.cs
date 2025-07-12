@@ -1,14 +1,17 @@
 ﻿using System.Net;
 using Example.Shared;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using mROA.Abstract;
 using mROA.Cbor;
 using mROA.Codegen;
 using mROA.Implementation;
 using mROA.Implementation.Backend;
-using mROA.Implementation.Bootstrap;
 using mROA.Implementation.Frontend;
 
-const int C = 100;
+
+const int C = 6;
 var time = TimeSpan.FromSeconds(10);
 Console.WriteLine($"Starting bench for {time} from {C} connections");
 var cts = new CancellationTokenSource();
@@ -17,10 +20,11 @@ new RemoteTypeBinder();
 var tasks = new Task<int>[C];
 for (int i = 0; i < C; i++)
 {
-    tasks[i] = Requests(cts.Token);
+    tasks[i] = Requests(cts.Token, i);
 }
 
 cts.CancelAfter(time);
+Console.WriteLine($"Test end at {DateTime.Now.Add(time)}");
 Console.WriteLine("Start waiting");
 await Task.WhenAll(tasks);
 Console.WriteLine("End waiting");
@@ -29,48 +33,78 @@ var totalRequests = tasks.Sum(i => i.Result);
 Console.WriteLine($"Total requests: {totalRequests}");
 Console.WriteLine($"Results: {totalRequests / time.TotalSeconds:N} RPS");
 
-async Task<int> Requests(CancellationToken token)
+async Task<int> Requests(CancellationToken token, int id)
 {
-    var builder = new FullMixBuilder();
-
-    builder.Modules.Add(new CborSerializationToolkit());
-    builder.Modules.Add(new EndPointContext());
-    builder.Modules.Add(new RemoteInstanceRepository());
-    builder.Modules.Add(new ChannelInteractionModule());
-    // builder.Modules.Add(new UdpUntrustedInteraction());
-    builder.Modules.Add(new RepresentationModule());
-    var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
-    builder.Modules.Add(new NetworkFrontendBridge(serverEndPoint));
-    builder.Modules.Add(new StaticRepresentationModuleProducer());
-    // builder.Modules.Add(new RequestExtractor());
-    builder.Modules.Add(new BasicExecutionModule());
-    var methodRepo = new CollectableMethodRepository();
-    methodRepo.AppendInvokers(new GeneratedInvokersCollection());
-    builder.Modules.Add(methodRepo);
-    builder.Modules.Add(new GeneratedCallIndexProvider());
-    builder.UseCollectableContextRepository();
-    builder.Modules.Add(new CancellationRepository());
-
-    builder.Build();
-
-    var frontendBridge = builder.GetModule<IFrontendBridge>()!;
-    await frontendBridge.Connect();
-    // _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
-    // _ = builder.GetModule<UdpUntrustedInteraction>().Start(serverEndPoint);
-    var context = builder.GetModule<RemoteInstanceRepository>();
-
-    var factory =
-        context.GetSingletonObject<ILoadTest>(
-            builder.GetModule<IEndPointContext>());
-
-    int count = 0;
-    int a;
-    do
+    try
     {
-        a = await factory.Next(2);
-        count++;
-    } while (!token.IsCancellationRequested);
+        Console.WriteLine($"{id} started");
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
+        builder.Services.AddSingleton<IContextualSerializationToolKit, CborSerializationToolkit>();
+        builder.Services.AddSingleton<IEndPointContext, EndPointContext>();
+        builder.Services.AddSingleton<IRealStoreInstanceRepository, InstanceRepository>(provider =>
+        {
+            var repo = new InstanceRepository(provider.GetService<IRepresentationModuleProducer>());
+            repo.FillSingletons(typeof(Program).Assembly);
+            return repo;
+        });
 
-    Console.WriteLine(a);
-    return count;
+        builder.Services.AddSingleton<IInstanceRepository, RemoteInstanceRepository>();
+        builder.Services.AddSingleton<IChannelInteractionModule, ChannelInteractionModule>();
+        builder.Services.AddSingleton<IUntrustedInteractionModule, UdpUntrustedInteraction>();
+        builder.Services.AddSingleton<IRepresentationModule, RepresentationModule>();
+        var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
+        builder.Services.AddSingleton<IFrontendBridge, NetworkFrontendBridge>();
+        builder.Services.AddOptions();
+        builder.Services.Configure<GatewayOptions>(options => options.Endpoint = serverEndPoint);
+        builder.Services.AddSingleton<IRepresentationModuleProducer, StaticRepresentationModuleProducer>();
+        builder.Services.AddSingleton<IRequestExtractor, RequestExtractor>();
+        builder.Services.AddSingleton<IExecuteModule, BasicExecutionModule>();
+
+        builder.Services.AddSingleton<IMethodRepository, CollectableMethodRepository>(p =>
+        {
+            var methodRepo = new CollectableMethodRepository();
+            methodRepo.AppendInvokers(new GeneratedInvokersCollection());
+            return methodRepo;
+        });
+        builder.Services.AddSingleton<ICallIndexProvider, GeneratedCallIndexProvider>();
+        builder.Services.AddSingleton<ICancellationRepository, CancellationRepository>();
+
+        var app = builder.Build();
+
+        var frontendBridge = app.Services.GetService<IFrontendBridge>()!;
+        await frontendBridge.Connect();
+        _ = app.Services.GetService<IRequestExtractor>()!.StartExtraction();
+        _ = app.Services.GetService<IUntrustedInteractionModule>().Start(serverEndPoint);
+        var context = app.Services.GetService<IInstanceRepository>();
+
+
+        var factory =
+            context.GetSingletonObject<ILoadTest>(
+                app.Services.GetService<IEndPointContext>());
+
+        bool needStop = false;
+        token.Register(() =>
+        {
+            Console.WriteLine($"Stopping {id}");
+            needStop = true;
+        });
+
+        int count = 0;
+        while (true){
+            if (token.IsCancellationRequested)
+            {
+                break;
+            }
+            await factory.Next(2);
+            count++;
+        } 
+
+        Console.WriteLine(id);
+        return count;
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        throw;
+    }
 }
