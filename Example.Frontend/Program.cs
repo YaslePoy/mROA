@@ -58,10 +58,10 @@ class Program
 
         var frontendBridge = app.Services.GetService<IFrontendBridge>()!;
         await frontendBridge.Connect();
-        _ = app.Services.GetService<RequestExtractor>()!.StartExtraction();
-        _ = app.Services.GetService<UdpUntrustedInteraction>().Start(serverEndPoint);
+        _ = app.Services.GetService<IRequestExtractor>()!.StartExtraction();
+        _ = app.Services.GetService<IUntrustedInteractionModule>().Start(serverEndPoint);
         Console.WriteLine(app.Services.GetService<IEndPointContext>().HostId);
-        var context = app.Services.GetService<RemoteInstanceRepository>();
+        var context = app.Services.GetService<IInstanceRepository>();
 
 #if !JUST_LOAD
         var factory =

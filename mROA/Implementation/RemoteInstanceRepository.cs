@@ -12,14 +12,12 @@ namespace mROA.Implementation
 
         private IRepresentationModuleProducer _representationProducer;
 
-        public RemoteInstanceRepository(ICallIndexProvider callIndexProvider, IRepresentationModuleProducer representationProducer, int hostId)
+        public RemoteInstanceRepository(ICallIndexProvider callIndexProvider, IRepresentationModuleProducer representationProducer)
         {
             _callIndexProvider = callIndexProvider;
             _representationProducer = representationProducer;
-            HostId = hostId;
         }
 
-        public int HostId { get; set; }
 
         public int ResisterObject<T>(object o, IEndPointContext context)
         {

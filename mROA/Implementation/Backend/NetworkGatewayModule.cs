@@ -13,17 +13,19 @@ namespace mROA.Implementation.Backend
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly TcpListener _tcpListener;
-        private IConnectionHub? _hub;
+        private readonly IConnectionHub _hub;
         private readonly IContextualSerializationToolKit _serialization;
         private readonly Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
-        private ICallIndexProvider? _callIndexProvider;
+        private ICallIndexProvider _callIndexProvider;
         private readonly IIdentityGenerator _identityGenerator;
-        public NetworkGatewayModule(IOptions<GatewayOptions> options, IServiceProvider service, IIdentityGenerator identityGenerator, IContextualSerializationToolKit serialization)
+        public NetworkGatewayModule(IOptions<GatewayOptions> options, IServiceProvider service, IIdentityGenerator identityGenerator, IContextualSerializationToolKit serialization, ICallIndexProvider callIndexProvider, IConnectionHub hub)
         {
             _tcpListener = new(options.Value.Endpoint);
             _serviceProvider = service;
             _identityGenerator = identityGenerator;
             _serialization = serialization;
+            _callIndexProvider = callIndexProvider;
+            _hub = hub;
         }
 
         public void Run()

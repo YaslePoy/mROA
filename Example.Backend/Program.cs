@@ -50,15 +50,15 @@ class Program
 
         builder.Services.AddSingleton<ICancellationRepository, CancellationRepository>();
 
-        var mroaMachine = builder.Build();
-
+        var host = builder.Build();
+        host.Services.GetService<HubRequestExtractor>();
 //
 //         builder.Build();
 //         new RemoteTypeBinder();
 //
 //
-         _ = mroaMachine.Services.GetService<IUntrustedGateway>()!.Start();
-         var gateway = mroaMachine.Services.GetService<IGatewayModule>();
+         _ = host.Services.GetService<IUntrustedGateway>()!.Start();
+         var gateway = host.Services.GetService<IGatewayModule>();
          gateway.Run();
          
          Console.ReadLine();

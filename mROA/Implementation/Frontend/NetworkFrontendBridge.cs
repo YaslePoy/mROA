@@ -14,17 +14,18 @@ namespace mROA.Implementation.Frontend
     {
         private readonly IPEndPoint _serverEndPoint;
         private TcpClient _tcpClient = new();
-        private IChannelInteractionModule? _interactionModule;
+        private IChannelInteractionModule _interactionModule;
         private IContextualSerializationToolKit _serialization;
         private ChannelInteractionModule.StreamExtractor? _currentExtractor;
         private CancellationTokenSource _rawExtractorCancellation;
         private IEndPointContext _context;
 
-        public NetworkFrontendBridge(IOptions<GatewayOptions> options, IEndPointContext context, IContextualSerializationToolKit serialization)
+        public NetworkFrontendBridge(IOptions<GatewayOptions> options, IEndPointContext context, IContextualSerializationToolKit serialization, IChannelInteractionModule interactionModule)
         {
             _serverEndPoint = options.Value.Endpoint;
             _context = context;
             _serialization = serialization;
+            _interactionModule = interactionModule;
             _rawExtractorCancellation = new CancellationTokenSource();
         }
 

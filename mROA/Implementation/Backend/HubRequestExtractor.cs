@@ -5,8 +5,6 @@ namespace mROA.Implementation.Backend
 {
     public class HubRequestExtractor
     {
-        private IConnectionHub _hub;
-
         private IRealStoreInstanceRepository _contextRepository;
         private IInstanceRepository _remoteContextRepository;
         private IMethodRepository _methodRepository;
@@ -14,12 +12,10 @@ namespace mROA.Implementation.Backend
         private IExecuteModule _executeModule;
 
         public HubRequestExtractor(IConnectionHub hub, IRealStoreInstanceRepository contextRepository,
-            RemoteInstanceRepository remoteContextRepository, IMethodRepository methodRepository,
+            IInstanceRepository remoteContextRepository, IMethodRepository methodRepository,
             IContextualSerializationToolKit serializationToolkit, IExecuteModule executeModule)
         {
-            _hub = hub;
-            _hub.OnConnected += HubOnOnConnected;
-
+            hub.OnConnected += HubOnOnConnected;
             _contextRepository = contextRepository;
             _remoteContextRepository = remoteContextRepository;
             _methodRepository = methodRepository;

@@ -8,7 +8,7 @@ namespace mROA.Implementation
         {
             
         }
-        public EndPointContext(IInstanceRepository realRepository, IInstanceRepository remoteRepository)
+        public EndPointContext(IRealStoreInstanceRepository realRepository, IInstanceRepository remoteRepository)
         {
             RealRepository = realRepository;
             RemoteRepository = remoteRepository;
