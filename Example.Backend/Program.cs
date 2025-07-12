@@ -54,7 +54,7 @@ class Program
         host.Services.GetService<HubRequestExtractor>();
 //
 //         builder.Build();
-//         new RemoteTypeBinder();
+         new RemoteTypeBinder();
 //
 //
          _ = host.Services.GetService<IUntrustedGateway>()!.Start();
