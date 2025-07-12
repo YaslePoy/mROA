@@ -11,16 +11,16 @@ using mROA.Implementation.Backend;
 using mROA.Implementation.Frontend;
 
 
-const int C = 6;
+const int C = 100;
 var time = TimeSpan.FromSeconds(10);
 Console.WriteLine($"Starting bench for {time} from {C} connections");
 var cts = new CancellationTokenSource();
 new RemoteTypeBinder();
-
+var eps = await GetLoadEndpoints(C);
 var tasks = new Task<int>[C];
 for (int i = 0; i < C; i++)
 {
-    tasks[i] = Requests(cts.Token, i);
+    tasks[i] = Requests(cts.Token, i, eps[i]);
 }
 
 cts.CancelAfter(time);
@@ -33,11 +33,12 @@ var totalRequests = tasks.Sum(i => i.Result);
 Console.WriteLine($"Total requests: {totalRequests}");
 Console.WriteLine($"Results: {totalRequests / time.TotalSeconds:N} RPS");
 
-async Task<int> Requests(CancellationToken token, int id)
+
+async Task<List<ILoadTest>> GetLoadEndpoints(int count)
 {
-    try
+    var loads = new List<ILoadTest>();
+    for (int i = 0; i < count; i++)
     {
-        Console.WriteLine($"{id} started");
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
         builder.Services.AddSingleton<IContextualSerializationToolKit, CborSerializationToolkit>();
         builder.Services.AddSingleton<IEndPointContext, EndPointContext>();
@@ -50,14 +51,14 @@ async Task<int> Requests(CancellationToken token, int id)
 
         builder.Services.AddSingleton<IInstanceRepository, RemoteInstanceRepository>();
         builder.Services.AddSingleton<IChannelInteractionModule, ChannelInteractionModule>();
-        builder.Services.AddSingleton<IUntrustedInteractionModule, UdpUntrustedInteraction>();
+        // builder.Services.AddSingleton<IUntrustedInteractionModule, UdpUntrustedInteraction>();
         builder.Services.AddSingleton<IRepresentationModule, RepresentationModule>();
         var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
         builder.Services.AddSingleton<IFrontendBridge, NetworkFrontendBridge>();
         builder.Services.AddOptions();
         builder.Services.Configure<GatewayOptions>(options => options.Endpoint = serverEndPoint);
         builder.Services.AddSingleton<IRepresentationModuleProducer, StaticRepresentationModuleProducer>();
-        builder.Services.AddSingleton<IRequestExtractor, RequestExtractor>();
+        // builder.Services.AddSingleton<IRequestExtractor, RequestExtractor>();
         builder.Services.AddSingleton<IExecuteModule, BasicExecutionModule>();
 
         builder.Services.AddSingleton<IMethodRepository, CollectableMethodRepository>(p =>
@@ -73,21 +74,24 @@ async Task<int> Requests(CancellationToken token, int id)
 
         var frontendBridge = app.Services.GetService<IFrontendBridge>()!;
         await frontendBridge.Connect();
-        _ = app.Services.GetService<IRequestExtractor>()!.StartExtraction();
-        _ = app.Services.GetService<IUntrustedInteractionModule>().Start(serverEndPoint);
+        // _ = app.Services.GetService<IRequestExtractor>()!.StartExtraction();
+        // _ = app.Services.GetService<IUntrustedInteractionModule>().Start(serverEndPoint);
         var context = app.Services.GetService<IInstanceRepository>();
 
 
-        var factory =
+        var singletonObject =
             context.GetSingletonObject<ILoadTest>(
                 app.Services.GetService<IEndPointContext>());
+        loads.Add(singletonObject);
+    }
+    return loads;
+}
 
-        bool needStop = false;
-        token.Register(() =>
-        {
-            Console.WriteLine($"Stopping {id}");
-            needStop = true;
-        });
+async Task<int> Requests(CancellationToken token, int id, ILoadTest load)
+{
+    try
+    {
+
 
         int count = 0;
         while (true){
@@ -95,7 +99,8 @@ async Task<int> Requests(CancellationToken token, int id)
             {
                 break;
             }
-            await factory.Next(2);
+
+            await load.Next(2);
             count++;
         } 
 

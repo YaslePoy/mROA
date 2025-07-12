@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Example.Shared;
@@ -10,8 +9,10 @@ namespace Example.Backend
     [SharedObjectSingleton]
     public class LoadTestImp : ILoadTest
     {
+        public static int N;
         public Task<int> Next(int last)
         {
+            Console.WriteLine(++N);
             return Task.FromResult( last + 1);
         }
 
