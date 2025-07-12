@@ -15,17 +15,20 @@ namespace mROA.Implementation
         private readonly ChannelWriter<NetworkMessageHeader> _untrustedWriter;
         private readonly Channel<NetworkMessageHeader> _outputTrustedChannel;
         private readonly Channel<NetworkMessageHeader> _outputUntrustedChannel;
-        private IContextualSerializationToolKit _serialization;
+        private readonly IContextualSerializationToolKit _serialization;
         private bool _isConnected = true;
         private bool _isActive = true;
         private TaskCompletionSource<Stream> _reconnection;
 
         public ChannelInteractionModule(IContextualSerializationToolKit serialization,
-            IIdentityGenerator identityGenerator)
+            IIdentityGenerator identityGenerator) : this(serialization)
+        {
+            ConnectionId = identityGenerator.GetNextIdentity();
+        }
+
+        public ChannelInteractionModule(IContextualSerializationToolKit serialization)
         {
             _serialization = serialization;
-            ConnectionId = identityGenerator.GetNextIdentity();
-
             ReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
             {
                 SingleReader = false,
@@ -46,7 +49,7 @@ namespace mROA.Implementation
             _untrustedWriter = _outputUntrustedChannel.Writer;
             _reconnection = new TaskCompletionSource<Stream>();
         }
-
+        
         public int ConnectionId { get; set; }
 
         public IEndPointContext Context { get; set; }
