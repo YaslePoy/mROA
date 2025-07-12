@@ -6,12 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Example.Frontend;
 using Example.Shared;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using mROA.Abstract;
 using mROA.Cbor;
 using mROA.Codegen;
 using mROA.Implementation;
 using mROA.Implementation.Backend;
-using mROA.Implementation.Bootstrap;
 using mROA.Implementation.Frontend;
 
 
@@ -21,38 +22,51 @@ class Program
     {
         new RemoteTypeBinder();
 
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton<IContextualSerializationToolKit, CborSerializationToolkit>();
+        builder.Services.AddSingleton<IEndPointContext, EndPointContext>();
+        builder.Services.AddSingleton<IRealStoreInstanceRepository, InstanceRepository>(provider =>
+        {
+            var repo = new InstanceRepository(provider.GetService<IRepresentationModuleProducer>());
+            repo.FillSingletons(typeof(Program).Assembly);
+            return repo;
+        });
         
-        builder.Modules.Add(new CborSerializationToolkit());
-        builder.Modules.Add(new EndPointContext());
-        builder.Modules.Add(new RemoteInstanceRepository());
-        builder.Modules.Add(new ChannelInteractionModule());
-        builder.Modules.Add(new UdpUntrustedInteraction());
-        builder.Modules.Add(new RepresentationModule());
+        
+        builder.Services.AddSingleton<IInstanceRepository, RemoteInstanceRepository>();
+        builder.Services.AddSingleton<IChannelInteractionModule, ChannelInteractionModule>();
+        builder.Services.AddSingleton<IUntrustedInteractionModule, UdpUntrustedInteraction>();
+        builder.Services.AddSingleton<IRepresentationModule, RepresentationModule>();
         var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
-        builder.Modules.Add(new NetworkFrontendBridge(serverEndPoint));
-        builder.Modules.Add(new StaticRepresentationModuleProducer());
-        builder.Modules.Add(new RequestExtractor());
-        builder.Modules.Add(new BasicExecutionModule());
-        var methodRepo = new CollectableMethodRepository();
-        methodRepo.AppendInvokers(new GeneratedInvokersCollection());
-        builder.Modules.Add(methodRepo);
-        builder.Modules.Add(new GeneratedCallIndexProvider());
-        builder.UseCollectableContextRepository();
-        builder.Modules.Add(new CancellationRepository());
+        builder.Services.AddSingleton<IFrontendBridge, NetworkFrontendBridge>();
+        builder.Services.AddOptions();
+        builder.Services.Configure<GatewayOptions>(options => options.Endpoint = serverEndPoint);
+        builder.Services.AddSingleton<IRepresentationModuleProducer, StaticRepresentationModuleProducer>();
+        builder.Services.AddSingleton<IRequestExtractor, RequestExtractor>();
+        builder.Services.AddSingleton<IExecuteModule, BasicExecutionModule>();
+        
+        builder.Services.AddSingleton<IMethodRepository, CollectableMethodRepository>(p =>
+        {
+            var methodRepo = new CollectableMethodRepository();
+            methodRepo.AppendInvokers(new GeneratedInvokersCollection());
+            return methodRepo;
+        });
+        builder.Services.AddSingleton<ICallIndexProvider, GeneratedCallIndexProvider>();
+        builder.Services.AddSingleton<ICancellationRepository, CancellationRepository>();
 
-        builder.Build();
+        var app = builder.Build();
 
-        var frontendBridge = builder.GetModule<IFrontendBridge>()!;
+        var frontendBridge = app.Services.GetService<IFrontendBridge>()!;
         await frontendBridge.Connect();
-        _ = builder.GetModule<RequestExtractor>()!.StartExtraction();
-        _ = builder.GetModule<UdpUntrustedInteraction>().Start(serverEndPoint);
-        Console.WriteLine(builder.GetModule<IEndPointContext>().HostId);
-        var context = builder.GetModule<RemoteInstanceRepository>();
+        _ = app.Services.GetService<RequestExtractor>()!.StartExtraction();
+        _ = app.Services.GetService<UdpUntrustedInteraction>().Start(serverEndPoint);
+        Console.WriteLine(app.Services.GetService<IEndPointContext>().HostId);
+        var context = app.Services.GetService<RemoteInstanceRepository>();
 
-        #if !JUST_LOAD
+#if !JUST_LOAD
         var factory =
             context.GetSingletonObject<IPrinterFactory>(
-                builder.GetModule<IEndPointContext>());
+                app.Services.GetService<IEndPointContext>());
 
         using (var disposingPrinter = factory.Create("Test"))
         {
@@ -118,7 +132,7 @@ class Program
         DemoCheck.Dispose = true;
 #endif
 
-        var loadSingleton = context.GetSingletonObject<ILoadTest>(builder.GetModule<IEndPointContext>());
+        var loadSingleton = context.GetSingletonObject<ILoadTest>(app.Services.GetService<IEndPointContext>());
 
 #if !JUST_LOAD
         var cts = new CancellationTokenSource();
@@ -130,7 +144,7 @@ class Program
         Console.WriteLine($"Token state {cts.Token.IsCancellationRequested}");
         DemoCheck.TaskCancelation = true;
 #endif
-        
+
         const int iterations = 10_000;
         var timer = Stopwatch.StartNew();
         var x = 0;
@@ -143,7 +157,7 @@ class Program
         Console.WriteLine("X is {0}", x);
         Console.WriteLine("Time : {0}", timer.Elapsed.TotalMilliseconds);
         Console.WriteLine($"Time per call: {timer.Elapsed.TotalMilliseconds / iterations} ms");
-            Console.WriteLine($"Serialization time: {CborSerializationToolkit.SerializationTime}");
+        Console.WriteLine($"Serialization time: {CborSerializationToolkit.SerializationTime}");
 
         frontendBridge.Disconnect();
 

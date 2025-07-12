@@ -3,7 +3,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using mROA.Abstract;
+using mROA.Implementation.Backend;
 using Exception = System.Exception;
 
 namespace mROA.Implementation.Frontend
@@ -18,9 +20,9 @@ namespace mROA.Implementation.Frontend
         private CancellationTokenSource _rawExtractorCancellation;
         private IEndPointContext _context;
 
-        public NetworkFrontendBridge(IPEndPoint serverEndPoint, IEndPointContext context, IContextualSerializationToolKit serialization)
+        public NetworkFrontendBridge(IOptions<GatewayOptions> options, IEndPointContext context, IContextualSerializationToolKit serialization)
         {
-            _serverEndPoint = serverEndPoint;
+            _serverEndPoint = options.Value.Endpoint;
             _context = context;
             _serialization = serialization;
             _rawExtractorCancellation = new CancellationTokenSource();

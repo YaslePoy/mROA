@@ -52,7 +52,6 @@ class Program
 
         var mroaMachine = builder.Build();
 
-        mroaMachine.StartAsync();
 //
 //         builder.Build();
 //         new RemoteTypeBinder();

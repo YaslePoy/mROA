@@ -14,8 +14,6 @@ namespace mROA.Implementation
 
         public IRepresentationModule Produce(int ownership)
         {
-            if (_representationModule == null)
-                throw new NullReferenceException("The representation module is not initialized.");
             return _representationModule;
         }
     }
