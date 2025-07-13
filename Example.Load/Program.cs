@@ -30,7 +30,7 @@ await Task.WhenAll(tasks);
 Console.WriteLine("End waiting");
 
 var totalRequests = tasks.Sum(i => i.Result);
-Console.WriteLine($"Total requests: {totalRequests}");
+Console.WriteLine($"Total requests: {totalRequests:N0}");
 Console.WriteLine($"Results: {totalRequests / time.TotalSeconds:N} RPS");
 
 

@@ -12,7 +12,6 @@ namespace Example.Backend
         public static int N;
         public Task<int> Next(int last)
         {
-            Console.WriteLine(++N);
             return Task.FromResult( last + 1);
         }
 
