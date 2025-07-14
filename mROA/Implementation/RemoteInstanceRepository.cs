@@ -34,8 +34,6 @@ namespace mROA.Implementation
             var index = _producedProxys.Find(i => i.Identifier.Equals(id));
             if (index is not null)
                 return (T)(index as object);
-            if (_representationProducer == null)
-                throw new NullReferenceException("representation producer is not initialized");
 
             if (!_callIndexProvider.Activators.TryGetValue(typeof(T), out var remoteType))
                 throw new NotSupportedException();
@@ -56,9 +54,6 @@ namespace mROA.Implementation
 
         public object GetSingletonObject(Type type, IEndPointContext context)
         {
-            if (_representationProducer == null)
-                throw new NullReferenceException("representation producer is not initialized");
-
             var representationModule =
                 _representationProducer.Produce(context.OwnerId);
 

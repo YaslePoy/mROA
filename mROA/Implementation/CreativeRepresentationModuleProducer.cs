@@ -18,9 +18,6 @@ namespace mROA.Implementation
 
         public IRepresentationModule Produce(int id)
         {
-            if (_hub == null)
-                throw new NullReferenceException("Interaction module is null");
-
             var interaction = _hub.GetInteraction(id);
             
             var produced = new RepresentationModule(interaction, _serialization);

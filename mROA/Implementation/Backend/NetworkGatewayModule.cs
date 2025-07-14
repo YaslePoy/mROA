@@ -11,21 +11,21 @@ namespace mROA.Implementation.Backend
 {
     public class NetworkGatewayModule : IGatewayModule
     {
-        private readonly IServiceProvider _serviceProvider;
         private readonly TcpListener _tcpListener;
         private readonly IConnectionHub _hub;
         private readonly IContextualSerializationToolKit _serialization;
         private readonly Dictionary<int, CancellationTokenSource> _extractorsCTS = new();
         private ICallIndexProvider _callIndexProvider;
         private readonly IIdentityGenerator _identityGenerator;
-        public NetworkGatewayModule(IOptions<GatewayOptions> options, IServiceProvider service, IIdentityGenerator identityGenerator, IContextualSerializationToolKit serialization, ICallIndexProvider callIndexProvider, IConnectionHub hub)
+        private readonly IMessageDistributorFactory _distributorFactory;
+        public NetworkGatewayModule(IOptions<GatewayOptions> options, IIdentityGenerator identityGenerator, IContextualSerializationToolKit serialization, ICallIndexProvider callIndexProvider, IConnectionHub hub, IMessageDistributorFactory distributorFactory)
         {
             _tcpListener = new(options.Value.Endpoint);
-            _serviceProvider = service;
             _identityGenerator = identityGenerator;
             _serialization = serialization;
             _callIndexProvider = callIndexProvider;
             _hub = hub;
+            _distributorFactory = distributorFactory;
         }
 
         public void Run()
@@ -74,7 +74,7 @@ namespace mROA.Implementation.Backend
                         interaction.PostMessageAsync(new NetworkMessageHeader(_serialization!,
                             new IdAssignment { Id = interaction.ConnectionId }, null));
                         _extractorsCTS[interaction.ConnectionId] = cts;
-                        _hub!.RegisterInteraction(interaction);
+                        _hub.RegisterInteraction(interaction);
                         Console.WriteLine("Client registered");
                         break;
                     case EMessageType.ClientRecovery:

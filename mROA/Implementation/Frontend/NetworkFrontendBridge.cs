@@ -31,11 +31,6 @@ namespace mROA.Implementation.Frontend
 
         public async Task Connect()
         {
-            if (_interactionModule is null)
-                throw new Exception("Interaction module was not injected");
-            if (_serialization == null)
-                throw new NullReferenceException("Serialization toolkit is not initialized");
-
             _tcpClient.Connect(_serverEndPoint);
             _tcpClient.NoDelay = true;
             PrepareExtractor();

@@ -40,6 +40,7 @@ class Program
             return repo;
         }));
 
+        builder.Services.AddSingleton<IMessageDistributorFactory, ChannelDistributorFactory>();
         builder.Services.AddSingleton<IMethodRepository>(p =>
         {
             var methodRepo = new CollectableMethodRepository();

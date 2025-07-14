@@ -82,9 +82,6 @@ namespace mROA.Implementation
 
         public async Task PostMessageAsync(NetworkMessageHeader messageHeader)
         {
-            if (_serialization == null)
-                throw new NullReferenceException("Serialization toolkit is not initialized");
-
             while (true)
             {
                 if (await PostMessageInternal(messageHeader))

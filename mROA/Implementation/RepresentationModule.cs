@@ -82,11 +82,6 @@ namespace mROA.Implementation
         public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload,
             IEndPointContext? context) where T : notnull
         {
-            if (_interaction == null)
-                throw new NullReferenceException("Interaction toolkit is not initialized");
-            if (_serialization == null)
-                throw new NullReferenceException("Serialization toolkit is not initialized");
-
             var serialized = _serialization.Serialize(payload, context);
             await _interaction.PostMessageAsync(new NetworkMessageHeader
                 { Id = id, MessageType = eMessageType, Data = serialized });

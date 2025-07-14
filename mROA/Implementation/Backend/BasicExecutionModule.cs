@@ -23,7 +23,6 @@ namespace mROA.Implementation.Backend
         {
             try
             {
-                ThrowIfNotInjected(instanceRepository);
                 if (command is CancelRequest)
                 {
                     return CancelExecution(command);
@@ -94,18 +93,6 @@ namespace mROA.Implementation.Backend
             }
 
             return castedParams;
-        }
-
-        private void ThrowIfNotInjected(IInstanceRepository instanceRepository)
-        {
-            if (_cancellationRepo is null)
-                throw new NullReferenceException("Method repository was not defined");
-
-            if (_methodRepo is null)
-                throw new NullReferenceException("Method repository was not defined");
-
-            if (instanceRepository is null)
-                throw new NullReferenceException("Context repository was not defined");
         }
 
         private FinalCommandExecution CancelExecution(ICallRequest command)
