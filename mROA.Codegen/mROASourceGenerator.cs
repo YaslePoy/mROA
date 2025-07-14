@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -23,6 +24,8 @@ namespace mROA.Codegen
     [Generator]
     public class mROAGenerator : IIncrementalGenerator
     {
+        private const string SharedObjectInterfaceAttributeName = "SharedObjectInterface";
+
         private static readonly Predicate<IParameterSymbol> ParameterFilter =
             i => i.Type.Name is "CancellationToken" or "RequestContext";
 
@@ -30,7 +33,7 @@ namespace mROA.Codegen
             i => i.Name is "CancellationToken" or "RequestContext";
 
         private readonly CodeTemplate _codeTemplate = new();
-        
+
         private int _currentInternalCallIndex;
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -38,12 +41,29 @@ namespace mROA.Codegen
             _codeTemplate.LoadTemplates();
 
             var syntaxes = context.SyntaxProvider.CreateSyntaxProvider(
-                    (static (node, _) => node is InterfaceDeclarationSyntax),
-                    static (node, _) => CodegenUtilities.ContainsSoiAttribute(node)).Where(i => i.usefull)
-                .Select((node, _) => node.node);
+                NodeIsInterfaceWithSharedObjectInterfaceAttribute,
+                TransformToInterfaceDeclarationSyntax);
 
-            context.RegisterSourceOutput(context.CompilationProvider.Combine(syntaxes.Collect()),
+            var incrementalValueProvider = context.CompilationProvider.Combine(syntaxes.Collect());
+            context.RegisterSourceOutput(incrementalValueProvider,
                 (productionContext, pair) => GenerateCode(productionContext, pair.Left, pair.Right));
+        }
+
+        private static InterfaceDeclarationSyntax TransformToInterfaceDeclarationSyntax(GeneratorSyntaxContext context,
+            CancellationToken _)
+        {
+            if (context.Node is not InterfaceDeclarationSyntax interfaceSyntax)
+                throw new InvalidOperationException();
+            return interfaceSyntax;
+        }
+
+        private static bool NodeIsInterfaceWithSharedObjectInterfaceAttribute(SyntaxNode node, CancellationToken _)
+        {
+            if (node is not InterfaceDeclarationSyntax interfaceSyntax)
+                return false;
+
+            var attributes = interfaceSyntax.AttributeLists.SelectMany(list => list.Attributes);
+            return attributes.Any(attribute => attribute.ToFullString() == SharedObjectInterfaceAttributeName);
         }
 
         private void GenerateCode(SourceProductionContext context, Compilation compilation,
@@ -166,19 +186,20 @@ namespace mROA.Codegen
             }
         }
 
-        private void GenerateEventImplementation(TemplateDocument classTemplate,INamedTypeSymbol classSymbol, List<string> invokers,
-            SourceProductionContext context)
+        private void GenerateEventImplementation(TemplateDocument classTemplate, INamedTypeSymbol classSymbol,
+            List<string> invokers, SourceProductionContext context)
         {
             var events = classSymbol.AllInterfaces.Add(classSymbol).SelectMany(i => i.GetMembers())
                 .OfType<IEventSymbol>().ToList();
             if (events.Count == 0)
                 return;
-            
+
             var interfaceTemplate = (TemplateDocument)_codeTemplate.PartialInterface.Clone();
             interfaceTemplate.AddDefine("name", classSymbol.Name);
             interfaceTemplate.AddDefine("namespace", classSymbol.ContainingNamespace.ToDisplayString());
             var objectBinderTemplate =
-                (TemplateDocument)((InnerTemplateSection)_codeTemplate.RemoteTypeBinder["objectBinderTemplate"]!).InnerTemplate
+                (TemplateDocument)((InnerTemplateSection)_codeTemplate.RemoteTypeBinder["objectBinderTemplate"]!)
+                .InnerTemplate
                 .Clone();
             foreach (var currentEvent in events)
             {
@@ -218,7 +239,8 @@ namespace mROA.Codegen
             return caller;
         }
 
-        private void GenerateDeclaredMethod(TemplateDocument classTemplate, IMethodSymbol method, List<string> invokers, INamedTypeSymbol baseInterface)
+        private void GenerateDeclaredMethod(TemplateDocument classTemplate, IMethodSymbol method, List<string> invokers,
+            INamedTypeSymbol baseInterface)
         {
             var sb = new StringBuilder();
 
@@ -579,28 +601,6 @@ namespace mROA.Codegen
         {
             var generics = ((INamedTypeSymbol)taskType).TypeArguments;
             return generics.Length == 0 ? "void" : generics[0].ToUnityString();
-        }
-
-        public static (InterfaceDeclarationSyntax node, bool usefull) ContainsSoiAttribute(
-            GeneratorSyntaxContext context)
-        {
-            var ids = (InterfaceDeclarationSyntax)context.Node;
-
-            // Go through all attributes of the class.
-            foreach (var attributeSyntax in ids.AttributeLists.SelectMany(attributeListSyntax =>
-                         attributeListSyntax.Attributes))
-            {
-                if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
-                    continue; // if we can't get the symbol, ignore it
-
-                var attributeName = attributeSymbol.ContainingType.ToDisplayString();
-
-                // Check the full name of the [Report] attribute.
-                if (attributeName == $"mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
-                    return (ids, true);
-            }
-
-            return (ids, false);
         }
 
         public static List<IMethodSymbol> CollectMembers(INamedTypeSymbol type)
