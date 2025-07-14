@@ -41,6 +41,22 @@ namespace mROA.Codegen
         private int _currentInternalCallIndex;
 
 
+        public void Initialize(IncrementalGeneratorInitializationContext context)
+        {
+            _methodRepoTemplate = TemplateReader.FromEmbeddedResource("MethodRepo.cstmpl");
+            _methodInvokerOriginal =
+                ((InnerTemplateSection)_methodRepoTemplate["syncInvoker"]!).InnerTemplate;
+            _classTemplateOriginal = TemplateReader.FromEmbeddedResource("Proxy.cstmpl");
+            _binderTemplate = TemplateReader.FromEmbeddedResource("RemoteTypeBinder.cstmpl");
+            _interfaceTemplateOriginal = TemplateReader.FromEmbeddedResource("PartialInterface.cstmpl");
+            _indexerTemplate = TemplateReader.FromEmbeddedResource("IndexProvider.cstmpl");
+
+            var syntaxes = context.SyntaxProvider.CreateSyntaxProvider(
+                (static (node, _) => node is InterfaceDeclarationSyntax),  static (node, _) => CodegenUtilities.ContainsSoiAttribute(node)).Where(i => i.usefull).Select((node, _) => node.node);
+            
+            context.RegisterSourceOutput(context.CompilationProvider.Combine(syntaxes.Collect()), (productionContext, pair) => GenerateCode(productionContext, pair.Left, pair.Right));
+        }
+        
         private void GenerateCode(SourceProductionContext context, Compilation compilation,
             ImmutableArray<InterfaceDeclarationSyntax> classes)
         {
@@ -60,7 +76,7 @@ namespace mROA.Codegen
 
                 var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
                 var className = classDeclarationSyntax.Identifier.Text;
-                var innerMethods = CollectMembers(classSymbol);
+                var innerMethods = CodegenUtilities.CollectMembers(classSymbol);
                 var associated = innerMethods.Select(i => i.AssociatedSymbol).Where(i => i != null)
                     .Distinct(SymbolEqualityComparer.Default).Cast<ISymbol>().ToList();
 
@@ -120,7 +136,7 @@ namespace mROA.Codegen
 
                 GenerateEventImplementation(classSymbol, invokers, context);
                 var endInvokers = invokers.Count;
-                _indexerTemplate.Insert("indexSpan", $"{{ typeof({originalName}), new[] {{ {JoinWithComa(Enumerable.Range(startInvokers, endInvokers - startInvokers).Select(i => i.ToString()))} }} }},");
+                _indexerTemplate.Insert("indexSpan", $"{{ typeof({originalName}), new[] {{ {CodegenUtilities.JoinWithComa(Enumerable.Range(startInvokers, endInvokers - startInvokers).Select(i => i.ToString()))} }} }},");
                 _classTemplate.AddDefine("className", className);
                 _classTemplate.AddDefine("originalName", originalName);
                 _classTemplate.AddDefine("namespaceName", namespaceName);
@@ -181,7 +197,7 @@ namespace mROA.Codegen
                 // declaredMethods.Add(additionalMethod);
                 _interfaceTemplate.Insert("signature", signature);
                 GenerateEventCode(currentEvent, invokers, classSymbol);
-                GenerateBinderCode(currentEvent, invokers, classSymbol, objectBinderTemplate);
+                GenerateBinderCode(currentEvent, classSymbol, objectBinderTemplate);
             }
 
             objectBinderTemplate.AddDefine("type", classSymbol.ToUnityString());
@@ -196,12 +212,12 @@ namespace mROA.Codegen
 
         private string GenerateMethodExternalCaller(IEventSymbol eventSymbol, out string interfaceSignature)
         {
-            var level = "\t\t";
+            const string level = "\t\t";
             var parameters = ((INamedTypeSymbol)eventSymbol.Type).TypeArguments;
             var parameterIndex = 0;
             var parametersDeclaration =
                 string.Join(", ", parameters.Select(i => $"{i.ToUnityString()} p{parameterIndex++}"));
-            var signature = $@"public void {EventExternalName(eventSymbol)}({parametersDeclaration})";
+            var signature = $"public void {CodegenUtilities.EventExternalName(eventSymbol)}({parametersDeclaration})";
             interfaceSignature = signature + ";";
             var caller = $@"{signature}
 {level}{{
@@ -211,22 +227,7 @@ namespace mROA.Codegen
             return caller;
         }
 
-        private static string EventExternalName(IEventSymbol eventSymbol)
-        {
-            return $"{eventSymbol.Name}External";
-        }
-
-        private static string Caster(ITypeSymbol type, string inner)
-        {
-            if (!type.IsValueType)
-                return inner +
-                       " as " +
-                       type.ToUnityString();
-            return $"({type.ToUnityString()})" + inner;
-        }
-
-        private void GenerateDeclaredMethod(IMethodSymbol method, List<string> invokers,
-            INamedTypeSymbol baseInterace)
+        private void GenerateDeclaredMethod(IMethodSymbol method, List<string> invokers, INamedTypeSymbol baseInterface)
         {
             var sb = new StringBuilder();
 
@@ -260,9 +261,9 @@ namespace mROA.Codegen
             sb.AppendLine("public" + (isAsync
                               ? " async "
                               : " ") +
-                          $"{method.ReturnType.ToUnityString()} {method.Name}({string.Join(", ", method.Parameters.Select(ToFullString))}){{");
+                          $"{method.ReturnType.ToUnityString()} {method.Name}({string.Join(", ", method.Parameters.Select(CodegenUtilities.ToFullString))}){{");
 
-            var isUntrusted = method.GetAttributes().Any(i => i.AttributeClass.Name == "UntrustedAttribute");
+            var isUntrusted = method.GetAttributes().Any(i => i.AttributeClass?.Name == "UntrustedAttribute");
 
             var prefix = isAsync ? "await " : "";
             var postfix = !isAsync ? isVoid ? ".Wait()" : ".GetAwaiter().GetResult()" : "";
@@ -287,8 +288,8 @@ namespace mROA.Codegen
                 caller = isVoid
                     ? $"CallAsync(CallIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})"
                     : isAsync
-                        ? $"GetResultAsync<{ExtractTaskType(method.ReturnType)}>(CallIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})"
-                        : $"GetResultAsync<{ToFullString(method.ReturnType)}>(CallIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})";
+                        ? $"GetResultAsync<{CodegenUtilities.ExtractTaskType(method.ReturnType)}>(CallIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})"
+                        : $"GetResultAsync<{CodegenUtilities.ToFullString(method.ReturnType)}>(CallIndices[{_currentInternalCallIndex++}]{parameterLink}{tokenInsert})";
 
                 if (!isVoid)
                     prefix = "return " + prefix;
@@ -317,7 +318,7 @@ namespace mROA.Codegen
                         parametersInsertList.Add("special[0] as RequestContext");
                         break;
                     default:
-                        parametersInsertList.Add(Caster(parameter.Type,
+                        parametersInsertList.Add(CodegenUtilities.Caster(parameter.Type,
                             $"parameters[{parameters.IndexOf(parameter)}]"));
                         break;
                 }
@@ -347,9 +348,9 @@ namespace mROA.Codegen
                     (TemplateDocument)((InnerTemplateSection)_methodRepoTemplate["asyncInvoker"]!).InnerTemplate
                     .Clone();
                 invokerTemplate.AddDefine("isVoid", isVoid.ToString().ToLower());
-                invokerTemplate.AddDefine("returnType", ExtractTaskType(method.ReturnType));
+                invokerTemplate.AddDefine("returnType", CodegenUtilities.ExtractTaskType(method.ReturnType));
                 invokerTemplate.AddDefine("parametersType", parameterTypes);
-                invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
+                invokerTemplate.AddDefine("suitableType", baseInterface.ToUnityString());
                 invokerTemplate.AddDefine("funcInvoking", funcInvoking);
                 invokerTemplate.AddDefine("isTrusted", (!isUntrusted).ToString().ToLower());
                 backend = invokerTemplate.Compile();
@@ -360,7 +361,7 @@ namespace mROA.Codegen
                 invokerTemplate.AddDefine("isVoid", isVoid.ToString().ToLower());
                 invokerTemplate.AddDefine("returnType", isVoid ? "void" : method.ReturnType.ToUnityString());
                 invokerTemplate.AddDefine("parametersType", parameterTypes);
-                invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
+                invokerTemplate.AddDefine("suitableType", baseInterface.ToUnityString());
                 invokerTemplate.AddDefine("funcInvoking", funcInvoking);
                 invokerTemplate.AddDefine("isTrusted", (!isUntrusted).ToString().ToLower());
                 backend = invokerTemplate.Compile();
@@ -371,21 +372,18 @@ namespace mROA.Codegen
             invokers.Add(backend);
         }
 
-        private void GenerateBinderCode(IEventSymbol eventSymbol, List<string> invokers, INamedTypeSymbol baseType,
-            TemplateDocument document)
+        private void GenerateBinderCode(IEventSymbol eventSymbol, INamedTypeSymbol baseType, TemplateDocument document)
         {
             var eventBinderTemplate =
                 (TemplateDocument)((InnerTemplateSection)document["eventBinderTemplate"]!).InnerTemplate.Clone();
 
             var index = _currentInternalCallIndex;
             var parameters = (eventSymbol.Type as INamedTypeSymbol)!.TypeArguments.ToList();
-            var parametersDeclaration = string.Join(", ",
-                JoinWithComa(Enumerable.Range(0, parameters.Count).Select(i => "p" + i)));
+            var parametersDeclaration = string.Join(", ", CodegenUtilities.JoinWithComa(Enumerable.Range(0, parameters.Count).Select(i => "p" + i)));
 
             
-            int pi = 0;
-            var transferParameters =
-                JoinWithComa(parameters.Select(i => (i, pi++)).Where(i => !ParameterFilterForType(i.i))
+            var pi = 0;
+            var transferParameters = CodegenUtilities.JoinWithComa(parameters.Select(i => (i, pi++)).Where(i => !ParameterFilterForType(i.i))
                     .Select(i => "p" + i.Item2));
 
             var requestIndex = parameters.FindIndex(i => i.Name == "RequestContext");
@@ -402,11 +400,6 @@ namespace mROA.Codegen
             eventBinderTemplate.AddDefine("transferParameters", transferParameters);
             var eventBinderCode = eventBinderTemplate.Compile();
             document.Insert("eventBinder", eventBinderCode);
-        }
-
-        private static string JoinWithComa(IEnumerable<string> parts)
-        {
-            return string.Join(", ", parts);
         }
 
         private void GenerateEventCode(IEventSymbol eventSymbol, List<string> invokers, ITypeSymbol baseInterface)
@@ -431,7 +424,7 @@ namespace mROA.Codegen
                         parametersInsertList.Add("special[0] as RequestContext");
                         break;
                     default:
-                        parametersInsertList.Add(Caster(parameter.i,
+                        parametersInsertList.Add(CodegenUtilities.Caster(parameter.i,
                             $"parameters[{parameter.Item2}]"));
                         break;
                 }
@@ -440,7 +433,7 @@ namespace mROA.Codegen
             var parametersInsert = string.Join(", ", parametersInsertList);
 
             var funcInvoking = $@"{{
-{level}        (i as {baseInterface.ToUnityString()}).{EventExternalName(eventSymbol)}({parametersInsert});
+{level}        (i as {baseInterface.ToUnityString()}).{CodegenUtilities.EventExternalName(eventSymbol)}({parametersInsert});
 {level}        return null;
 {level}    }}";
 
@@ -473,8 +466,7 @@ namespace mROA.Codegen
                     var parameterTypes = string.Join(", ",
                         $"{string.Join(", ", method.Parameters.Select(p => "typeof(" + p.Type.ToUnityString() + ")"))}");
                     var parameterInserts = string.Join(", ",
-                        method.Parameters.Select(p =>
-                            Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
+                        method.Parameters.Select(p => CodegenUtilities.Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
 
                     var invokerTemplate = (TemplateDocument)_methodInvokerOriginal.Clone();
                     invokerTemplate.AddDefine("isVoid", "false");
@@ -513,10 +505,9 @@ namespace mROA.Codegen
                     var parameterTypes = string.Join(", ",
                         $"{string.Join(", ", method.Parameters.Select(p => $"typeof({p.Type.ToUnityString()})"))}");
                     var parameterInserts = string.Join(", ",
-                        method.Parameters.Take(method.Parameters.Length - 1).Select(p =>
-                            Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
+                        method.Parameters.Take(method.Parameters.Length - 1).Select(p => CodegenUtilities.Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
 
-                    var valueInsert = Caster(method.Parameters.Last().Type,
+                    var valueInsert = CodegenUtilities.Caster(method.Parameters.Last().Type,
                         "parameters[" + (method.Parameters.Length - 1) + "]");
                     var invokerTemplate = (TemplateDocument)_methodInvokerOriginal.Clone();
 
@@ -541,7 +532,7 @@ namespace mROA.Codegen
                         $"typeof({method.Parameters.First().Type.ToUnityString()})");
                     invokerTemplate.AddDefine("suitableType", baseInterace.ToUnityString());
                     invokerTemplate.AddDefine("funcInvoking",
-                        $"(i as {method.ContainingType.ToUnityString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name} = {Caster((method.AssociatedSymbol as IPropertySymbol)!.Type, "parameters[0]")}");
+                        $"(i as {method.ContainingType.ToUnityString()}).{(method.AssociatedSymbol as IPropertySymbol)!.Name} = {CodegenUtilities.Caster((method.AssociatedSymbol as IPropertySymbol)!.Type, "parameters[0]")}");
                     invokerTemplate.AddDefine("isTrusted", "true");
 
                     backend = invokerTemplate.Compile();
@@ -554,36 +545,57 @@ namespace mROA.Codegen
             _methodRepoTemplate.Insert("invoker", backend);
             invokers.Add(backend);
         }
+    }
 
-        private static string ToFullString(IParameterSymbol parameter)
+    public static class CodegenUtilities
+    {
+        public static string EventExternalName(IEventSymbol eventSymbol)
+        {
+            return $"{eventSymbol.Name}External";
+        }
+
+        public static string Caster(ITypeSymbol type, string inner)
+        {
+            if (!type.IsValueType)
+                return inner +
+                       " as " +
+                       type.ToUnityString();
+            return $"({type.ToUnityString()})" + inner;
+        }
+
+        public static string JoinWithComa(IEnumerable<string> parts)
+        {
+            return string.Join(", ", parts);
+        }
+
+        public static string ToFullString(IParameterSymbol parameter)
         {
             return parameter.Type.ToUnityString() + " " + parameter.Name;
         }
 
-        private static string ToFullString(ITypeSymbol type)
+        public static string ToFullString(ITypeSymbol type)
         {
             return type.ToUnityString();
         }
 
-        private string ExtractTaskType(ITypeSymbol taskType)
+        public static string ExtractTaskType(ITypeSymbol taskType)
         {
             var generics = ((INamedTypeSymbol)taskType).TypeArguments;
             return generics.Length == 0 ? "void" : generics[0].ToUnityString();
         }
 
-        private static (InterfaceDeclarationSyntax node, bool usefull) ContainsSoiAttribute(
+        public static (InterfaceDeclarationSyntax node, bool usefull) ContainsSoiAttribute(
             GeneratorSyntaxContext context)
         {
             var ids = (InterfaceDeclarationSyntax)context.Node;
-
+            
             // Go through all attributes of the class.
-            foreach (AttributeListSyntax attributeListSyntax in ids.AttributeLists)
-            foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
+            foreach (var attributeSyntax in ids.AttributeLists.SelectMany(attributeListSyntax => attributeListSyntax.Attributes))
             {
                 if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
                     continue; // if we can't get the symbol, ignore it
 
-                string attributeName = attributeSymbol.ContainingType.ToDisplayString();
+                var attributeName = attributeSymbol.ContainingType.ToDisplayString();
 
                 // Check the full name of the [Report] attribute.
                 if (attributeName == $"mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
@@ -593,7 +605,7 @@ namespace mROA.Codegen
             return (ids ,false);
         }
 
-        private List<IMethodSymbol> CollectMembers(INamedTypeSymbol type)
+        public static List<IMethodSymbol> CollectMembers(INamedTypeSymbol type)
         {
             var methods = type.GetMembers().OfType<IMethodSymbol>().ToList();
             foreach (var inner in type.AllInterfaces) methods.AddRange(inner.GetMembers().OfType<IMethodSymbol>());
@@ -601,34 +613,17 @@ namespace mROA.Codegen
             methods.RemoveAll(m => m.Name == "Dispose");
             return methods.OrderBy(i => i.Name).ToList();
         }
-
-        public void Initialize(IncrementalGeneratorInitializationContext context)
-        {
-            _methodRepoTemplate = TemplateReader.FromEmbeddedResource("MethodRepo.cstmpl");
-            _methodInvokerOriginal =
-                ((InnerTemplateSection)_methodRepoTemplate["syncInvoker"]!).InnerTemplate;
-            _classTemplateOriginal = TemplateReader.FromEmbeddedResource("Proxy.cstmpl");
-            _binderTemplate = TemplateReader.FromEmbeddedResource("RemoteTypeBinder.cstmpl");
-            _interfaceTemplateOriginal = TemplateReader.FromEmbeddedResource("PartialInterface.cstmpl");
-            _indexerTemplate = TemplateReader.FromEmbeddedResource("IndexProvider.cstmpl");
-
-            var syntaxes = context.SyntaxProvider.CreateSyntaxProvider(
-                (static (node, _) => node is InterfaceDeclarationSyntax),  static (node, _) => ContainsSoiAttribute(node)).Where(i => i.usefull).Select((node, _) => node.node);
-            
-            context.RegisterSourceOutput(context.CompilationProvider.Combine(syntaxes.Collect()), (productionContext, pair) => GenerateCode(productionContext, pair.Left, pair.Right));
-        }
     }
-
-    public static class CodegenExtentions
+    
+    public static class CodegenExtensions
     {
         public static string ToUnityString(this ITypeSymbol type)
         {
             var parts = type.ToDisplayParts();
 
-            if (parts.Any(i => i.Kind == SymbolDisplayPartKind.Keyword))
-                return parts.ToUnityString();
-
-            return type.ToDisplayString();
+            return parts.Any(i => i.Kind == SymbolDisplayPartKind.Keyword) 
+                ? parts.ToUnityString() 
+                : type.ToDisplayString();
         }
 
         public static string ToUnityString(this IParameterSymbol parameter)
@@ -636,7 +631,7 @@ namespace mROA.Codegen
             return parameter.Type.ToUnityString() + " " + parameter.Name;
         }
 
-        public static string ToUnityString(this ImmutableArray<SymbolDisplayPart> parts)
+        private static string ToUnityString(this ImmutableArray<SymbolDisplayPart> parts)
         {
             var sb = new StringBuilder();
             foreach (var displayPart in parts)
