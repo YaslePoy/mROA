@@ -52,16 +52,19 @@ namespace mROA.Codegen
             _indexerTemplate = TemplateReader.FromEmbeddedResource("IndexProvider.cstmpl");
 
             var syntaxes = context.SyntaxProvider.CreateSyntaxProvider(
-                (static (node, _) => node is InterfaceDeclarationSyntax),  static (node, _) => CodegenUtilities.ContainsSoiAttribute(node)).Where(i => i.usefull).Select((node, _) => node.node);
-            
-            context.RegisterSourceOutput(context.CompilationProvider.Combine(syntaxes.Collect()), (productionContext, pair) => GenerateCode(productionContext, pair.Left, pair.Right));
+                    (static (node, _) => node is InterfaceDeclarationSyntax),
+                    static (node, _) => CodegenUtilities.ContainsSoiAttribute(node)).Where(i => i.usefull)
+                .Select((node, _) => node.node);
+
+            context.RegisterSourceOutput(context.CompilationProvider.Combine(syntaxes.Collect()),
+                (productionContext, pair) => GenerateCode(productionContext, pair.Left, pair.Right));
         }
-        
+
         private void GenerateCode(SourceProductionContext context, Compilation compilation,
             ImmutableArray<InterfaceDeclarationSyntax> classes)
         {
             var totalMethods = new List<IMethodSymbol>();
-            
+
             _indexerTemplate.AddDefine("namespace", compilation.AssemblyName!);
             var invokers = new List<string>();
             var declarations = classes.ToList();
@@ -136,7 +139,8 @@ namespace mROA.Codegen
 
                 GenerateEventImplementation(classSymbol, invokers, context);
                 var endInvokers = invokers.Count;
-                _indexerTemplate.Insert("indexSpan", $"{{ typeof({originalName}), new[] {{ {CodegenUtilities.JoinWithComa(Enumerable.Range(startInvokers, endInvokers - startInvokers).Select(i => i.ToString()))} }} }},");
+                _indexerTemplate.Insert("indexSpan",
+                    $"{{ typeof({originalName}), new[] {{ {CodegenUtilities.JoinWithComa(Enumerable.Range(startInvokers, endInvokers - startInvokers).Select(i => i.ToString()))} }} }},");
                 _classTemplate.AddDefine("className", className);
                 _classTemplate.AddDefine("originalName", originalName);
                 _classTemplate.AddDefine("namespaceName", namespaceName);
@@ -157,12 +161,13 @@ namespace mROA.Codegen
                 var coCodegenRepoCode = _methodRepoTemplate.Compile();
                 _indexerTemplate.AddDefine("level", apiLevel.ToString());
                 _indexerTemplate.AddDefine("len", invokers.Count.ToString());
-                
+
                 var providerCode = _indexerTemplate.Compile();
 #if !DONT_ADD
-                context.AddSource("GeneratedInvokersCollection.g.cs", SourceText.From(coCodegenRepoCode, Encoding.UTF8));
+                context.AddSource("GeneratedInvokersCollection.g.cs",
+                    SourceText.From(coCodegenRepoCode, Encoding.UTF8));
                 context.AddSource("GeneratedIndexProvider.g.cs", SourceText.From(providerCode, Encoding.UTF8));
-                
+
 #endif
             }
 
@@ -293,7 +298,6 @@ namespace mROA.Codegen
 
                 if (!isVoid)
                     prefix = "return " + prefix;
-
             }
 
             sb.AppendLine("\t\t\t" + prefix + caller + postfix + ";");
@@ -379,12 +383,14 @@ namespace mROA.Codegen
 
             var index = _currentInternalCallIndex;
             var parameters = (eventSymbol.Type as INamedTypeSymbol)!.TypeArguments.ToList();
-            var parametersDeclaration = string.Join(", ", CodegenUtilities.JoinWithComa(Enumerable.Range(0, parameters.Count).Select(i => "p" + i)));
+            var parametersDeclaration = string.Join(", ",
+                CodegenUtilities.JoinWithComa(Enumerable.Range(0, parameters.Count).Select(i => "p" + i)));
 
-            
+
             var pi = 0;
-            var transferParameters = CodegenUtilities.JoinWithComa(parameters.Select(i => (i, pi++)).Where(i => !ParameterFilterForType(i.i))
-                    .Select(i => "p" + i.Item2));
+            var transferParameters = CodegenUtilities.JoinWithComa(parameters.Select(i => (i, pi++))
+                .Where(i => !ParameterFilterForType(i.i))
+                .Select(i => "p" + i.Item2));
 
             var requestIndex = parameters.FindIndex(i => i.Name == "RequestContext");
             if (requestIndex != -1)
@@ -396,7 +402,8 @@ namespace mROA.Codegen
             eventBinderTemplate.AddDefine("type", baseType.ToUnityString());
             eventBinderTemplate.AddDefine("eventName", eventSymbol.Name);
             eventBinderTemplate.AddDefine("parametersDeclaration", parametersDeclaration);
-            eventBinderTemplate.AddDefine("commandId", $"context.CallIndexProvider.GetIndices(typeof({baseType.ToUnityString()}))[{index}]");
+            eventBinderTemplate.AddDefine("commandId",
+                $"context.CallIndexProvider.GetIndices(typeof({baseType.ToUnityString()}))[{index}]");
             eventBinderTemplate.AddDefine("transferParameters", transferParameters);
             var eventBinderCode = eventBinderTemplate.Compile();
             document.Insert("eventBinder", eventBinderCode);
@@ -407,7 +414,8 @@ namespace mROA.Codegen
             var level = "\t\t\t";
 
             int pi = 0;
-            var parameters = ((INamedTypeSymbol)eventSymbol.Type).TypeArguments.Select(i => (i, pi++)).ToImmutableArray();
+            var parameters = ((INamedTypeSymbol)eventSymbol.Type).TypeArguments.Select(i => (i, pi++))
+                .ToImmutableArray();
             var parsingParameters = parameters.RemoveAll(i => ParameterFilterForType(i.i)).ToList();
             var parameterTypes = string.Join(", ",
                 $"{string.Join(", ", parsingParameters.Select(p => $"typeof({p.i.ToUnityString()})"))}");
@@ -466,7 +474,8 @@ namespace mROA.Codegen
                     var parameterTypes = string.Join(", ",
                         $"{string.Join(", ", method.Parameters.Select(p => "typeof(" + p.Type.ToUnityString() + ")"))}");
                     var parameterInserts = string.Join(", ",
-                        method.Parameters.Select(p => CodegenUtilities.Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
+                        method.Parameters.Select(p =>
+                            CodegenUtilities.Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
 
                     var invokerTemplate = (TemplateDocument)_methodInvokerOriginal.Clone();
                     invokerTemplate.AddDefine("isVoid", "false");
@@ -505,7 +514,8 @@ namespace mROA.Codegen
                     var parameterTypes = string.Join(", ",
                         $"{string.Join(", ", method.Parameters.Select(p => $"typeof({p.Type.ToUnityString()})"))}");
                     var parameterInserts = string.Join(", ",
-                        method.Parameters.Take(method.Parameters.Length - 1).Select(p => CodegenUtilities.Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
+                        method.Parameters.Take(method.Parameters.Length - 1).Select(p =>
+                            CodegenUtilities.Caster(p.Type, "parameters[" + method.Parameters.IndexOf(p) + "]")));
 
                     var valueInsert = CodegenUtilities.Caster(method.Parameters.Last().Type,
                         "parameters[" + (method.Parameters.Length - 1) + "]");
@@ -538,7 +548,8 @@ namespace mROA.Codegen
                     backend = invokerTemplate.Compile();
                 }
 
-                frontend = $"set => CallAsync(CallIndices[{_currentInternalCallIndex++}], new System.Object[] {{ {parametersArray} }}).Wait();";
+                frontend =
+                    $"set => CallAsync(CallIndices[{_currentInternalCallIndex++}], new System.Object[] {{ {parametersArray} }}).Wait();";
             }
 
             propsCollection.Add((frontend, method));
@@ -588,9 +599,10 @@ namespace mROA.Codegen
             GeneratorSyntaxContext context)
         {
             var ids = (InterfaceDeclarationSyntax)context.Node;
-            
+
             // Go through all attributes of the class.
-            foreach (var attributeSyntax in ids.AttributeLists.SelectMany(attributeListSyntax => attributeListSyntax.Attributes))
+            foreach (var attributeSyntax in ids.AttributeLists.SelectMany(attributeListSyntax =>
+                         attributeListSyntax.Attributes))
             {
                 if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
                     continue; // if we can't get the symbol, ignore it
@@ -599,10 +611,10 @@ namespace mROA.Codegen
 
                 // Check the full name of the [Report] attribute.
                 if (attributeName == $"mROA.Implementation.Attributes.SharedObjectInterfaceAttribute")
-                    return  (ids,true);
+                    return (ids, true);
             }
 
-            return (ids ,false);
+            return (ids, false);
         }
 
         public static List<IMethodSymbol> CollectMembers(INamedTypeSymbol type)
@@ -614,15 +626,15 @@ namespace mROA.Codegen
             return methods.OrderBy(i => i.Name).ToList();
         }
     }
-    
+
     public static class CodegenExtensions
     {
         public static string ToUnityString(this ITypeSymbol type)
         {
             var parts = type.ToDisplayParts();
 
-            return parts.Any(i => i.Kind == SymbolDisplayPartKind.Keyword) 
-                ? parts.ToUnityString() 
+            return parts.Any(i => i.Kind == SymbolDisplayPartKind.Keyword)
+                ? parts.ToUnityString()
                 : type.ToDisplayString();
         }
 
