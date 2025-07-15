@@ -22,14 +22,18 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="System.Formats.Cbor" Version="9.0.2" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="mroaLogo.png">
         <Pack>True</Pack>
         <PackagePath></PackagePath>
       </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="System.Formats.Cbor.dll"></Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Micial.Cbor" Version="9.0.7" />
     </ItemGroup>
 
 </Project>
