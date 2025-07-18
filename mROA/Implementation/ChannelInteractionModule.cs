@@ -62,11 +62,7 @@ namespace mROA.Implementation
         public ValueTask<NetworkMessageHeader> GetNextMessageReceiving(bool infinite = true)
         {
             return _receiveReader.ReadAsync();
-            // if (_currentReceiving != null) return _currentReceiving;
-            // _currentReceiving = Task.Run(async () => await GetNextMessage());
-            // return _currentReceiving;
         }
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
         private async ValueTask<bool> PostMessageInternal(NetworkMessageHeader messageHeader)
         {
             if (!IsConnected())
@@ -77,8 +73,6 @@ namespace mROA.Implementation
             await _trustedWriter.WriteAsync(messageHeader);
             return true;
         }
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-
 
         public async Task PostMessageAsync(NetworkMessageHeader messageHeader)
         {

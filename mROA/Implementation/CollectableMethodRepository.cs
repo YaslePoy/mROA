@@ -5,7 +5,7 @@ namespace mROA.Implementation
 {
     public class CollectableMethodRepository : IMethodRepository
     {
-        private List<IMethodInvoker> _methods = new();
+        private readonly List<IMethodInvoker> _methods = new();
 
         public void AppendInvokers(IEnumerable<IMethodInvoker> methodInvokers)
         {

@@ -39,8 +39,11 @@ class Program
         builder.Services.AddSingleton<IRepresentationModule, RepresentationModule>();
         var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
         builder.Services.AddSingleton<IFrontendBridge, NetworkFrontendBridge>();
+        
         builder.Services.AddOptions();
         builder.Services.Configure<GatewayOptions>(options => options.Endpoint = serverEndPoint);
+        builder.Services.Configure<DistributionOptions>(o => o.DistributionType = EDistributionType.Channeled);
+
         builder.Services.AddSingleton<IRepresentationModuleProducer, StaticRepresentationModuleProducer>();
         builder.Services.AddSingleton<IRequestExtractor, RequestExtractor>();
         builder.Services.AddSingleton<IExecuteModule, BasicExecutionModule>();

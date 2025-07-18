@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using mROA.Abstract;
 using mROA.Implementation.Frontend;
 
@@ -5,28 +6,30 @@ namespace mROA.Implementation.Backend
 {
     public class HubRequestExtractor
     {
-        private IRealStoreInstanceRepository _contextRepository;
-        private IInstanceRepository _remoteContextRepository;
-        private IMethodRepository _methodRepository;
-        private IContextualSerializationToolKit _serializationToolkit;
-        private IExecuteModule _executeModule;
+        private readonly IRealStoreInstanceRepository _contextRepository;
+        private readonly IInstanceRepository _remoteContextRepository;
+        private readonly IExecuteModule _executeModule;
+        private readonly DistributionOptions _mode;
 
-        public HubRequestExtractor(IConnectionHub hub, IRealStoreInstanceRepository contextRepository,
-            IInstanceRepository remoteContextRepository, IMethodRepository methodRepository,
-            IContextualSerializationToolKit serializationToolkit, IExecuteModule executeModule)
+        public HubRequestExtractor(IRealStoreInstanceRepository contextRepository,
+            IInstanceRepository remoteContextRepository, IExecuteModule executeModule,
+            IOptions<DistributionOptions> mode)
         {
-            hub.OnConnected += HubOnOnConnected;
             _contextRepository = contextRepository;
             _remoteContextRepository = remoteContextRepository;
-            _methodRepository = methodRepository;
-            _serializationToolkit = serializationToolkit;
             _executeModule = executeModule;
+            _mode = mode.Value;
         }
 
-        private void HubOnOnConnected(IRepresentationModule interaction)
+        public IRequestExtractor HubOnOnConnected(IRepresentationModule interaction)
         {
             var extractor = CreateExtractor(interaction);
-            extractor.StartExtraction().ContinueWith(_ => OnDisconnected(interaction));
+            if (_mode.DistributionType == EDistributionType.Channeled)
+            {
+                extractor.StartExtraction().ContinueWith(_ => OnDisconnected(interaction));
+            }
+
+            return extractor;
         }
 
         private void OnDisconnected(IRepresentationModule representationModule)
@@ -45,7 +48,7 @@ namespace mROA.Implementation.Backend
                 context.RealRepository = _contextRepository;
 
             context.RemoteRepository = _remoteContextRepository;
-            
+
             return extractor;
         }
     }

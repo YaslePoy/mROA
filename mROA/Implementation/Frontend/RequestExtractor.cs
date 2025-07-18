@@ -10,10 +10,10 @@ namespace mROA.Implementation.Frontend
     public class RequestExtractor : IRequestExtractor
     {
         
-        private IExecuteModule _executeModule;
+        private readonly IExecuteModule _executeModule;
 
-        private IRepresentationModule _representationModule;
-        private IEndPointContext _context;
+        private readonly IRepresentationModule _representationModule;
+        private readonly IEndPointContext _context;
 
         public RequestExtractor(IExecuteModule executeModule, IRepresentationModule representationModule, IEndPointContext context)
         {
@@ -84,7 +84,7 @@ namespace mROA.Implementation.Frontend
                 return;
             }
 
-            _representationModule.PostCallMessage(request.Id, resultType, result, _context);
+            _representationModule.PostCallMessageAsync(request.Id, resultType, result, _context).ConfigureAwait(false);
         }
 
         private void HandleEventRequest(DefaultCallRequest request)

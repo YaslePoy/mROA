@@ -1,16 +1,13 @@
-﻿using System;
-using mROA.Abstract;
+﻿using mROA.Abstract;
 
 namespace mROA.Implementation
 {
     public class CreativeRepresentationModuleProducer : IRepresentationModuleProducer
     {
-        private IServiceProvider _creationModules;
-        private IConnectionHub _hub;
-        private IContextualSerializationToolKit _serialization;
-        public CreativeRepresentationModuleProducer(IServiceProvider creationModules, IConnectionHub hub, IContextualSerializationToolKit serialization)
+        private readonly IConnectionHub _hub;
+        private readonly IContextualSerializationToolKit _serialization;
+        public CreativeRepresentationModuleProducer(IConnectionHub hub, IContextualSerializationToolKit serialization)
         {
-            _creationModules = creationModules;
             _hub = hub;
             _serialization = serialization;
         }

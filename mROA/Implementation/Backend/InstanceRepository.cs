@@ -11,7 +11,7 @@ namespace mROA.Implementation.Backend
     {
         public static object[] EventBinders = { };
 
-        private IRepresentationModuleProducer _representationModuleProducer;
+        private readonly IRepresentationModuleProducer _representationModuleProducer;
 
         private Dictionary<int, object?> _singletons = new();
         private readonly IStorage<object> _storage;
