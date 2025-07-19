@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using mROA.Abstract;
 
@@ -14,6 +15,7 @@ namespace mROA.Implementation.Backend
         private readonly TcpListener _tcpListener;
         private readonly IConnectionHub _hub;
         private readonly HubRequestExtractor _hre;
+        private readonly ILogger _logger;
         private readonly DistributionOptions _distribution;
         private readonly IContextualSerializationToolKit _serialization;
         private readonly Dictionary<int, CancellationTokenSource> _extractorsTokenSources = new();
@@ -22,7 +24,7 @@ namespace mROA.Implementation.Backend
 
         public NetworkGatewayModule(IOptions<GatewayOptions> options, IIdentityGenerator identityGenerator,
             IContextualSerializationToolKit serialization, ICallIndexProvider callIndexProvider, IConnectionHub hub,
-            IOptions<DistributionOptions> distribution, HubRequestExtractor hre)
+            IOptions<DistributionOptions> distribution, HubRequestExtractor hre, ILogger<ChannelInteractionModule.StreamExtractor> logger)
         {
             _tcpListener = new(options.Value.Endpoint);
             _identityGenerator = identityGenerator;
@@ -30,6 +32,7 @@ namespace mROA.Implementation.Backend
             _callIndexProvider = callIndexProvider;
             _hub = hub;
             _hre = hre;
+            _logger = logger;
             _distribution = distribution.Value;
         }
 
@@ -66,7 +69,7 @@ namespace mROA.Implementation.Backend
                 CallIndexProvider = _callIndexProvider
             };
             var streamExtractor =
-                new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
+                new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context, _logger);
             interaction.IsConnected = () => streamExtractor.IsConnected;
             streamExtractor.MessageReceived = async message =>
             {

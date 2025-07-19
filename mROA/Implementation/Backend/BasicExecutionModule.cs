@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using mROA.Abstract;
 using mROA.Implementation.CommandExecution;
 
@@ -10,17 +11,20 @@ namespace mROA.Implementation.Backend
         private readonly ICancellationRepository _cancellationRepo;
         private readonly IMethodRepository _methodRepo;
         private readonly IContextualSerializationToolKit _serialization;
+        private readonly ILogger<BasicExecutionModule> _logger;
 
-        public BasicExecutionModule(ICancellationRepository cancellationRepo, IMethodRepository methodRepo, IContextualSerializationToolKit serialization)
+        public BasicExecutionModule(ICancellationRepository cancellationRepo, IMethodRepository methodRepo, IContextualSerializationToolKit serialization, ILogger<BasicExecutionModule> logger)
         {
             _cancellationRepo = cancellationRepo;
             _methodRepo = methodRepo;
             _serialization = serialization;
+            _logger = logger;
         }
 
         public ICommandExecution Execute(ICallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext)
         {
+            // _logger.LogInformation("Executing {0}", command.Id);
             try
             {
                 if (command is CancelRequest)

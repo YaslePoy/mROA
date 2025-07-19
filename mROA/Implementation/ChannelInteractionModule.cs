@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using mROA.Abstract;
 
 namespace mROA.Implementation
@@ -147,14 +148,16 @@ namespace mROA.Implementation
             private readonly IContextualSerializationToolKit _serializationToolkit;
             private readonly Memory<byte> _buffer = new byte[BufferSize];
             private readonly IEndPointContext _context;
+            private readonly ILogger _logger;
             private readonly byte[] _lenBuffer;
 
             public StreamExtractor(Stream ioStream, IContextualSerializationToolKit serializationToolkit,
-                IEndPointContext context)
+                IEndPointContext context, ILogger logger)
             {
                 _ioStream = ioStream;
                 _serializationToolkit = serializationToolkit;
                 _context = context;
+                _logger = logger;
                 _lenBuffer = new byte[2];
             }
 
@@ -176,6 +179,7 @@ namespace mROA.Implementation
 
                 await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: token);
                 var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan, _context);
+                // _logger.LogTrace("RECV {0}", message.ToString());
                 MessageReceived(message);
             }
 
@@ -195,6 +199,8 @@ namespace mROA.Implementation
                 header.CopyTo(_buffer);
                 var sendingSpan = _buffer[..(len + 2)];
                 await _ioStream.WriteAsync(sendingSpan, token);
+                // _logger.LogTrace("SEND {0}", message.ToString());
+
             }
 
             public async Task SendFromChannel(ChannelReader<NetworkMessageHeader> channel,

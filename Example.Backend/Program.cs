@@ -9,12 +9,14 @@ using mROA.Implementation;
 using mROA.Implementation.Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 class Program
 {
     public static void Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddLogging(l => l.AddConsole());
         builder.Services.AddSingleton<IContextualSerializationToolKit, CborSerializationToolkit>();
         builder.Services.AddSingleton<IIdentityGenerator, BackendIdentityGenerator>();
         builder.Services.AddSingleton<IGatewayModule, NetworkGatewayModule>();
