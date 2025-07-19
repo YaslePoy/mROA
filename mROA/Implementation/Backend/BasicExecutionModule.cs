@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using Microsoft.Extensions.Logging;
 using mROA.Abstract;
 using mROA.Implementation.CommandExecution;
 
@@ -11,14 +10,13 @@ namespace mROA.Implementation.Backend
         private readonly ICancellationRepository _cancellationRepo;
         private readonly IMethodRepository _methodRepo;
         private readonly IContextualSerializationToolKit _serialization;
-        private readonly ILogger<BasicExecutionModule> _logger;
 
-        public BasicExecutionModule(ICancellationRepository cancellationRepo, IMethodRepository methodRepo, IContextualSerializationToolKit serialization, ILogger<BasicExecutionModule> logger)
+        public BasicExecutionModule(ICancellationRepository cancellationRepo, IMethodRepository methodRepo,
+            IContextualSerializationToolKit serialization)
         {
             _cancellationRepo = cancellationRepo;
             _methodRepo = methodRepo;
             _serialization = serialization;
-            _logger = logger;
         }
 
         public ICommandExecution Execute(ICallRequest command, IInstanceRepository instanceRepository,
@@ -36,9 +34,9 @@ namespace mROA.Implementation.Backend
                 if (invoker == null)
                     throw new Exception($"Command {command.CommandId} not found");
 
-                var context = GetContext(command, instanceRepository, invoker, endPointContext);
+                var instance = GetInstance(command, instanceRepository, invoker, endPointContext);
 
-                if (context == null)
+                if (instance is null)
                     throw new NullReferenceException("Instance can't be null");
 
 
@@ -50,24 +48,10 @@ namespace mROA.Implementation.Backend
 
                 var execContext = new RequestContext(command.Id, representationModule.Id);
 
-                switch (invoker)
-                {
-                    case AsyncMethodInvoker { IsVoid: false } asyncNonVoidMethodInvoker:
-                        return TypedExecuteAsync(asyncNonVoidMethodInvoker, context, castedParams, command,
-                            _cancellationRepo,
-                            representationModule, execContext, endPointContext);
-                    case AsyncMethodInvoker asyncMethodInvoker:
-                        return ExecuteAsync(asyncMethodInvoker, context, castedParams, command, _cancellationRepo,
-                            representationModule, execContext, endPointContext);
-                    default:
-                        var result = Execute((invoker as MethodInvoker)!, context, castedParams!, command, execContext);
-                        if (command.CommandId == -1)
-                        {
-                            instanceRepository.ClearObject(command.ObjectId, endPointContext);
-                        }
-
-                        return result;
-                }
+                var executionResult = ExecuteRequest(command, instanceRepository, representationModule, endPointContext,
+                    invoker,
+                    instance, castedParams, execContext);
+                return executionResult;
             }
             catch (Exception e)
             {
@@ -79,12 +63,37 @@ namespace mROA.Implementation.Backend
             }
         }
 
-        private static object GetContext(ICallRequest command, IInstanceRepository instanceRepository,
+        private ICommandExecution ExecuteRequest(ICallRequest command, IInstanceRepository instanceRepository,
+            IRepresentationModule representationModule, IEndPointContext endPointContext, IMethodInvoker invoker,
+            object context, object?[]? castedParams, RequestContext execContext)
+        {
+            switch (invoker)
+            {
+                case AsyncMethodInvoker { IsVoid: false } asyncNonVoidMethodInvoker:
+                    return TypedExecuteAsync(asyncNonVoidMethodInvoker, context, castedParams, command,
+                        _cancellationRepo,
+                        representationModule, execContext, endPointContext);
+                case AsyncMethodInvoker asyncMethodInvoker:
+                    return ExecuteAsync(asyncMethodInvoker, context, castedParams, command, _cancellationRepo,
+                        representationModule, execContext, endPointContext);
+                default:
+                    var result = Execute((invoker as MethodInvoker)!, context, castedParams!, command, execContext);
+                    if (command.CommandId == -1)
+                    {
+                        instanceRepository.ClearObject(command.ObjectId, endPointContext);
+                    }
+
+                    return result;
+            }
+        }
+
+        private static object GetInstance(ICallRequest command, IInstanceRepository instanceRepository,
             IMethodInvoker invoker, IEndPointContext endPointContext)
         {
             var context = command.ObjectId.ContextId != -1
                 ? instanceRepository.GetObject<object>(command.ObjectId, endPointContext)
                 : instanceRepository.GetSingletonObject(invoker.SuitableType, endPointContext);
+
             return context;
         }
 
@@ -116,42 +125,26 @@ namespace mROA.Implementation.Backend
         private static ICommandExecution Execute(MethodInvoker invoker, object instance, object?[] parameter,
             ICallRequest command, RequestContext executionContext)
         {
-            try
+            var finalResult = invoker.Invoke(instance, parameter, new object[] { executionContext });
+
+            if (!invoker.IsTrusted)
             {
-                var finalResult = invoker.Invoke(instance, parameter, new object[] { executionContext });
-
-                if (!invoker.IsTrusted)
-                {
-                    return new AsyncCommandExecution();
-                }
-
-                if (invoker.IsVoid)
-                {
-                    return new FinalCommandExecution
-                    {
-                        Id = command.Id
-                    };
-                }
-
-                return new FinalCommandExecution<object>
-                {
-                    Result = finalResult,
-                    Id = command.Id
-                };
+                return new AsyncCommandExecution();
             }
-            catch (Exception e)
+
+            if (invoker.IsVoid)
             {
-                if (invoker.IsTrusted)
-                    return new ExceptionCommandExecution
-                    {
-                        Id = command.Id,
-                        Exception = e.ToString()
-                    };
-                return new AsyncCommandExecution
+                return new FinalCommandExecution
                 {
                     Id = command.Id
                 };
             }
+
+            return new FinalCommandExecution<object>
+            {
+                Result = finalResult,
+                Id = command.Id
+            };
         }
 
         private ICommandExecution ExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
@@ -162,43 +155,27 @@ namespace mROA.Implementation.Backend
             cancellationRepository.RegisterCancellation(command.Id, tokenSource);
             var token = tokenSource.Token;
 
-            try
+            invoker.Invoke(instance, parameters, new object[] { executionContext, token }, _ =>
             {
-                invoker.Invoke(instance, parameters, new object[] { executionContext, token }, _ =>
-                {
-                    if (token.IsCancellationRequested)
-                        return;
+                if (token.IsCancellationRequested)
+                    return;
 
-                    var payload = new FinalCommandExecution
-                    {
-                        Id = command.Id
-                    };
-                    _cancellationRepo?.FreeCancelation(command.Id);
-
-
-                    if (invoker.IsTrusted)
-                        representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
-                            payload, context);
-                });
-
-                return new AsyncCommandExecution
+                var payload = new FinalCommandExecution
                 {
                     Id = command.Id
                 };
-            }
-            catch (Exception e)
-            {
+                _cancellationRepo.FreeCancelation(command.Id);
+
+
                 if (invoker.IsTrusted)
-                    return new ExceptionCommandExecution
-                    {
-                        Id = command.Id,
-                        Exception = e.ToString()
-                    };
-                return new AsyncCommandExecution
-                {
-                    Id = command.Id
-                };
-            }
+                    representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
+                        payload, context);
+            });
+
+            return new AsyncCommandExecution
+            {
+                Id = command.Id
+            };
         }
 
         private ICommandExecution TypedExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
@@ -209,35 +186,25 @@ namespace mROA.Implementation.Backend
             cancellationRepository.RegisterCancellation(command.Id, tokenSource);
 
             var token = tokenSource.Token;
-            try
-            {
-                invoker.Invoke(instance, parameters, new object[] { executionContext, token },
-                    finalResult =>
+
+            invoker.Invoke(instance, parameters, new object[] { executionContext, token },
+                finalResult =>
+                {
+                    var payload = new FinalCommandExecution<object>
                     {
-                        var payload = new FinalCommandExecution<object>
-                        {
-                            Id = command.Id,
-                            Result = finalResult
-                        };
-                        _cancellationRepo.FreeCancelation(command.Id);
+                        Id = command.Id,
+                        Result = finalResult
+                    };
+                    _cancellationRepo.FreeCancelation(command.Id);
 
-                        representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
-                            payload, context);
-                    });
+                    representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
+                        payload, context);
+                });
 
-                return new AsyncCommandExecution
-                {
-                    Id = command.Id
-                };
-            }
-            catch (Exception e)
+            return new AsyncCommandExecution
             {
-                return new ExceptionCommandExecution
-                {
-                    Id = command.Id,
-                    Exception = e.ToString()
-                };
-            }
+                Id = command.Id
+            };
         }
     }
 }

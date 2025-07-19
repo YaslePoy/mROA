@@ -14,8 +14,6 @@ namespace mROA.Implementation.Backend
             _produceRepository = produceRepository;
         }
 
-        public int HostId { get; set; }
-
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
             var repository = GetRepositoryByClientId(context.OwnerId);

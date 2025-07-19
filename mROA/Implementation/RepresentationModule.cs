@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
 
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
 namespace mROA.Implementation
 {
@@ -15,7 +14,8 @@ namespace mROA.Implementation
         private readonly IChannelInteractionModule _interaction;
         private readonly IContextualSerializationToolKit _serialization;
 
-        public RepresentationModule(IChannelInteractionModule interaction, IContextualSerializationToolKit serialization)
+        public RepresentationModule(IChannelInteractionModule interaction,
+            IContextualSerializationToolKit serialization)
         {
             _interaction = interaction;
             _serialization = serialization;
@@ -56,7 +56,7 @@ namespace mROA.Implementation
             [EnumeratorCancellation] CancellationToken token = default,
             params Func<NetworkMessageHeader, Type?>[] converter)
         {
-            var writer = _interaction?.ReceiveChanel.Writer;
+            var writer = _interaction.ReceiveChanel.Writer;
             await foreach (var message in _interaction.ReceiveChanel.Reader.ReadAllAsync(token))
             {
                 if (!rule(message))
@@ -66,7 +66,7 @@ namespace mROA.Implementation
                 }
 
 
-                for (int i = 0; i < converter.Length; i++)
+                for (var i = 0; i < converter.Length; i++)
                 {
                     var func = converter[i];
                     if (func(message) is { } t)

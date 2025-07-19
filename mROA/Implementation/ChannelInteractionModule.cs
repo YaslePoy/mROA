@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using mROA.Abstract;
 
 namespace mROA.Implementation
@@ -50,7 +48,7 @@ namespace mROA.Implementation
             _untrustedWriter = _outputUntrustedChannel.Writer;
             _reconnection = new TaskCompletionSource<Stream>();
         }
-        
+
         public int ConnectionId { get; set; }
 
         public IEndPointContext Context { get; set; }
@@ -60,10 +58,11 @@ namespace mROA.Implementation
         public ChannelReader<NetworkMessageHeader> UntrustedPostChanel => _outputUntrustedChannel.Reader;
         public Func<bool> IsConnected { get; set; } = () => false;
 
-        public ValueTask<NetworkMessageHeader> GetNextMessageReceiving(bool infinite = true)
+        public ValueTask<NetworkMessageHeader> GetNextMessageReceiving()
         {
             return _receiveReader.ReadAsync();
         }
+
         private async ValueTask<bool> PostMessageInternal(NetworkMessageHeader messageHeader)
         {
             if (!IsConnected())
@@ -148,16 +147,14 @@ namespace mROA.Implementation
             private readonly IContextualSerializationToolKit _serializationToolkit;
             private readonly Memory<byte> _buffer = new byte[BufferSize];
             private readonly IEndPointContext _context;
-            private readonly ILogger _logger;
             private readonly byte[] _lenBuffer;
 
             public StreamExtractor(Stream ioStream, IContextualSerializationToolKit serializationToolkit,
-                IEndPointContext context, ILogger logger)
+                IEndPointContext context)
             {
                 _ioStream = ioStream;
                 _serializationToolkit = serializationToolkit;
                 _context = context;
-                _logger = logger;
                 _lenBuffer = new byte[2];
             }
 
@@ -168,7 +165,7 @@ namespace mROA.Implementation
                 await _ioStream.ReadAsync(_lenBuffer);
 
                 var len = BitConverter.ToUInt16(_lenBuffer);
-            
+
                 return len;
             }
 
@@ -200,7 +197,6 @@ namespace mROA.Implementation
                 var sendingSpan = _buffer[..(len + 2)];
                 await _ioStream.WriteAsync(sendingSpan, token);
                 // _logger.LogTrace("SEND {0}", message.ToString());
-
             }
 
             public async Task SendFromChannel(ChannelReader<NetworkMessageHeader> channel,

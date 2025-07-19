@@ -14,7 +14,8 @@ namespace mROA.Implementation.Frontend
         private readonly CancellationTokenSource _tokenSource = new();
         private readonly IEndPointContext _context;
 
-        public UdpUntrustedInteraction(IContextualSerializationToolKit serializationToolkit, IChannelInteractionModule channelInteractionModule, IEndPointContext context)
+        public UdpUntrustedInteraction(IContextualSerializationToolKit serializationToolkit,
+            IChannelInteractionModule channelInteractionModule, IEndPointContext context)
         {
             _serializationToolkit = serializationToolkit;
             _channelInteractionModule = channelInteractionModule;

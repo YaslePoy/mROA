@@ -9,6 +9,7 @@ namespace mROA.Implementation
 
     public class ClientRecovery : INetworkMessage
     {
+        // ReSharper disable once UnusedMember.Global
         public ClientRecovery()
         {
             Id = 0;

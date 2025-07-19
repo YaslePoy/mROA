@@ -1,8 +1,6 @@
 ﻿using System;
 using mROA.Abstract;
 
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-
 namespace mROA.Implementation.CommandExecution
 {
     public struct FinalCommandExecution : ICommandExecution

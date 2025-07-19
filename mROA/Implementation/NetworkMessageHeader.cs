@@ -1,8 +1,6 @@
 ﻿using System;
 using mROA.Abstract;
 
-// ReSharper disable UnusedMember.Global
-
 namespace mROA.Implementation
 {
     public class NetworkMessageHeader
@@ -16,11 +14,8 @@ namespace mROA.Implementation
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((NetworkMessageHeader)obj);
+            return obj.GetType() == GetType() && Equals((NetworkMessageHeader)obj);
         }
-
-        public static readonly NetworkMessageHeader Null = new();
 
         public NetworkMessageHeader()
         {

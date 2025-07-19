@@ -3,14 +3,10 @@ using System.Text.Json.Serialization;
 using mROA.Abstract;
 using mROA.Implementation.Attributes;
 
-// ReSharper disable UnusedMember.Global
-// #pragma warning disable CS8618, CS9264
-
 namespace mROA.Implementation
 {
     public interface ISharedObjectShell
     {
-        // ReSharper disable once UnusedMemberInSuper.Global
         IEndPointContext EndPointContext { get; set; }
         ComplexObjectIdentifier Identifier { get; set; }
         object UniversalValue { get; set; }

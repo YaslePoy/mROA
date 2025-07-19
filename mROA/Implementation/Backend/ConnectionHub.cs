@@ -18,8 +18,5 @@ namespace mROA.Implementation.Backend
             return _connections!.GetValueOrDefault(id, null) ?? _connections!.GetValueOrDefault(-id, null) ??
                 throw new Exception("No connection found");
         }
-
-        public event ConnectionHandler? OnConnected;
-        public event DisconnectionHandler? OnDisconnected;
     }
 }

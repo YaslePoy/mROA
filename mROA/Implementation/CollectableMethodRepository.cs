@@ -14,10 +14,7 @@ namespace mROA.Implementation
 
         public IMethodInvoker GetMethod(int id)
         {
-            if (id == -1)
-                return MethodInvoker.Dispose;
-
-            return _methods[id];
+            return id == -1 ? MethodInvoker.Dispose : _methods[id];
         }
     }
 }

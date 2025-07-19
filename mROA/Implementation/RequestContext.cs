@@ -2,7 +2,7 @@ using System;
 
 namespace mROA.Implementation
 {
-    public sealed class RequestContext
+    public struct RequestContext
     {
         public int OwnerId { get; }
         public Guid RequestId { get; }

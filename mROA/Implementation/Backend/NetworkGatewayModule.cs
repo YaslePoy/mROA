@@ -24,7 +24,8 @@ namespace mROA.Implementation.Backend
 
         public NetworkGatewayModule(IOptions<GatewayOptions> options, IIdentityGenerator identityGenerator,
             IContextualSerializationToolKit serialization, ICallIndexProvider callIndexProvider, IConnectionHub hub,
-            IOptions<DistributionOptions> distribution, HubRequestExtractor hre, ILogger<ChannelInteractionModule.StreamExtractor> logger)
+            IOptions<DistributionOptions> distribution, HubRequestExtractor hre,
+            ILogger<ChannelInteractionModule.StreamExtractor> logger)
         {
             _tcpListener = new(options.Value.Endpoint);
             _identityGenerator = identityGenerator;
@@ -69,7 +70,7 @@ namespace mROA.Implementation.Backend
                 CallIndexProvider = _callIndexProvider
             };
             var streamExtractor =
-                new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context, _logger);
+                new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
             interaction.IsConnected = () => streamExtractor.IsConnected;
             streamExtractor.MessageReceived = async message =>
             {
@@ -106,7 +107,7 @@ namespace mROA.Implementation.Backend
             interaction.PostMessageAsync(new NetworkMessageHeader(_serialization,
                 new IdAssignment { Id = interaction.ConnectionId }, null));
             _extractorsTokenSources[interaction.ConnectionId] = cts;
-            
+
             _hub.RegisterInteraction(interaction);
             var requestExtractor = _hre.HubOnOnConnected(new RepresentationModule(interaction, _serialization));
 
@@ -124,20 +125,19 @@ namespace mROA.Implementation.Backend
             {
                 if (requestExtractor.Rule(message))
                 {
-                    for (int i = 0; i < converters.Length; i++)
+                    for (var i = 0; i < converters.Length; i++)
                     {
                         var func = converters[i];
-                        if (func(message) is { } t)
-                        {
-                            var deserialized = _serialization.Deserialize(message.Data, t, context);
-                            Task.Run(() => requestExtractor.PushMessage(deserialized, message.MessageType));
-                            break;
-                        }
-                    }
+                        if (func(message) is not { } t) continue;
                         
+                        var deserialized = _serialization.Deserialize(message.Data, t, context);
+                        Task.Run(() => requestExtractor.PushMessage(deserialized, message.MessageType));
+                        break;
+                    }
+
                     return;
                 }
-                    
+
                 interaction.ReceiveChanel.Writer.WriteAsync(message).ConfigureAwait(false);
             };
         }
@@ -160,9 +160,10 @@ namespace mROA.Implementation.Backend
 
             if (_distribution.DistributionType == EDistributionType.ExtractorFirst)
             {
-                BindRequestFirstDistribution(recoveryInteraction.Context, recoveryInteraction, streamExtractor, _hre[recoveryInteraction.ConnectionId]);
+                BindRequestFirstDistribution(recoveryInteraction.Context, recoveryInteraction, streamExtractor,
+                    _hre[recoveryInteraction.ConnectionId]);
             }
-            
+
             Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token).ConfigureAwait(false));
 
             recoveryInteraction.Restart(false);
@@ -172,6 +173,5 @@ namespace mROA.Implementation.Backend
     public class GatewayOptions
     {
         public IPEndPoint Endpoint { get; set; }
-        public Type InteractionModuleType { get; set; }
     }
 }

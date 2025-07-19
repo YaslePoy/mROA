@@ -3,19 +3,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using mROA.Abstract;
 
-// ReSharper disable MethodHasAsyncOverload
 
 namespace mROA.Implementation.Frontend
 {
     public class RequestExtractor : IRequestExtractor
     {
-        
         private readonly IExecuteModule _executeModule;
 
         private readonly IRepresentationModule _representationModule;
         private readonly IEndPointContext _context;
 
-        public RequestExtractor(IExecuteModule executeModule, IRepresentationModule representationModule, IEndPointContext context)
+        public RequestExtractor(IExecuteModule executeModule, IRepresentationModule representationModule,
+            IEndPointContext context)
         {
             _executeModule = executeModule;
             _representationModule = representationModule;
@@ -53,7 +52,7 @@ namespace mROA.Implementation.Frontend
                     HandleCancelRequest((parced as CancelRequest)!);
                     break;
                 default:
-                    return;
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -61,7 +60,8 @@ namespace mROA.Implementation.Frontend
             m.MessageType is EMessageType.CallRequest or EMessageType.CancelRequest
                 or EMessageType.EventRequest or EMessageType.ClientDisconnect;
 
-        public Func<NetworkMessageHeader, Type?>[] Converters { get; } = {
+        public Func<NetworkMessageHeader, Type?>[] Converters { get; } =
+        {
             m => m.MessageType == EMessageType.CallRequest ? typeof(DefaultCallRequest) : null,
             m => m.MessageType == EMessageType.CancelRequest ? typeof(CancelRequest) : null,
             m => m.MessageType == EMessageType.EventRequest ? typeof(DefaultCallRequest) : null,

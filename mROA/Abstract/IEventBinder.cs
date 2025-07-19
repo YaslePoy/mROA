@@ -1,6 +1,6 @@
 ﻿namespace mROA.Abstract
 {
-    public interface IEventBinder<T> : IEventBinder
+    public interface IEventBinder<in T> : IEventBinder
     {
         public void BindEvents(T source, IEndPointContext context,
             IRepresentationModuleProducer representationModuleProducer, int index);

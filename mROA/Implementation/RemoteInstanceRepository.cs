@@ -12,7 +12,8 @@ namespace mROA.Implementation
 
         private readonly IRepresentationModuleProducer _representationProducer;
 
-        public RemoteInstanceRepository(ICallIndexProvider callIndexProvider, IRepresentationModuleProducer representationProducer)
+        public RemoteInstanceRepository(ICallIndexProvider callIndexProvider,
+            IRepresentationModuleProducer representationProducer)
         {
             _callIndexProvider = callIndexProvider;
             _representationProducer = representationProducer;
@@ -60,9 +61,7 @@ namespace mROA.Implementation
             var instance = _callIndexProvider.Activators[type](-1, representationModule, context,
                 _callIndexProvider.GetIndices(type))!;
 
-            var remoteObjectBase = instance;
-
-            _producedProxies.Add(remoteObjectBase);
+            _producedProxies.Add(instance);
 
             return _producedProxies.Last();
         }

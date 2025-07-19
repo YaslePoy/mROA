@@ -1,9 +1,8 @@
-using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using mROA.Abstract;
 using mROA.Implementation.Backend;
@@ -16,20 +15,20 @@ namespace mROA.Implementation.Frontend
         private readonly IPEndPoint _serverEndPoint;
         private TcpClient _tcpClient = new();
         private readonly IChannelInteractionModule _interactionModule;
-        private readonly ILogger _logger;
         private readonly IContextualSerializationToolKit _serialization;
-        private ChannelInteractionModule.StreamExtractor? _currentExtractor;
+        private ChannelInteractionModule.StreamExtractor _currentExtractor;
         private CancellationTokenSource _rawExtractorCancellation;
         private readonly IEndPointContext _context;
 
-        public NetworkFrontendBridge(IOptions<GatewayOptions> options, IEndPointContext context, IContextualSerializationToolKit serialization, IChannelInteractionModule interactionModule, ILogger<ChannelInteractionModule.StreamExtractor> logger)
+        public NetworkFrontendBridge(IOptions<GatewayOptions> options, IEndPointContext context,
+            IContextualSerializationToolKit serialization, IChannelInteractionModule interactionModule)
         {
             _serverEndPoint = options.Value.Endpoint;
             _context = context;
             _serialization = serialization;
             _interactionModule = interactionModule;
-            _logger = logger;
             _rawExtractorCancellation = new CancellationTokenSource();
+            _currentExtractor = new ChannelInteractionModule.StreamExtractor(Stream.Null, _serialization, context);
         }
 
         public async Task Connect()
@@ -38,13 +37,13 @@ namespace mROA.Implementation.Frontend
             _tcpClient.NoDelay = true;
             PrepareExtractor();
             _interactionModule.IsConnected = () => _currentExtractor.IsConnected;
-            _interactionModule.OnDisconnected += _ => { Reconnect(); };
+            _interactionModule.OnDisconnected += _ => { Reconnect().ConfigureAwait(false); };
 
             _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect(), _context))
                 .Wait();
 
-            _currentExtractor.SingleReceive();
-            var idMessage = await _interactionModule.GetNextMessageReceiving(false);
+            _ = _currentExtractor.SingleReceive().ConfigureAwait(false);
+            var idMessage = await _interactionModule.GetNextMessageReceiving();
 
             if (idMessage.MessageType != EMessageType.IdAssigning)
             {
@@ -53,7 +52,7 @@ namespace mROA.Implementation.Frontend
             }
 
 
-            Task.Run(async () => await _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token));
+            _ = Task.Run(async () => await _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token));
 
             var assignment = _serialization.Deserialize<IdAssignment>(idMessage.Data, _context);
             _interactionModule.ConnectionId = -assignment.Id;
@@ -64,7 +63,7 @@ namespace mROA.Implementation.Frontend
         private void PrepareExtractor()
         {
             _currentExtractor =
-                new ChannelInteractionModule.StreamExtractor(_tcpClient.GetStream(), _serialization, _context, _logger);
+                new ChannelInteractionModule.StreamExtractor(_tcpClient.GetStream(), _serialization, _context);
 
             _ = _currentExtractor.SendFromChannel(_interactionModule.TrustedPostChanel,
                 _rawExtractorCancellation.Token);
@@ -84,7 +83,7 @@ namespace mROA.Implementation.Frontend
 
             PrepareExtractor();
 
-            Task.Run(async () => await _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token));
+            _ = Task.Run(async () => await _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token));
 
             await _interactionModule.Restart(true);
         }

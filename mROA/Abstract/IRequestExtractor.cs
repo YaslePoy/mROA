@@ -9,6 +9,6 @@ namespace mROA.Abstract
         Task StartExtraction();
         void PushMessage(object parced, EMessageType originalType);
         Predicate<NetworkMessageHeader> Rule { get; }
-        Func<NetworkMessageHeader,Type?>[] Converters { get; }
+        Func<NetworkMessageHeader, Type?>[] Converters { get; }
     }
 }

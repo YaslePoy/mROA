@@ -22,8 +22,6 @@ namespace mROA.Implementation.Backend
             _storage = new ExtensibleStorage<object>();
         }
 
-        public int HostId { get; set; }
-
         public int ResisterObject<T>(object o, IEndPointContext context)
         {
             var last = _storage.Place(o);

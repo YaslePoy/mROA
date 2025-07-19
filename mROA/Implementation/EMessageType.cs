@@ -12,6 +12,6 @@ namespace mROA.Implementation
         ClientRecovery,
         ClientConnect,
         ClientDisconnect,
-        UntrustedConnect,
+        UntrustedConnect
     }
 }

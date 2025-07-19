@@ -11,7 +11,6 @@ using Microsoft.CodeAnalysis.Text;
 using mROA.CodegenTools;
 using mROA.CodegenTools.Reading;
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
 namespace mROA.Codegen
 {
@@ -314,7 +313,7 @@ namespace mROA.Codegen
                         parametersInsertList.Add("(CancellationToken)special[1]");
                         break;
                     case "RequestContext":
-                        parametersInsertList.Add("special[0] as RequestContext");
+                        parametersInsertList.Add("(RequestContext)special[0]");
                         break;
                     default:
                         parametersInsertList.Add(Caster(parameter.Type,
@@ -428,7 +427,7 @@ namespace mROA.Codegen
                         parametersInsertList.Add("(CancellationToken)special[1]");
                         break;
                     case "RequestContext":
-                        parametersInsertList.Add("special[0] as RequestContext");
+                        parametersInsertList.Add("(RequestContext)special[0]");
                         break;
                     default:
                         parametersInsertList.Add(Caster(parameter.i,

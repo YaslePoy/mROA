@@ -1,8 +1,5 @@
 ﻿using System;
 
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
-
 namespace mROA.Implementation
 {
     public interface ICallRequest

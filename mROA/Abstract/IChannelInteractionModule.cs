@@ -13,7 +13,7 @@ namespace mROA.Abstract
         ChannelReader<NetworkMessageHeader> TrustedPostChanel { get; }
         ChannelReader<NetworkMessageHeader> UntrustedPostChanel { get; }
         Func<bool> IsConnected { get; set; }
-        ValueTask<NetworkMessageHeader> GetNextMessageReceiving(bool infinite = true);
+        ValueTask<NetworkMessageHeader> GetNextMessageReceiving();
         Task PostMessageAsync(NetworkMessageHeader messageHeader);
         Task PostMessageUntrustedAsync(NetworkMessageHeader messageHeader);
         event Action<int> OnDisconnected;

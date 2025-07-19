@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using mROA.Abstract;
 using mROA.Implementation.CommandExecution;
 
-// ReSharper disable UnusedMember.Global
 
 namespace mROA.Implementation
 {
@@ -21,8 +20,7 @@ namespace mROA.Implementation
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((RemoteObjectBase)obj);
+            return obj.GetType() == GetType() && Equals((RemoteObjectBase)obj);
         }
 
         public override int GetHashCode()
@@ -142,6 +140,8 @@ namespace mROA.Implementation
                     return;
                 case EMessageType.ExceptionCommandExecution:
                     throw (responseRequest.Deserialized as ExceptionCommandExecution)!.GetException();
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 

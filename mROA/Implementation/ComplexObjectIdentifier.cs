@@ -2,7 +2,6 @@ using System;
 
 namespace mROA.Implementation
 {
-#pragma warning disable CS8618, CS9264
     public struct ComplexObjectIdentifier : IEquatable<ComplexObjectIdentifier>
     {
         public int ContextId;
@@ -14,14 +13,9 @@ namespace mROA.Implementation
             OwnerId = ownerId;
         }
 
-        public static ComplexObjectIdentifier Singleton(int ownerId) => new() { ContextId = -1, OwnerId = ownerId };
-
-        public static ComplexObjectIdentifier Null = new ComplexObjectIdentifier { ContextId = -2, OwnerId = 0 };
+        public static ComplexObjectIdentifier Null = new() { ContextId = -2, OwnerId = 0 };
         public static ComplexObjectIdentifier FromFlat(ulong flat) => new() { Flat = flat };
 
-        public int ClientId => Math.Abs(OwnerId);
-        public bool IsSererStored => OwnerId > 0;
-        public bool IsClientStored => OwnerId < 0;
 
         public override string ToString()
         {

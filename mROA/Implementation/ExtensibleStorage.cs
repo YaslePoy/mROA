@@ -55,7 +55,7 @@ namespace mROA.Implementation
         public void Free(int index)
         {
             _freePlaces.AddFirst(index);
-            _array[index] = default;
+            _array[index] = null;
         }
     }
 }

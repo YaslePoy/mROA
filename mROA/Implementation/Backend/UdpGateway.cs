@@ -18,7 +18,8 @@ namespace mROA.Implementation.Backend
         private readonly CancellationTokenSource _tokenSource = new();
         private readonly IContextualSerializationToolKit _serializationToolkit;
 
-        public UdpGateway(IOptions<GatewayOptions> options, IConnectionHub hub, IContextualSerializationToolKit serializationToolkit)
+        public UdpGateway(IOptions<GatewayOptions> options, IConnectionHub hub,
+            IContextualSerializationToolKit serializationToolkit)
         {
             _hub = hub;
             _serializationToolkit = serializationToolkit;
