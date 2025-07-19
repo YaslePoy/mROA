@@ -130,7 +130,7 @@ namespace mROA.Implementation.Backend
                         if (func(message) is { } t)
                         {
                             var deserialized = _serialization.Deserialize(message.Data, t, context);
-                            requestExtractor.PushMessage(deserialized, message.MessageType);
+                            Task.Run(() => requestExtractor.PushMessage(deserialized, message.MessageType));
                             break;
                         }
                     }
