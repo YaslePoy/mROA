@@ -165,7 +165,7 @@ namespace mROA.Implementation
                 await _ioStream.ReadAsync(_lenBuffer);
 
                 var len = BitConverter.ToUInt16(_lenBuffer);
-
+            
                 return len;
             }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using mROA.Abstract;
 using mROA.Implementation.Frontend;
@@ -10,6 +11,7 @@ namespace mROA.Implementation.Backend
         private readonly IInstanceRepository _remoteContextRepository;
         private readonly IExecuteModule _executeModule;
         private readonly DistributionOptions _mode;
+        private Dictionary<int, IRequestExtractor> _producedExtractors = new();
 
         public HubRequestExtractor(IRealStoreInstanceRepository contextRepository,
             IInstanceRepository remoteContextRepository, IExecuteModule executeModule,
@@ -21,6 +23,8 @@ namespace mROA.Implementation.Backend
             _mode = mode.Value;
         }
 
+        public IRequestExtractor this[int id] => _producedExtractors[id];
+        
         public IRequestExtractor HubOnOnConnected(IRepresentationModule interaction)
         {
             var extractor = CreateExtractor(interaction);
@@ -29,6 +33,7 @@ namespace mROA.Implementation.Backend
                 extractor.StartExtraction().ContinueWith(_ => OnDisconnected(interaction));
             }
 
+            _producedExtractors[interaction.Id] = extractor;
             return extractor;
         }
 

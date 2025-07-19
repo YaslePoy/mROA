@@ -19,7 +19,10 @@ namespace mROA.Implementation.Backend
         private readonly Dictionary<int, CancellationTokenSource> _extractorsTokenSources = new();
         private readonly ICallIndexProvider _callIndexProvider;
         private readonly IIdentityGenerator _identityGenerator;
-        public NetworkGatewayModule(IOptions<GatewayOptions> options, IIdentityGenerator identityGenerator, IContextualSerializationToolKit serialization, ICallIndexProvider callIndexProvider, IConnectionHub hub, IOptions<DistributionOptions> distribution, HubRequestExtractor hre)
+
+        public NetworkGatewayModule(IOptions<GatewayOptions> options, IIdentityGenerator identityGenerator,
+            IContextualSerializationToolKit serialization, ICallIndexProvider callIndexProvider, IConnectionHub hub,
+            IOptions<DistributionOptions> distribution, HubRequestExtractor hre)
         {
             _tcpListener = new(options.Value.Endpoint);
             _identityGenerator = identityGenerator;
@@ -57,7 +60,7 @@ namespace mROA.Implementation.Backend
         {
             Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
             var interaction = new ChannelInteractionModule(_serialization, _identityGenerator);
-                
+
             var context = new EndPointContext(null, null)
             {
                 CallIndexProvider = _callIndexProvider
@@ -100,17 +103,44 @@ namespace mROA.Implementation.Backend
             interaction.PostMessageAsync(new NetworkMessageHeader(_serialization,
                 new IdAssignment { Id = interaction.ConnectionId }, null));
             _extractorsTokenSources[interaction.ConnectionId] = cts;
-
-            _hub.RegisterInteraction(interaction);
-            _hre.HubOnOnConnected(new RepresentationModule(interaction, _serialization));
             
+            _hub.RegisterInteraction(interaction);
+            var requestExtractor = _hre.HubOnOnConnected(new RepresentationModule(interaction, _serialization));
+
             if (_distribution.DistributionType != EDistributionType.Channeled)
             {
-                            
+                BindRequestFirstDistribution(context, interaction, streamExtractor, requestExtractor);
             }
         }
 
-        private void RecoverDisconnectedClient(NetworkMessageHeader connectionRequest, ChannelInteractionModule.StreamExtractor streamExtractor,
+        private void BindRequestFirstDistribution(IEndPointContext context, IChannelInteractionModule interaction,
+            ChannelInteractionModule.StreamExtractor streamExtractor, IRequestExtractor requestExtractor)
+        {
+            var converters = requestExtractor.Converters;
+            streamExtractor.MessageReceived = message =>
+            {
+                if (requestExtractor.Rule(message))
+                {
+                    for (int i = 0; i < converters.Length; i++)
+                    {
+                        var func = converters[i];
+                        if (func(message) is { } t)
+                        {
+                            var deserialized = _serialization.Deserialize(message.Data, t, context);
+                            requestExtractor.PushMessage(deserialized, message.MessageType);
+                            break;
+                        }
+                    }
+                        
+                    return;
+                }
+                    
+                interaction.ReceiveChanel.Writer.WriteAsync(message).ConfigureAwait(false);
+            };
+        }
+
+        private void RecoverDisconnectedClient(NetworkMessageHeader connectionRequest,
+            ChannelInteractionModule.StreamExtractor streamExtractor,
             CancellationTokenSource cts)
         {
             var recoveryRequest = _serialization.Deserialize<ClientRecovery>(connectionRequest.Data, null);
@@ -125,6 +155,11 @@ namespace mROA.Implementation.Backend
             };
             _ = streamExtractor.SendFromChannel(recoveryInteraction.TrustedPostChanel, cts.Token);
 
+            if (_distribution.DistributionType == EDistributionType.ExtractorFirst)
+            {
+                BindRequestFirstDistribution(recoveryInteraction.Context, recoveryInteraction, streamExtractor, _hre[recoveryInteraction.ConnectionId]);
+            }
+            
             Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token).ConfigureAwait(false));
 
             recoveryInteraction.Restart(false);
