@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using mROA.Abstract;
 using mROA.Implementation.Backend;
@@ -14,18 +15,20 @@ namespace mROA.Implementation.Frontend
     {
         private readonly IPEndPoint _serverEndPoint;
         private TcpClient _tcpClient = new();
-        private IChannelInteractionModule _interactionModule;
-        private IContextualSerializationToolKit _serialization;
+        private readonly IChannelInteractionModule _interactionModule;
+        private readonly ILogger _logger;
+        private readonly IContextualSerializationToolKit _serialization;
         private ChannelInteractionModule.StreamExtractor? _currentExtractor;
         private CancellationTokenSource _rawExtractorCancellation;
-        private IEndPointContext _context;
+        private readonly IEndPointContext _context;
 
-        public NetworkFrontendBridge(IOptions<GatewayOptions> options, IEndPointContext context, IContextualSerializationToolKit serialization, IChannelInteractionModule interactionModule)
+        public NetworkFrontendBridge(IOptions<GatewayOptions> options, IEndPointContext context, IContextualSerializationToolKit serialization, IChannelInteractionModule interactionModule, ILogger<ChannelInteractionModule.StreamExtractor> logger)
         {
             _serverEndPoint = options.Value.Endpoint;
             _context = context;
             _serialization = serialization;
             _interactionModule = interactionModule;
+            _logger = logger;
             _rawExtractorCancellation = new CancellationTokenSource();
         }
 
@@ -61,9 +64,9 @@ namespace mROA.Implementation.Frontend
         private void PrepareExtractor()
         {
             _currentExtractor =
-                new ChannelInteractionModule.StreamExtractor(_tcpClient.GetStream(), _serialization, _context);
+                new ChannelInteractionModule.StreamExtractor(_tcpClient.GetStream(), _serialization, _context, _logger);
 
-            _ = _currentExtractor.SendFromChannel(_interactionModule!.TrustedPostChanel,
+            _ = _currentExtractor.SendFromChannel(_interactionModule.TrustedPostChanel,
                 _rawExtractorCancellation.Token);
             _currentExtractor.MessageReceived = message =>
             {
@@ -93,7 +96,7 @@ namespace mROA.Implementation.Frontend
 
         public void Disconnect()
         {
-            _ = _interactionModule!.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientDisconnect(),
+            _ = _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientDisconnect(),
                 _context));
             _interactionModule.Dispose();
             _tcpClient.Dispose();

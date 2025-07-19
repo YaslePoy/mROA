@@ -8,6 +8,7 @@ using Example.Frontend;
 using Example.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using mROA.Abstract;
 using mROA.Cbor;
 using mROA.Codegen;
@@ -23,6 +24,8 @@ class Program
         new RemoteTypeBinder();
 
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
+        builder.Services.AddLogging(l => l.SetMinimumLevel(LogLevel.Trace).AddConsole());
+        
         builder.Services.AddSingleton<IContextualSerializationToolKit, CborSerializationToolkit>();
         builder.Services.AddSingleton<IEndPointContext, EndPointContext>();
         builder.Services.AddSingleton<IRealStoreInstanceRepository, InstanceRepository>(provider =>
@@ -39,8 +42,11 @@ class Program
         builder.Services.AddSingleton<IRepresentationModule, RepresentationModule>();
         var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
         builder.Services.AddSingleton<IFrontendBridge, NetworkFrontendBridge>();
+        
         builder.Services.AddOptions();
         builder.Services.Configure<GatewayOptions>(options => options.Endpoint = serverEndPoint);
+        builder.Services.Configure<DistributionOptions>(o => o.DistributionType = EDistributionType.Channeled);
+
         builder.Services.AddSingleton<IRepresentationModuleProducer, StaticRepresentationModuleProducer>();
         builder.Services.AddSingleton<IRequestExtractor, RequestExtractor>();
         builder.Services.AddSingleton<IExecuteModule, BasicExecutionModule>();

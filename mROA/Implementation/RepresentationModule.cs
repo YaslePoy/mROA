@@ -12,8 +12,8 @@ namespace mROA.Implementation
 {
     public class RepresentationModule : IRepresentationModule
     {
-        private IChannelInteractionModule _interaction;
-        private IContextualSerializationToolKit _serialization;
+        private readonly IChannelInteractionModule _interaction;
+        private readonly IContextualSerializationToolKit _serialization;
 
         public RepresentationModule(IChannelInteractionModule interaction, IContextualSerializationToolKit serialization)
         {

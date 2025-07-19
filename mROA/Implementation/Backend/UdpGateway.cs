@@ -12,11 +12,11 @@ namespace mROA.Implementation.Backend
 {
     public class UdpGateway : IUntrustedGateway
     {
-        private IConnectionHub _hub;
-        private UdpClient _client;
-        private Dictionary<IPEndPoint, int> _reservedPorts = new();
-        private CancellationTokenSource _tokenSource = new();
-        private IContextualSerializationToolKit _serializationToolkit;
+        private readonly IConnectionHub _hub;
+        private readonly UdpClient _client;
+        private readonly Dictionary<IPEndPoint, int> _reservedPorts = new();
+        private readonly CancellationTokenSource _tokenSource = new();
+        private readonly IContextualSerializationToolKit _serializationToolkit;
 
         public UdpGateway(IOptions<GatewayOptions> options, IConnectionHub hub, IContextualSerializationToolKit serializationToolkit)
         {

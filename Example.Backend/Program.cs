@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using Example.Backend;
 using Example.Shared;
@@ -10,24 +9,26 @@ using mROA.Implementation;
 using mROA.Implementation.Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 class Program
 {
     public static void Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddLogging(l => l.AddConsole());
         builder.Services.AddSingleton<IContextualSerializationToolKit, CborSerializationToolkit>();
         builder.Services.AddSingleton<IIdentityGenerator, BackendIdentityGenerator>();
         builder.Services.AddSingleton<IGatewayModule, NetworkGatewayModule>();
         builder.Services.AddSingleton<IUntrustedGateway, UdpGateway>();
         builder.Services.AddSingleton<IConnectionHub, ConnectionHub>();
+        
         builder.Services.AddOptions();
         var listening = new IPEndPoint(IPAddress.Any, 4567);
-
         builder.Services.Configure<GatewayOptions>(options => options.Endpoint = listening);
-
+        builder.Services.Configure<DistributionOptions>(o => o.DistributionType = EDistributionType.ExtractorFirst);
+        
         builder.Services.AddSingleton<HubRequestExtractor>();
-
         builder.Services.AddSingleton<IExecuteModule, BasicExecutionModule>();
         builder.Services.AddSingleton<IRepresentationModuleProducer, CreativeRepresentationModuleProducer>();
         builder.Services.AddSingleton<IInstanceRepository, RemoteInstanceRepository>();
@@ -40,7 +41,6 @@ class Program
             return repo;
         }));
 
-        builder.Services.AddSingleton<IMessageDistributorFactory, ChannelDistributorFactory>();
         builder.Services.AddSingleton<IMethodRepository>(p =>
         {
             var methodRepo = new CollectableMethodRepository();
@@ -52,17 +52,13 @@ class Program
         builder.Services.AddSingleton<ICancellationRepository, CancellationRepository>();
 
         var host = builder.Build();
-        host.Services.GetService<HubRequestExtractor>();
 //
-//         builder.Build();
-         new RemoteTypeBinder();
+        new RemoteTypeBinder();
 //
-//
-         _ = host.Services.GetService<IUntrustedGateway>()!.Start();
-         var gateway = host.Services.GetService<IGatewayModule>();
-         gateway.Run();
-         
-         Console.ReadLine();
+        _ = host.Services.GetService<IUntrustedGateway>()!.Start();
+        var gateway = host.Services.GetService<IGatewayModule>();
+        gateway.Run();
 
+        Console.ReadLine();
     }
 }
