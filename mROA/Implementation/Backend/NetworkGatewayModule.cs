@@ -83,7 +83,8 @@ namespace mROA.Implementation.Backend
             switch (connectionRequest.MessageType)
             {
                 case EMessageType.ClientConnect:
-                    HandleNewClient(context, interaction, streamExtractor, cts);
+                    
+                    HandleNewClient(context, interaction, streamExtractor, cts, connectionRequest);
                     break;
                 case EMessageType.ClientRecovery:
                 {
@@ -97,7 +98,7 @@ namespace mROA.Implementation.Backend
         }
 
         private void HandleNewClient(EndPointContext context, ChannelInteractionModule interaction,
-            ChannelInteractionModule.StreamExtractor streamExtractor, CancellationTokenSource cts)
+            ChannelInteractionModule.StreamExtractor streamExtractor, CancellationTokenSource cts, NetworkMessageHeader connectionHeader)
         {
             context.HostId = 0;
             context.OwnerId = -interaction.ConnectionId;

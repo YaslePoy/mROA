@@ -27,5 +27,6 @@ namespace mROA.Implementation
     public class ClientConnect : INetworkMessage
     {
         public EMessageType MessageType => EMessageType.ClientConnect;
+        public string[]? Config { get; set; }
     }
 }
