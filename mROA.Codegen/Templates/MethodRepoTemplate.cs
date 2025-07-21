@@ -7,7 +7,7 @@ namespace mROA.Codegen.Templates
         private const string SyncInvokerTemplate = "syncInvoker";
         private const string AsyncInvokerTemplate = "asyncInvoker";
         
-        private const string InvokerTag = "invoke";
+        private const string InvokerTag = "invoker";
 
         public MethodRepoTemplate() : base(TemplateFile) { }
 
