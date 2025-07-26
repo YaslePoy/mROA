@@ -39,7 +39,7 @@ namespace mROA.Implementation.Frontend
             _interactionModule.IsConnected = () => _currentExtractor.IsConnected;
             _interactionModule.OnDisconnected += _ => { Reconnect().ConfigureAwait(false); };
 
-            _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientConnect(), _context))
+            _interactionModule.PostMessageAsync(new NetworkMessage(_serialization, new ClientConnect(), _context))
                 .Wait();
 
             _ = _currentExtractor.SingleReceive().ConfigureAwait(false);
@@ -95,7 +95,7 @@ namespace mROA.Implementation.Frontend
 
         public void Disconnect()
         {
-            _ = _interactionModule.PostMessageAsync(new NetworkMessageHeader(_serialization, new ClientDisconnect(),
+            _ = _interactionModule.PostMessageAsync(new NetworkMessage(_serialization, new ClientDisconnect(),
                 _context));
             _interactionModule.Dispose();
             _tcpClient.Dispose();

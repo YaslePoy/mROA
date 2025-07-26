@@ -44,7 +44,7 @@ namespace mROA.Implementation.Frontend
             while (token.IsCancellationRequested == false)
             {
                 var message = new Memory<byte>((await udpClient.ReceiveAsync()).Buffer);
-                var parsed = _serializationToolkit.Deserialize<NetworkMessageHeader>(message, _context);
+                var parsed = _serializationToolkit.Deserialize<NetworkMessage>(message, _context);
 
                 await writer.WriteAsync(parsed, token);
             }
@@ -52,7 +52,7 @@ namespace mROA.Implementation.Frontend
 
         private async Task Posting(UdpClient udpClient, CancellationToken token)
         {
-            var initMessage = new NetworkMessageHeader
+            var initMessage = new NetworkMessage
             {
                 MessageType = EMessageType.UntrustedConnect, Id = Guid.NewGuid(),
                 Data = BitConverter.GetBytes(_channelInteractionModule.ConnectionId)

@@ -27,7 +27,7 @@ namespace mROA.Cbor
 
         private bool FindParser(Type t, out IOrdinaryStructureParser parser)
         {
-            if (t == typeof(NetworkMessageHeader))
+            if (t == typeof(NetworkMessage))
             {
                 parser = _parsers[0];
                 return true;

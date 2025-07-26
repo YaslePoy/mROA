@@ -16,7 +16,7 @@ namespace mROA.Cbor
     {
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
-            var v = value as NetworkMessageHeader;
+            var v = value as NetworkMessage;
             writer.WriteStartArray(3);
             writer.WriteByteString(v.Id.ToByteArray());
             writer.WriteInt32((int)v.MessageType);
@@ -27,7 +27,7 @@ namespace mROA.Cbor
         public object Read(CborReader reader, IEndPointContext context, CborSerializationToolkit serialization)
         {
             reader.ReadStartArray();
-            var value = new NetworkMessageHeader
+            var value = new NetworkMessage
             {
                 Id = new Guid(reader.ReadByteString()),
                 MessageType = (EMessageType)reader.ReadInt32(),

@@ -28,8 +28,8 @@ namespace mROA.Implementation
         public IEndPointContext Context => _interaction.Context;
 
         public async Task<(object? Deserialized, EMessageType MessageType)> GetSingle(
-            Predicate<NetworkMessageHeader> rule, IEndPointContext? context,
-            CancellationToken token = default, params Func<NetworkMessageHeader, Type?>[] converter)
+            Predicate<NetworkMessage> rule, IEndPointContext? context,
+            CancellationToken token = default, params Func<NetworkMessage, Type?>[] converter)
         {
             var writer = _interaction.ReceiveChanel.Writer;
             var reader = _interaction.ReceiveChanel.Reader;
@@ -52,9 +52,9 @@ namespace mROA.Implementation
         }
 
         public async IAsyncEnumerable<(object parced, EMessageType originalType)> GetStream(
-            Predicate<NetworkMessageHeader> rule, IEndPointContext? context,
+            Predicate<NetworkMessage> rule, IEndPointContext? context,
             [EnumeratorCancellation] CancellationToken token = default,
-            params Func<NetworkMessageHeader, Type?>[] converter)
+            params Func<NetworkMessage, Type?>[] converter)
         {
             var writer = _interaction.ReceiveChanel.Writer;
             await foreach (var message in _interaction.ReceiveChanel.Reader.ReadAllAsync(token))
@@ -83,7 +83,7 @@ namespace mROA.Implementation
             IEndPointContext? context) where T : notnull
         {
             var serialized = _serialization.Serialize(payload, context);
-            await _interaction.PostMessageAsync(new NetworkMessageHeader
+            await _interaction.PostMessageAsync(new NetworkMessage
                 { Id = id, MessageType = eMessageType, Data = serialized });
         }
 
@@ -97,7 +97,7 @@ namespace mROA.Implementation
             IEndPointContext? context) where T : notnull
         {
             var serialized = _serialization.Serialize(payload, context);
-            await _interaction.PostMessageUntrustedAsync(new NetworkMessageHeader
+            await _interaction.PostMessageUntrustedAsync(new NetworkMessage
                 { Id = id, MessageType = eMessageType, Data = serialized });
         }
     }

@@ -9,13 +9,13 @@ namespace mROA.Abstract
     {
         int ConnectionId { get; set; }
         IEndPointContext Context { get; set; }
-        Channel<NetworkMessageHeader> ReceiveChanel { get; }
-        ChannelReader<NetworkMessageHeader> TrustedPostChanel { get; }
-        ChannelReader<NetworkMessageHeader> UntrustedPostChanel { get; }
+        Channel<NetworkMessage> ReceiveChanel { get; }
+        ChannelReader<NetworkMessage> TrustedPostChanel { get; }
+        ChannelReader<NetworkMessage> UntrustedPostChanel { get; }
         Func<bool> IsConnected { get; set; }
-        ValueTask<NetworkMessageHeader> GetNextMessageReceiving();
-        Task PostMessageAsync(NetworkMessageHeader messageHeader);
-        Task PostMessageUntrustedAsync(NetworkMessageHeader messageHeader);
+        ValueTask<NetworkMessage> GetNextMessageReceiving();
+        Task PostMessageAsync(NetworkMessage message);
+        Task PostMessageUntrustedAsync(NetworkMessage message);
         event Action<int> OnDisconnected;
         Task Restart(bool sendRecovery);
         void PassReconnection();

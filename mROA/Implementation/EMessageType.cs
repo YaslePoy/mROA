@@ -1,6 +1,6 @@
 namespace mROA.Implementation
 {
-    public enum EMessageType
+    public enum EMessageType : byte
     {
         Unknown,
         FinishedCommandExecution,

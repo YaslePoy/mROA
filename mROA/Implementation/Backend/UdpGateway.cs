@@ -41,7 +41,7 @@ namespace mROA.Implementation.Backend
                 while (token.IsCancellationRequested == false)
                 {
                     var incoming = await _client.ReceiveAsync();
-                    var parsed = _serializationToolkit.Deserialize<NetworkMessageHeader>(incoming.Buffer, null);
+                    var parsed = _serializationToolkit.Deserialize<NetworkMessage>(incoming.Buffer, null);
                     try
                     {
                         int channelId;

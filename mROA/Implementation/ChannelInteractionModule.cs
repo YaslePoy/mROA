@@ -9,11 +9,11 @@ namespace mROA.Implementation
 {
     public class ChannelInteractionModule : IChannelInteractionModule
     {
-        private readonly ChannelReader<NetworkMessageHeader> _receiveReader;
-        private readonly ChannelWriter<NetworkMessageHeader> _trustedWriter;
-        private readonly ChannelWriter<NetworkMessageHeader> _untrustedWriter;
-        private readonly Channel<NetworkMessageHeader> _outputTrustedChannel;
-        private readonly Channel<NetworkMessageHeader> _outputUntrustedChannel;
+        private readonly ChannelReader<NetworkMessage> _receiveReader;
+        private readonly ChannelWriter<NetworkMessage> _trustedWriter;
+        private readonly ChannelWriter<NetworkMessage> _untrustedWriter;
+        private readonly Channel<NetworkMessage> _outputTrustedChannel;
+        private readonly Channel<NetworkMessage> _outputUntrustedChannel;
         private readonly IContextualSerializationToolKit _serialization;
         private bool _isConnected = true;
         private bool _isActive = true;
@@ -28,19 +28,19 @@ namespace mROA.Implementation
         public ChannelInteractionModule(IContextualSerializationToolKit serialization)
         {
             _serialization = serialization;
-            ReceiveChanel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            ReceiveChanel = Channel.CreateUnbounded<NetworkMessage>(new UnboundedChannelOptions
             {
                 SingleReader = false,
                 SingleWriter = false,
             });
             _receiveReader = ReceiveChanel.Reader;
-            _outputTrustedChannel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            _outputTrustedChannel = Channel.CreateUnbounded<NetworkMessage>(new UnboundedChannelOptions
             {
                 SingleReader = true,
                 SingleWriter = true
             });
             _trustedWriter = _outputTrustedChannel.Writer;
-            _outputUntrustedChannel = Channel.CreateUnbounded<NetworkMessageHeader>(new UnboundedChannelOptions
+            _outputUntrustedChannel = Channel.CreateUnbounded<NetworkMessage>(new UnboundedChannelOptions
             {
                 SingleReader = true,
                 SingleWriter = true,
@@ -52,33 +52,33 @@ namespace mROA.Implementation
         public int ConnectionId { get; set; }
 
         public IEndPointContext Context { get; set; }
-        public Channel<NetworkMessageHeader> ReceiveChanel { get; }
+        public Channel<NetworkMessage> ReceiveChanel { get; }
 
-        public ChannelReader<NetworkMessageHeader> TrustedPostChanel => _outputTrustedChannel.Reader;
-        public ChannelReader<NetworkMessageHeader> UntrustedPostChanel => _outputUntrustedChannel.Reader;
+        public ChannelReader<NetworkMessage> TrustedPostChanel => _outputTrustedChannel.Reader;
+        public ChannelReader<NetworkMessage> UntrustedPostChanel => _outputUntrustedChannel.Reader;
         public Func<bool> IsConnected { get; set; } = () => false;
 
-        public ValueTask<NetworkMessageHeader> GetNextMessageReceiving()
+        public ValueTask<NetworkMessage> GetNextMessageReceiving()
         {
             return _receiveReader.ReadAsync();
         }
 
-        private async ValueTask<bool> PostMessageInternal(NetworkMessageHeader messageHeader)
+        private async ValueTask<bool> PostMessageInternal(NetworkMessage message)
         {
             if (!IsConnected())
             {
                 return false;
             }
 
-            await _trustedWriter.WriteAsync(messageHeader);
+            await _trustedWriter.WriteAsync(message);
             return true;
         }
 
-        public async Task PostMessageAsync(NetworkMessageHeader messageHeader)
+        public async Task PostMessageAsync(NetworkMessage message)
         {
             while (true)
             {
-                if (await PostMessageInternal(messageHeader))
+                if (await PostMessageInternal(message))
                     break;
 
                 if (!_isActive)
@@ -91,9 +91,9 @@ namespace mROA.Implementation
             }
         }
 
-        public async Task PostMessageUntrustedAsync(NetworkMessageHeader messageHeader)
+        public async Task PostMessageUntrustedAsync(NetworkMessage message)
         {
-            await _untrustedWriter.WriteAsync(messageHeader);
+            await _untrustedWriter.WriteAsync(message);
         }
 
         public event Action<int>? OnDisconnected;
@@ -103,12 +103,12 @@ namespace mROA.Implementation
             if (sendRecovery)
             {
                 await PostMessageAsync(
-                    new NetworkMessageHeader(_serialization, new ClientRecovery(Math.Abs(ConnectionId)), Context));
+                    new NetworkMessage(_serialization, new ClientRecovery(Math.Abs(ConnectionId)), Context));
                 await ReceiveChanel.Reader.ReadAsync();
             }
             else
             {
-                await _trustedWriter.WriteAsync(new NetworkMessageHeader());
+                await _trustedWriter.WriteAsync(new NetworkMessage());
             }
 
             PassReconnection();
@@ -141,7 +141,7 @@ namespace mROA.Implementation
 
         public class StreamExtractor
         {
-            private const int BufferSize = ushort.MaxValue;
+            private const int BufferSize = ushort.MaxValue + 2;
 
             private readonly Stream _ioStream;
             private readonly IContextualSerializationToolKit _serializationToolkit;
@@ -158,25 +158,22 @@ namespace mROA.Implementation
                 _lenBuffer = new byte[2];
             }
 
-            public Action<NetworkMessageHeader> MessageReceived = _ => { };
-
-            private async Task<ushort> ReadMessageLength()
-            {
-                await _ioStream.ReadAsync(_lenBuffer);
-
-                var len = BitConverter.ToUInt16(_lenBuffer);
-
-                return len;
-            }
-
+            public Action<NetworkMessage> MessageReceived = _ => { };
+            
             public async Task SingleReceive(CancellationToken token = default)
             {
-                var len = await ReadMessageLength();
-                var localSpan = _buffer[..len];
+                int firstRead = _ioStream.Read(_buffer.Span);
 
-                await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: token);
-                var message = _serializationToolkit.Deserialize<NetworkMessageHeader>(localSpan, _context);
-                // _logger.LogTrace("RECV {0}", message.ToString());
+                var metadata = new NetworkMessage.NetworkMessageMeta(_buffer.Span);
+                
+                var localSpan = _buffer[2..len];
+                if (firstRead - 2 != len)
+                {
+                    localSpan = _buffer[(len + 2)..];
+                    await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: token);
+                }
+                
+                var message = _serializationToolkit.Deserialize<NetworkMessage>(localSpan, _context);
                 MessageReceived(message);
             }
 
@@ -188,7 +185,7 @@ namespace mROA.Implementation
                 }
             }
 
-            private async Task Send(NetworkMessageHeader message, CancellationToken token = default)
+            private async Task Send(NetworkMessage message, CancellationToken token = default)
             {
                 var bodySpan = _buffer[2..];
                 var len = _serializationToolkit.Serialize(message, bodySpan.Span, _context);
@@ -199,7 +196,7 @@ namespace mROA.Implementation
                 // _logger.LogTrace("SEND {0}", message.ToString());
             }
 
-            public async Task SendFromChannel(ChannelReader<NetworkMessageHeader> channel,
+            public async Task SendFromChannel(ChannelReader<NetworkMessage> channel,
                 CancellationToken token = default)
             {
                 while (token.IsCancellationRequested == false && IsConnected)
