@@ -54,7 +54,7 @@ namespace mROA.Implementation.Frontend
         {
             var initMessage = new NetworkMessage
             {
-                MessageType = EMessageType.UntrustedConnect, Id = Guid.NewGuid(),
+                MessageType = EMessageType.UntrustedConnect, Id = RequestId.Generate(),
                 Data = BitConverter.GetBytes(_channelInteractionModule.ConnectionId)
             };
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -141,39 +142,34 @@ namespace mROA.Implementation
 
         public class StreamExtractor
         {
-            private const int BufferSize = ushort.MaxValue + 2;
+            private const int BufferSize = ushort.MaxValue + 19;
 
             private readonly Stream _ioStream;
-            private readonly IContextualSerializationToolKit _serializationToolkit;
             private readonly Memory<byte> _buffer = new byte[BufferSize];
-            private readonly IEndPointContext _context;
-            private readonly byte[] _lenBuffer;
 
-            public StreamExtractor(Stream ioStream, IContextualSerializationToolKit serializationToolkit,
-                IEndPointContext context)
+            public StreamExtractor(Stream ioStream)
             {
                 _ioStream = ioStream;
-                _serializationToolkit = serializationToolkit;
-                _context = context;
-                _lenBuffer = new byte[2];
             }
 
             public Action<NetworkMessage> MessageReceived = _ => { };
             
             public async Task SingleReceive(CancellationToken token = default)
             {
-                int firstRead = _ioStream.Read(_buffer.Span);
-
-                var metadata = new NetworkMessage.NetworkMessageMeta(_buffer.Span);
+                var firstRead = _ioStream.Read(_buffer.Span);
                 
-                var localSpan = _buffer[2..len];
-                if (firstRead - 2 != len)
+                var meta = MemoryMarshal.Read<NetworkMessage.NetworkMessageMeta>(_buffer.Span);
+                
+                var len = meta.BodyLength;
+                var readLen = firstRead - 19;
+                
+                if (readLen != len)
                 {
-                    localSpan = _buffer[(len + 2)..];
-                    await _ioStream.ReadExactlyAsync(localSpan, cancellationToken: token);
+                    var lastPart = _buffer[firstRead..(len + 19)];
+                    await _ioStream.ReadExactlyAsync(lastPart, cancellationToken: token);
                 }
-                
-                var message = _serializationToolkit.Deserialize<NetworkMessage>(localSpan, _context);
+
+                var message = meta.ToMessage(_buffer.Span);
                 MessageReceived(message);
             }
 
@@ -187,11 +183,10 @@ namespace mROA.Implementation
 
             private async Task Send(NetworkMessage message, CancellationToken token = default)
             {
-                var bodySpan = _buffer[2..];
-                var len = _serializationToolkit.Serialize(message, bodySpan.Span, _context);
-                var header = BitConverter.GetBytes((ushort)len);
-                header.CopyTo(_buffer);
-                var sendingSpan = _buffer[..(len + 2)];
+                var meta = message.ToMeta();
+                MemoryMarshal.Write(_buffer.Span, ref meta);
+                message.Data.CopyTo(_buffer.Span[19..]);
+                var sendingSpan = _buffer[..(19 + meta.BodyLength)];
                 await _ioStream.WriteAsync(sendingSpan, token);
                 // _logger.LogTrace("SEND {0}", message.ToString());
             }

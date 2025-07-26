@@ -56,7 +56,7 @@ namespace mROA.Implementation.Backend
             while (true)
             {
                 var client = await _tcpListener.AcceptTcpClientAsync();
-                _ = HandleConnection(client).ConfigureAwait(false);
+                _ = HandleConnection(client);
             }
         }
 
@@ -70,7 +70,7 @@ namespace mROA.Implementation.Backend
                 CallIndexProvider = _callIndexProvider
             };
             var streamExtractor =
-                new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
+                new ChannelInteractionModule.StreamExtractor(client.GetStream());
             interaction.IsConnected = () => streamExtractor.IsConnected;
             streamExtractor.MessageReceived = async message =>
             {

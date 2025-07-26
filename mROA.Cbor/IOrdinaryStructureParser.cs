@@ -29,7 +29,7 @@ namespace mROA.Cbor
             reader.ReadStartArray();
             var value = new NetworkMessage
             {
-                Id = new Guid(reader.ReadByteString()),
+                Id = new RequestId(reader.ReadByteString()),
                 MessageType = (EMessageType)reader.ReadInt32(),
                 Data = reader.ReadByteString()
             };
@@ -57,7 +57,7 @@ namespace mROA.Cbor
             reader.ReadStartArray();
             var value = new DefaultCallRequest
             {
-                Id = new Guid(reader.ReadByteString()),
+                Id = new RequestId(reader.ReadByteString()),
                 CommandId = reader.ReadInt32(),
                 ObjectId = (ComplexObjectIdentifier)ComplexObjectIdentifierParser.Instance.Read(reader, context, serialization),
                 Parameters = serialization.ReadData(reader, typeof(object[]), context) as object[]
@@ -102,7 +102,7 @@ namespace mROA.Cbor
             reader.ReadStartArray();
             var result = new FinalCommandExecution<object>
             {
-                Id = new Guid(reader.ReadByteString()),
+                Id = new RequestId(reader.ReadByteString()),
                 Result = serialization.ReadData(reader, typeof(object), context),
             };
              reader.ReadEndArray();
@@ -125,7 +125,7 @@ namespace mROA.Cbor
             reader.ReadStartArray();
             var result = new FinalCommandExecution
             {
-                Id = new Guid(reader.ReadByteString())
+                Id = new RequestId(reader.ReadByteString())
             };
             reader.ReadEndArray();
             return result;

@@ -57,7 +57,7 @@ namespace mROA.Implementation
         {
             var request = new DefaultCallRequest
             {
-                Id = Guid.NewGuid(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+                Id = RequestId.Generate(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
 
             await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request, _context);
@@ -102,7 +102,7 @@ namespace mROA.Implementation
         {
             var request = new DefaultCallRequest
             {
-                Id = Guid.NewGuid(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+                Id = RequestId.Generate(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
             await _representationModule.PostCallMessageAsync(request.Id, EMessageType.CallRequest, request, _context);
 
@@ -149,7 +149,7 @@ namespace mROA.Implementation
         {
             var request = new DefaultCallRequest
             {
-                Id = Guid.NewGuid(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
+                Id = RequestId.Generate(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
             await _representationModule.PostCallMessageUntrustedAsync(request.Id, EMessageType.CallRequest, request,
                 _context);

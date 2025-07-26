@@ -6,7 +6,7 @@ namespace mROA.Implementation.CommandExecution
 {
     public class ExceptionCommandExecution : ICommandExecution
     {
-        public Guid Id { get; set; }
+        public RequestId Id { get; set; }
         public EMessageType MessageType => EMessageType.ExceptionCommandExecution;
         public string Exception { get; set; }
 

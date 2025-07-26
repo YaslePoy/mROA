@@ -19,13 +19,13 @@ namespace mROA.Abstract
             IEndPointContext? context, CancellationToken token = default,
             params Func<NetworkMessage, Type?>[] converter);
 
-        Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context)
+        Task PostCallMessageAsync<T>(RequestId id, EMessageType eMessageType, T payload, IEndPointContext? context)
             where T : notnull;
 
-        void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context)
+        void PostCallMessage<T>(RequestId id, EMessageType eMessageType, T payload, IEndPointContext? context)
             where T : notnull;
 
-        Task PostCallMessageUntrustedAsync<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context)
+        Task PostCallMessageUntrustedAsync<T>(RequestId id, EMessageType eMessageType, T payload, IEndPointContext? context)
             where T : notnull;
     }
 }

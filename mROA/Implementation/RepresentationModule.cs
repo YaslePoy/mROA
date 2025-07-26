@@ -79,7 +79,7 @@ namespace mROA.Implementation
             }
         }
 
-        public async Task PostCallMessageAsync<T>(Guid id, EMessageType eMessageType, T payload,
+        public async Task PostCallMessageAsync<T>(RequestId id, EMessageType eMessageType, T payload,
             IEndPointContext? context) where T : notnull
         {
             var serialized = _serialization.Serialize(payload, context);
@@ -87,13 +87,13 @@ namespace mROA.Implementation
                 { Id = id, MessageType = eMessageType, Data = serialized });
         }
 
-        public void PostCallMessage<T>(Guid id, EMessageType eMessageType, T payload, IEndPointContext? context)
+        public void PostCallMessage<T>(RequestId id, EMessageType eMessageType, T payload, IEndPointContext? context)
             where T : notnull
         {
             PostCallMessageAsync(id, eMessageType, payload, context).GetAwaiter().GetResult();
         }
 
-        public async Task PostCallMessageUntrustedAsync<T>(Guid id, EMessageType eMessageType, T payload,
+        public async Task PostCallMessageUntrustedAsync<T>(RequestId id, EMessageType eMessageType, T payload,
             IEndPointContext? context) where T : notnull
         {
             var serialized = _serialization.Serialize(payload, context);

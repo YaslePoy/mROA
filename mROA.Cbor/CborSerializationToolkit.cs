@@ -116,9 +116,9 @@ namespace mROA.Cbor
                 return preParsed.ToObject(type, context);
 
 
-            if (type == typeof(Guid))
+            if (type == typeof(RequestId))
             {
-                return new Guid((byte[])nonCasted);
+                return new RequestId((byte[])nonCasted);
             }
 
             return Convert.ChangeType(nonCasted, type);
@@ -164,7 +164,7 @@ namespace mROA.Cbor
                 case DateTimeOffset dto:
                     writer.WriteDateTimeOffset(dto);
                     break;
-                case Guid g:
+                case RequestId g:
                     writer.WriteByteString(g.ToByteArray());
                     break;
                 case byte[] bytes:
@@ -270,8 +270,8 @@ namespace mROA.Cbor
 
                     return reader.ReadUInt64();
                 case CborReaderState.ByteString:
-                    if (type == typeof(Guid))
-                        return new Guid(reader.ReadByteString());
+                    if (type == typeof(RequestId))
+                        return new RequestId(reader.ReadByteString());
                     return reader.ReadByteString();
                 case CborReaderState.TextString:
                     return reader.ReadTextString();

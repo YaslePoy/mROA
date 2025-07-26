@@ -27,10 +27,10 @@ namespace mROA.Implementation
         {
             MessageType = networkMessage.MessageType;
             Data = serializationToolkit.Serialize(networkMessage, context);
-            Id = Guid.NewGuid();
+            Id = RequestId.Generate();
         }
 
-        public Guid Id { get; set; }
+        public RequestId Id { get; set; }
 
         public EMessageType MessageType { get; set; }
 
@@ -40,19 +40,22 @@ namespace mROA.Implementation
         {
             return $" {Id}:{MessageType} [{Data.Length}]";
         }
+
+        public NetworkMessageMeta ToMeta()
+        {
+            return new NetworkMessageMeta
+            {
+                BodyLength = (ushort)(Data == null ? 0 : Data.Length),
+                Type = (byte)MessageType,
+                Id = Id
+            };
+        }
         
         public struct NetworkMessageMeta
         {
-            public byte Type;
-            public Guid Id;
+            public RequestId Id;
             public ushort BodyLength;
-
-            public NetworkMessageMeta(ReadOnlySpan<byte> metadata)
-            {
-                Type = metadata[0];
-                Id = new Guid(metadata[1..17]);
-                BodyLength = BitConverter.ToUInt16(metadata[17..]);
-            }
+            public byte Type;
 
             public NetworkMessage ToMessage(ReadOnlySpan<byte> memory)
             {

@@ -28,7 +28,7 @@ namespace mROA.Implementation.Frontend
             _serialization = serialization;
             _interactionModule = interactionModule;
             _rawExtractorCancellation = new CancellationTokenSource();
-            _currentExtractor = new ChannelInteractionModule.StreamExtractor(Stream.Null, _serialization, context);
+            _currentExtractor = new ChannelInteractionModule.StreamExtractor(Stream.Null);
         }
 
         public async Task Connect()
@@ -63,7 +63,7 @@ namespace mROA.Implementation.Frontend
         private void PrepareExtractor()
         {
             _currentExtractor =
-                new ChannelInteractionModule.StreamExtractor(_tcpClient.GetStream(), _serialization, _context);
+                new ChannelInteractionModule.StreamExtractor(_tcpClient.GetStream());
 
             _ = _currentExtractor.SendFromChannel(_interactionModule.TrustedPostChanel,
                 _rawExtractorCancellation.Token);

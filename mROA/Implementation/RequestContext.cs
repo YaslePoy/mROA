@@ -5,9 +5,9 @@ namespace mROA.Implementation
     public struct RequestContext
     {
         public int OwnerId { get; }
-        public Guid RequestId { get; }
+        public RequestId RequestId { get; }
 
-        public RequestContext(Guid requestId, int ownerId)
+        public RequestContext(RequestId requestId, int ownerId)
         {
             RequestId = requestId;
             OwnerId = ownerId;
