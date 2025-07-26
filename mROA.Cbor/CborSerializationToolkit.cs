@@ -2,10 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Formats.Cbor;
 using System.Linq;
 using System.Reflection;
-using Micial.Cbor.Reader;
-using Micial.Cbor.Writer;
 using mROA.Abstract;
 using mROA.Implementation;
 using mROA.Implementation.Attributes;
@@ -15,12 +14,15 @@ namespace mROA.Cbor
 {
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
-        private readonly IOrdinaryStructureParser[] _parsers = {
+        private readonly CborWriter _writer = new(initialCapacity: 512);
+
+        private readonly IOrdinaryStructureParser[] _parsers =
+        {
             new NetworkMessageHeaderParser(), new DefaultCallRequestParser(), new FinalCommandExecutionParser(),
             new FinalCommandExecutionResultlessParser()
         };
-        // private Dictionary<Type, IOrdinaryStructureParser> _parsers = new(){{typeof(NetworkMessageHeader), new NetworkMessageHeaderParser()}, {typeof(DefaultCallRequest), new DefaultCallRequestParser()}, {typeof(FinalCommandExecution<object>), new FinalCommandExecutionParser()}, {typeof(FinalCommandExecution), new FinalCommandExecutionResultlessParser()}}; //
-        private Dictionary<Type, List<PropertyInfo>> _propertiesCache = new();
+
+        private readonly Dictionary<Type, List<PropertyInfo>> _propertiesCache = new();
         public static TimeSpan SerializationTime = TimeSpan.Zero;
 
         private bool FindParser(Type t, out IOrdinaryStructureParser parser)
@@ -52,22 +54,28 @@ namespace mROA.Cbor
             parser = null;
             return false;
         }
+
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
-            var sw = Stopwatch.StartNew();
-            var writer = new CborWriter(initialCapacity:64);
-            WriteData(objectToSerialize, writer, context);
-            var result = writer.Encode();
-            sw.Stop();
-            SerializationTime = SerializationTime.Add(sw.Elapsed);
+            byte[] result;
+            lock (_writer)
+            {
+                _writer.Reset();
+                WriteData(objectToSerialize, _writer, context);
+                result = _writer.Encode();
+            }
+            
             return result;
         }
 
         public int Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext context)
         {
-            var writer = new CborWriter(initialCapacity:64);
-            WriteData(objectToSerialize, writer, context);
-            return writer.Encode(destination);
+            lock (_writer)
+            {
+                _writer.Reset();
+                WriteData(objectToSerialize, _writer, context);
+                return _writer.Encode(destination);
+            }
         }
 
         public T Deserialize<T>(byte[] rawData, IEndPointContext? context)
@@ -116,50 +124,6 @@ namespace mROA.Cbor
             return Convert.ChangeType(nonCasted, type);
         }
 
-        public void Inject(object dependency)
-        {
-        }
-
-        public byte[] Serialize<T>(T objectToSerialize)
-        {
-            return Serialize(objectToSerialize, typeof(T));
-        }
-
-        public byte[] Serialize(object objectToSerialize, Type type)
-        {
-            return Serialize(objectToSerialize, context: null);
-        }
-
-        public T Deserialize<T>(byte[] rawData)
-        {
-            return Deserialize<T>(rawData: rawData, context: null);
-        }
-
-        public object? Deserialize(byte[] rawData, Type type)
-        {
-            return Deserialize(rawData: rawData, type, context: null);
-        }
-
-        public T Deserialize<T>(Span<byte> rawData)
-        {
-            return Deserialize<T>(rawData.ToArray().AsMemory(), context: null);
-        }
-
-        public object? Deserialize(Span<byte> rawData, Type type)
-        {
-            return Deserialize(rawData: rawData.ToArray(), type: type);
-        }
-
-        public T Cast<T>(object nonCasted)
-        {
-            return Cast<T>(nonCasted: nonCasted, context: null);
-        }
-
-        public object Cast(object nonCasted, Type type)
-        {
-            return Cast(nonCasted: nonCasted, type: type, context: null);
-        }
-
         public void WriteData(object? obj, CborWriter writer, IEndPointContext? context)
         {
             if (obj is not null && FindParser(obj.GetType(), out var parser))
@@ -167,7 +131,7 @@ namespace mROA.Cbor
                 parser.Write(writer, obj, context, this);
                 return;
             }
-            
+
             switch (obj)
             {
                 case int i:
@@ -289,6 +253,7 @@ namespace mROA.Cbor
             {
                 return parser.Read(reader, context, this);
             }
+
             var state = reader.PeekState();
             switch (state)
             {
@@ -302,8 +267,6 @@ namespace mROA.Cbor
                         return reader.ReadInt64();
                     if (type == typeof(uint))
                         return reader.ReadUInt32();
-                    if (type == typeof(ulong))
-                        return reader.ReadUInt64();
 
                     return reader.ReadUInt64();
                 case CborReaderState.ByteString:
@@ -482,15 +445,15 @@ namespace mROA.Cbor
         public static List<PropertyInfo> FilterProperties(PropertyInfo[] properties)
         {
             var finalProperties = new List<PropertyInfo>(properties.Length);
-            
+
             for (int i = 0; i < properties.Length; i++)
             {
                 var property = properties[i];
-                if (property is not { CanRead: true, CanWrite: true } || property.GetCustomAttribute<SerializationIgnoreAttribute>() != null)
+                if (property is not { CanRead: true, CanWrite: true } ||
+                    property.GetCustomAttribute<SerializationIgnoreAttribute>() != null)
                     continue;
-                
+
                 finalProperties.Add(property);
-                
             }
 
             return finalProperties;

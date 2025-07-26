@@ -28,12 +28,8 @@
       </None>
     </ItemGroup>
 
-    <ItemGroup>
-        <Reference Include="System.Formats.Cbor.dll"></Reference>
-    </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Micial.Cbor" Version="9.0.7" />
+        <PackageReference Include="System.Formats.Cbor" Version="9.0.7" />
     </ItemGroup>
-
 </Project>
