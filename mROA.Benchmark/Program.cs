@@ -1,51 +1,44 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using BenchmarkDotNet.Attributes;
+﻿// See https://aka.ms/new-console-template for more information
 
-namespace mROA.Benchmark
+using System.Formats.Cbor;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using BenchmarkDotNet.Running;
+using mROA.Benchmark;
+using mROA.Implementation;
+
+Console.WriteLine("Hello, World!");
+var test = new CborTest();
+test.ArrayWrite();
+BenchmarkRunner.Run<CborTest>();
+
+public static class CborExtensions
 {
-    class Program
+    public static unsafe void WriteToCbor(this RequestId id, CborWriter writer)
     {
-        static void Main(string[] args)
-        {
-            // Console.WriteLine("Hello, World!");
-            // var summary = BenchmarkRunner.Run<CollectionsSpeed>();
-        }
+        Span<byte> span = stackalloc byte[16];
+        MemoryMarshal.Write(span, ref id);
+        writer.WriteByteString(span);
     }
 
-    public class CollectionsSpeed
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void WriteToCborInline(this RequestId id, CborWriter writer)
     {
-        private const int N = 1000;
+        Span<byte> span = stackalloc byte[16];
+        MemoryMarshal.Write(span, ref id);
+        writer.WriteByteString(span);
+    }
     
-        private readonly List<int> _immutable;
-        private readonly int[] _array;
-
-        public CollectionsSpeed()
-        {
-            _array = Enumerable.Range(0, N).ToArray();
-            // _immutable = [.._array];
-        }
-
-        [Benchmark]
-        public int DefaultArray()
-        {
-            var sum = 0;
-            for (int i = 0; i < N; i++)
-            {
-                sum += _array[i];
-            }
-            return sum;
-        }
+    public static void WriteToDest(this RequestId id, Span<byte> destination)
+    {
+        MemoryMarshal.Write(destination, ref id);
+    }
     
-        [Benchmark]
-        public int ImmutableArray()
-        {
-            var sum = 0;
-            for (int i = 0; i < N; i++)
-            {
-                sum += _immutable[i];
-            }
-            return sum;
-        }
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static unsafe void WriteToCborOpt(this RequestId id, CborWriter writer)
+    {
+        Span<byte> span = stackalloc byte[16];
+        MemoryMarshal.Write(span, ref id);
+        writer.WriteByteString(span);
     }
 }

@@ -18,7 +18,7 @@ namespace mROA.Cbor
 
         private readonly IOrdinaryStructureParser[] _parsers =
         {
-            new NetworkMessageHeaderParser(), new DefaultCallRequestParser(), new FinalCommandExecutionParser(),
+            new DefaultCallRequestParser(), new FinalCommandExecutionParser(),
             new FinalCommandExecutionResultlessParser()
         };
 
@@ -27,27 +27,21 @@ namespace mROA.Cbor
 
         private bool FindParser(Type t, out IOrdinaryStructureParser parser)
         {
-            if (t == typeof(NetworkMessage))
+            if (t == typeof(DefaultCallRequest))
             {
                 parser = _parsers[0];
                 return true;
             }
 
-            if (t == typeof(DefaultCallRequest))
+            if (t == typeof(FinalCommandExecution<object>))
             {
                 parser = _parsers[1];
                 return true;
             }
 
-            if (t == typeof(FinalCommandExecution<object>))
-            {
-                parser = _parsers[2];
-                return true;
-            }
-
             if (t == typeof(FinalCommandExecution))
             {
-                parser = _parsers[3];
+                parser = _parsers[2];
                 return true;
             }
 
@@ -165,7 +159,8 @@ namespace mROA.Cbor
                     writer.WriteDateTimeOffset(dto);
                     break;
                 case RequestId g:
-                    writer.WriteByteString(g.ToByteArray());
+                    // writer.WriteByteString(g.ToByteArray());
+                    g.WriteToCborInline(writer);
                     break;
                 case byte[] bytes:
                     writer.WriteByteString(bytes);

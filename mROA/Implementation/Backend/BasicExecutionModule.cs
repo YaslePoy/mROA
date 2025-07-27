@@ -168,7 +168,7 @@ namespace mROA.Implementation.Backend
 
 
                 if (invoker.IsTrusted)
-                    representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
+                    representationModule.PostCallMessageAsync(command.Id, EMessageType.FinishedCommandExecution,
                         payload, context);
             });
 
@@ -197,7 +197,7 @@ namespace mROA.Implementation.Backend
                     };
                     _cancellationRepo.FreeCancellation(command.Id);
 
-                    representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
+                    representationModule.PostCallMessageAsync(command.Id, EMessageType.FinishedCommandExecution,
                         payload, context);
                 });
 

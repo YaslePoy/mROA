@@ -7,6 +7,7 @@
         <Version>2.0.7</Version>
         <LangVersion>9</LangVersion>
         <PackageIcon>mroaLogo.png</PackageIcon>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

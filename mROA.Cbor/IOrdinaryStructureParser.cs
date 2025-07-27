@@ -12,38 +12,14 @@ namespace mROA.Cbor
         object Read(CborReader reader, IEndPointContext context, CborSerializationToolkit serialization);
     }
 
-    public class NetworkMessageHeaderParser : IOrdinaryStructureParser
-    {
-        public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
-        {
-            var v = value as NetworkMessage;
-            writer.WriteStartArray(3);
-            writer.WriteByteString(v.Id.ToByteArray());
-            writer.WriteInt32((int)v.MessageType);
-            writer.WriteByteString(v.Data);
-            writer.WriteEndArray();
-        }
-
-        public object Read(CborReader reader, IEndPointContext context, CborSerializationToolkit serialization)
-        {
-            reader.ReadStartArray();
-            var value = new NetworkMessage
-            {
-                Id = new RequestId(reader.ReadByteString()),
-                MessageType = (EMessageType)reader.ReadInt32(),
-                Data = reader.ReadByteString()
-            };
-            return value;
-        }
-    }
-
     public class DefaultCallRequestParser : IOrdinaryStructureParser
     {
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
             var v = (DefaultCallRequest)value;
             writer.WriteStartArray(4);
-            writer.WriteByteString(v.Id.ToByteArray());
+            v.Id.WriteToCborInline(writer);
+            // writer.WriteByteString(v.Id.ToByteArray());
             writer.WriteInt32(v.CommandId);
             writer.WriteStartArray(1);
             writer.WriteUInt64(v.ObjectId.Flat);
@@ -92,7 +68,8 @@ namespace mROA.Cbor
         {
             var v = (FinalCommandExecution<object>)value;
             writer.WriteStartArray(2);
-            writer.WriteByteString(v.Id.ToByteArray());
+            // writer.WriteByteString(v.Id.ToByteArray());
+            v.Id.WriteToCborInline(writer);
             serialization.WriteData(v.Result, writer, context);
             writer.WriteEndArray();
         }
@@ -116,7 +93,8 @@ namespace mROA.Cbor
         {
             var v = (FinalCommandExecution)value;
             writer.WriteStartArray(1);
-            writer.WriteByteString(v.Id.ToByteArray());
+            // writer.WriteByteString(v.Id.ToByteArray());
+            v.Id.WriteToCborInline(writer);
             writer.WriteEndArray();
         }
 

@@ -35,7 +35,8 @@ namespace mROA.Implementation
         public EMessageType MessageType { get; set; }
 
         public byte[] Data { get; set; }
-
+        public object Serialized { get; set; }
+        public IEndPointContext Context { get; set; }
         public override string ToString()
         {
             return $" {Id}:{MessageType} [{Data.Length}]";
@@ -57,7 +58,7 @@ namespace mROA.Implementation
             public ushort BodyLength;
             public byte Type;
 
-            public NetworkMessage ToMessage(ReadOnlySpan<byte> memory)
+            public NetworkMessage ToMessage(Span<byte> memory)
             {
                 var data = memory[19..][..BodyLength];
                 return new NetworkMessage
