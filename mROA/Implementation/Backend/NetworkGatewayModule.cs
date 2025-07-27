@@ -56,7 +56,7 @@ namespace mROA.Implementation.Backend
             while (true)
             {
                 var client = await _tcpListener.AcceptTcpClientAsync();
-                _ = HandleConnection(client).ConfigureAwait(false);
+                _ = HandleConnection(client);
             }
         }
 
@@ -70,7 +70,7 @@ namespace mROA.Implementation.Backend
                 CallIndexProvider = _callIndexProvider
             };
             var streamExtractor =
-                new ChannelInteractionModule.StreamExtractor(client.GetStream(), _serialization, context);
+                new ChannelInteractionModule.StreamExtractor(client.GetStream());
             interaction.IsConnected = () => streamExtractor.IsConnected;
             streamExtractor.MessageReceived = async message =>
             {
@@ -98,14 +98,14 @@ namespace mROA.Implementation.Backend
         }
 
         private void HandleNewClient(EndPointContext context, ChannelInteractionModule interaction,
-            ChannelInteractionModule.StreamExtractor streamExtractor, CancellationTokenSource cts, NetworkMessageHeader connectionHeader)
+            ChannelInteractionModule.StreamExtractor streamExtractor, CancellationTokenSource cts, NetworkMessage connection)
         {
             context.HostId = 0;
             context.OwnerId = -interaction.ConnectionId;
             interaction.Context = context;
             Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token));
             _ = streamExtractor.SendFromChannel(interaction.TrustedPostChanel, cts.Token);
-            interaction.PostMessageAsync(new NetworkMessageHeader(_serialization,
+            interaction.PostMessageAsync(new NetworkMessage(_serialization,
                 new IdAssignment { Id = interaction.ConnectionId }, null));
             _extractorsTokenSources[interaction.ConnectionId] = cts;
 
@@ -143,7 +143,7 @@ namespace mROA.Implementation.Backend
             };
         }
 
-        private void RecoverDisconnectedClient(NetworkMessageHeader connectionRequest,
+        private void RecoverDisconnectedClient(NetworkMessage connectionRequest,
             ChannelInteractionModule.StreamExtractor streamExtractor,
             CancellationTokenSource cts)
         {

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading;
+using mROA.Implementation;
 
 namespace mROA.Abstract
 {
     public interface ICancellationRepository
     {
-        void RegisterCancellation(Guid id, CancellationTokenSource cts);
-        CancellationTokenSource? GetCancellation(Guid id);
-        void FreeCancelation(Guid id);
+        void RegisterCancellation(RequestId id, CancellationTokenSource cts);
+        CancellationTokenSource? GetCancellation(RequestId id);
+        void FreeCancellation(RequestId id);
     }
 }

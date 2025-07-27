@@ -12,38 +12,14 @@ namespace mROA.Cbor
         object Read(CborReader reader, IEndPointContext context, CborSerializationToolkit serialization);
     }
 
-    public class NetworkMessageHeaderParser : IOrdinaryStructureParser
-    {
-        public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
-        {
-            var v = value as NetworkMessageHeader;
-            writer.WriteStartArray(3);
-            writer.WriteByteString(v.Id.ToByteArray());
-            writer.WriteInt32((int)v.MessageType);
-            writer.WriteByteString(v.Data);
-            writer.WriteEndArray();
-        }
-
-        public object Read(CborReader reader, IEndPointContext context, CborSerializationToolkit serialization)
-        {
-            reader.ReadStartArray();
-            var value = new NetworkMessageHeader
-            {
-                Id = new Guid(reader.ReadByteString()),
-                MessageType = (EMessageType)reader.ReadInt32(),
-                Data = reader.ReadByteString()
-            };
-            return value;
-        }
-    }
-
     public class DefaultCallRequestParser : IOrdinaryStructureParser
     {
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
             var v = (DefaultCallRequest)value;
             writer.WriteStartArray(4);
-            writer.WriteByteString(v.Id.ToByteArray());
+            v.Id.WriteToCborInline(writer);
+            // writer.WriteByteString(v.Id.ToByteArray());
             writer.WriteInt32(v.CommandId);
             writer.WriteStartArray(1);
             writer.WriteUInt64(v.ObjectId.Flat);
@@ -57,7 +33,7 @@ namespace mROA.Cbor
             reader.ReadStartArray();
             var value = new DefaultCallRequest
             {
-                Id = new Guid(reader.ReadByteString()),
+                Id = new RequestId(reader.ReadByteString()),
                 CommandId = reader.ReadInt32(),
                 ObjectId = (ComplexObjectIdentifier)ComplexObjectIdentifierParser.Instance.Read(reader, context, serialization),
                 Parameters = serialization.ReadData(reader, typeof(object[]), context) as object[]
@@ -92,7 +68,8 @@ namespace mROA.Cbor
         {
             var v = (FinalCommandExecution<object>)value;
             writer.WriteStartArray(2);
-            writer.WriteByteString(v.Id.ToByteArray());
+            // writer.WriteByteString(v.Id.ToByteArray());
+            v.Id.WriteToCborInline(writer);
             serialization.WriteData(v.Result, writer, context);
             writer.WriteEndArray();
         }
@@ -102,7 +79,7 @@ namespace mROA.Cbor
             reader.ReadStartArray();
             var result = new FinalCommandExecution<object>
             {
-                Id = new Guid(reader.ReadByteString()),
+                Id = new RequestId(reader.ReadByteString()),
                 Result = serialization.ReadData(reader, typeof(object), context),
             };
              reader.ReadEndArray();
@@ -116,7 +93,8 @@ namespace mROA.Cbor
         {
             var v = (FinalCommandExecution)value;
             writer.WriteStartArray(1);
-            writer.WriteByteString(v.Id.ToByteArray());
+            // writer.WriteByteString(v.Id.ToByteArray());
+            v.Id.WriteToCborInline(writer);
             writer.WriteEndArray();
         }
 
@@ -125,7 +103,7 @@ namespace mROA.Cbor
             reader.ReadStartArray();
             var result = new FinalCommandExecution
             {
-                Id = new Guid(reader.ReadByteString())
+                Id = new RequestId(reader.ReadByteString())
             };
             reader.ReadEndArray();
             return result;

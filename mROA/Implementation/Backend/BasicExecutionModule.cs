@@ -114,7 +114,7 @@ namespace mROA.Implementation.Backend
             if (cts == null)
                 throw new NullReferenceException("Can't find cancellation for this request");
             cts.Cancel();
-            _cancellationRepo.FreeCancelation(command.Id);
+            _cancellationRepo.FreeCancellation(command.Id);
 
             return new FinalCommandExecution
             {
@@ -164,11 +164,11 @@ namespace mROA.Implementation.Backend
                 {
                     Id = command.Id
                 };
-                _cancellationRepo.FreeCancelation(command.Id);
+                _cancellationRepo.FreeCancellation(command.Id);
 
 
                 if (invoker.IsTrusted)
-                    representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
+                    representationModule.PostCallMessageAsync(command.Id, EMessageType.FinishedCommandExecution,
                         payload, context);
             });
 
@@ -195,9 +195,9 @@ namespace mROA.Implementation.Backend
                         Id = command.Id,
                         Result = finalResult
                     };
-                    _cancellationRepo.FreeCancelation(command.Id);
+                    _cancellationRepo.FreeCancellation(command.Id);
 
-                    representationModule.PostCallMessage(command.Id, EMessageType.FinishedCommandExecution,
+                    representationModule.PostCallMessageAsync(command.Id, EMessageType.FinishedCommandExecution,
                         payload, context);
                 });
 

@@ -56,11 +56,11 @@ namespace mROA.Implementation.Frontend
             }
         }
 
-        public Predicate<NetworkMessageHeader> Rule { get; } = m =>
+        public Predicate<NetworkMessage> Rule { get; } = m =>
             m.MessageType is EMessageType.CallRequest or EMessageType.CancelRequest
                 or EMessageType.EventRequest or EMessageType.ClientDisconnect;
 
-        public Func<NetworkMessageHeader, Type?>[] Converters { get; } =
+        public Func<NetworkMessage, Type?>[] Converters { get; } =
         {
             m => m.MessageType == EMessageType.CallRequest ? typeof(DefaultCallRequest) : null,
             m => m.MessageType == EMessageType.CancelRequest ? typeof(CancelRequest) : null,

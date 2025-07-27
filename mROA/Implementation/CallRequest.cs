@@ -4,7 +4,7 @@ namespace mROA.Implementation
 {
     public interface ICallRequest
     {
-        Guid Id { get; }
+        RequestId Id { get; }
         int CommandId { get; }
         ComplexObjectIdentifier ObjectId { get; }
         object?[]? Parameters { get; }
@@ -12,7 +12,7 @@ namespace mROA.Implementation
 
     public struct DefaultCallRequest : ICallRequest
     {
-        public Guid Id { get; set; }
+        public RequestId Id { get; set; }
         public int CommandId { get; set; }
         public ComplexObjectIdentifier ObjectId { get; set; }
 
@@ -26,7 +26,7 @@ namespace mROA.Implementation
 
     public class CancelRequest : ICallRequest
     {
-        public Guid Id { get; set; }
+        public RequestId Id { get; set; }
         public int CommandId { get; set; } = -2;
         public ComplexObjectIdentifier ObjectId { get; set; } = ComplexObjectIdentifier.Null;
         public object?[]? Parameters { get; set; } = null;

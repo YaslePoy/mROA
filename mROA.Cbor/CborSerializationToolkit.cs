@@ -18,7 +18,7 @@ namespace mROA.Cbor
 
         private readonly IOrdinaryStructureParser[] _parsers =
         {
-            new NetworkMessageHeaderParser(), new DefaultCallRequestParser(), new FinalCommandExecutionParser(),
+            new DefaultCallRequestParser(), new FinalCommandExecutionParser(),
             new FinalCommandExecutionResultlessParser()
         };
 
@@ -27,27 +27,21 @@ namespace mROA.Cbor
 
         private bool FindParser(Type t, out IOrdinaryStructureParser parser)
         {
-            if (t == typeof(NetworkMessageHeader))
+            if (t == typeof(DefaultCallRequest))
             {
                 parser = _parsers[0];
                 return true;
             }
 
-            if (t == typeof(DefaultCallRequest))
+            if (t == typeof(FinalCommandExecution<object>))
             {
                 parser = _parsers[1];
                 return true;
             }
 
-            if (t == typeof(FinalCommandExecution<object>))
-            {
-                parser = _parsers[2];
-                return true;
-            }
-
             if (t == typeof(FinalCommandExecution))
             {
-                parser = _parsers[3];
+                parser = _parsers[2];
                 return true;
             }
 
@@ -116,9 +110,9 @@ namespace mROA.Cbor
                 return preParsed.ToObject(type, context);
 
 
-            if (type == typeof(Guid))
+            if (type == typeof(RequestId))
             {
-                return new Guid((byte[])nonCasted);
+                return new RequestId((byte[])nonCasted);
             }
 
             return Convert.ChangeType(nonCasted, type);
@@ -164,8 +158,9 @@ namespace mROA.Cbor
                 case DateTimeOffset dto:
                     writer.WriteDateTimeOffset(dto);
                     break;
-                case Guid g:
-                    writer.WriteByteString(g.ToByteArray());
+                case RequestId g:
+                    // writer.WriteByteString(g.ToByteArray());
+                    g.WriteToCborInline(writer);
                     break;
                 case byte[] bytes:
                     writer.WriteByteString(bytes);
@@ -270,8 +265,8 @@ namespace mROA.Cbor
 
                     return reader.ReadUInt64();
                 case CborReaderState.ByteString:
-                    if (type == typeof(Guid))
-                        return new Guid(reader.ReadByteString());
+                    if (type == typeof(RequestId))
+                        return new RequestId(reader.ReadByteString());
                     return reader.ReadByteString();
                 case CborReaderState.TextString:
                     return reader.ReadTextString();
