@@ -156,7 +156,7 @@ namespace mROA.Implementation
             
             public async Task SingleReceive(CancellationToken token = default)
             {
-                var firstRead = _ioStream.Read(_buffer.Span);
+                var firstRead = await _ioStream.ReadAsync(_buffer, token);
                 
                 var meta = MemoryMarshal.Read<NetworkMessage.NetworkMessageMeta>(_buffer.Span);
                 

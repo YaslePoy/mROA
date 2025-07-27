@@ -31,7 +31,7 @@ Console.WriteLine("End waiting");
 var totalRequests = tasks.Sum(i => i.Result);
 Console.WriteLine($"Total requests: {totalRequests:N0}");
 Console.WriteLine($"Results: {totalRequests / time.TotalSeconds:N} RPS");
-File.AppendAllText("results.txt", $"[SINGLE CBOR WRITER ALLOC] {totalRequests}\r\n");
+File.AppendAllText("results.txt", $"[HEADER REMAKE] {totalRequests}\r\n");
 
 async Task<List<ILoadTest>> GetLoadEndpoints(int count)
 {
