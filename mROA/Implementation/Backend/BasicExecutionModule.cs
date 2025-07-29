@@ -19,7 +19,7 @@ namespace mROA.Implementation.Backend
             _serialization = serialization;
         }
 
-        public ICommandExecution Execute(ICallRequest command, IInstanceRepository instanceRepository,
+        public ICommandExecution? Execute(ICallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext)
         {
             // _logger.LogInformation("Executing {0}", command.Id);
@@ -63,7 +63,7 @@ namespace mROA.Implementation.Backend
             }
         }
 
-        private ICommandExecution ExecuteRequest(ICallRequest command, IInstanceRepository instanceRepository,
+        private ICommandExecution? ExecuteRequest(ICallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext, IMethodInvoker invoker,
             object context, object?[]? castedParams, RequestContext execContext)
         {
@@ -122,14 +122,14 @@ namespace mROA.Implementation.Backend
             };
         }
 
-        private static ICommandExecution Execute(MethodInvoker invoker, object instance, object?[] parameter,
+        private static ICommandExecution? Execute(MethodInvoker invoker, object instance, object?[] parameter,
             ICallRequest command, RequestContext executionContext)
         {
             var finalResult = invoker.Invoke(instance, parameter, new object[] { executionContext });
 
             if (!invoker.IsTrusted)
             {
-                return new AsyncCommandExecution();
+                return null;
             }
 
             if (invoker.IsVoid)
@@ -147,7 +147,7 @@ namespace mROA.Implementation.Backend
             };
         }
 
-        private ICommandExecution ExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
+        private ICommandExecution? ExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
             ICallRequest command, ICancellationRepository cancellationRepository,
             IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)
         {
@@ -172,13 +172,11 @@ namespace mROA.Implementation.Backend
                         payload, context);
             });
 
-            return new AsyncCommandExecution
-            {
-                Id = command.Id
-            };
+
+            return null;
         }
 
-        private ICommandExecution TypedExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
+        private ICommandExecution? TypedExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
             ICallRequest command, ICancellationRepository cancellationRepository,
             IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)
         {
@@ -201,10 +199,7 @@ namespace mROA.Implementation.Backend
                         payload, context);
                 });
 
-            return new AsyncCommandExecution
-            {
-                Id = command.Id
-            };
+            return null;
         }
     }
 }

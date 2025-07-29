@@ -4,7 +4,7 @@ namespace mROA.Abstract
 {
     public interface IExecuteModule
     {
-        ICommandExecution Execute(ICallRequest command, IInstanceRepository instanceRepository,
+        ICommandExecution? Execute(ICallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext context);
     }
 }

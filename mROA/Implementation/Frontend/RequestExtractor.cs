@@ -76,14 +76,13 @@ namespace mROA.Implementation.Frontend
         private void HandleCallRequest(DefaultCallRequest request)
         {
             var result = _executeModule.Execute(request, _context.RealRepository, _representationModule, _context);
-
-            var resultType = result.MessageType;
-
-            if (resultType == EMessageType.Unknown)
+            
+            if (result is null)
             {
                 return;
             }
 
+            var resultType = result.MessageType;
             _representationModule.PostCallMessageAsync(request.Id, resultType, result, _context).ConfigureAwait(false);
         }
 
