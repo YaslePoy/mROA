@@ -40,7 +40,6 @@ async Task<List<ILoadTest>> GetLoadEndpoints(int count)
         var loads = new List<ILoadTest>();
         for (int i = 0; i < count; i++)
         {
-            Console.WriteLine($"Initializing {i}");
             var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
             builder.Services.AddSingleton<IContextualSerializationToolKit, CborSerializationToolkit>();
             builder.Services.AddSingleton<IEndPointContext, EndPointContext>();
@@ -74,13 +73,11 @@ async Task<List<ILoadTest>> GetLoadEndpoints(int count)
 
             var app = builder.Build();
 
-            Console.WriteLine($"Connecting {i}");
             var frontendBridge = app.Services.GetService<IFrontendBridge>()!;
             await frontendBridge.Connect();
             // _ = app.Services.GetService<IRequestExtractor>()!.StartExtraction();
             // _ = app.Services.GetService<IUntrustedInteractionModule>().Start(serverEndPoint);
             var context = app.Services.GetService<IInstanceRepository>();
-            Console.WriteLine($"Connected {i}");
 
             var singletonObject =
                 context.GetSingletonObject<ILoadTest>(
@@ -112,8 +109,7 @@ async Task<int> Requests(CancellationToken token, int id, ILoadTest load)
             await load.Next(2);
             count++;
         }
-
-        Console.WriteLine(id);
+        
         return count;
     }
     catch (Exception e)
