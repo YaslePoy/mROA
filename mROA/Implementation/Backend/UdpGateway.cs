@@ -73,7 +73,7 @@ namespace mROA.Implementation.Backend
                 {
                     await foreach (var post in interaction.UntrustedPostChanel.ReadAllAsync())
                     {
-                        if (post.MessageType is not (CallRequest or EMessageType.CancelRequest
+                        if (post.MessageType is not (EMessageType.CallRequest or EMessageType.CancelRequest
                             or EventRequest))
                             continue;
 

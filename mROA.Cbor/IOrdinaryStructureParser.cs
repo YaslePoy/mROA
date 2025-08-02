@@ -12,11 +12,11 @@ namespace mROA.Cbor
         object Read(CborReader reader, IEndPointContext context, CborSerializationToolkit serialization);
     }
 
-    public class DefaultCallRequestParser : IOrdinaryStructureParser
+    public class CallRequestParser : IOrdinaryStructureParser
     {
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
-            var v = (DefaultCallRequest)value;
+            var v = (CallRequest)value;
             writer.WriteStartArray(4);
             v.Id.WriteToCborInline(writer);
             // writer.WriteByteString(v.Id.ToByteArray());
@@ -31,7 +31,7 @@ namespace mROA.Cbor
         public object Read(CborReader reader, IEndPointContext context, CborSerializationToolkit serialization)
         {
             reader.ReadStartArray();
-            var value = new DefaultCallRequest
+            var value = new CallRequest
             {
                 Id = new RequestId(reader.ReadByteString()),
                 CommandId = reader.ReadInt32(),

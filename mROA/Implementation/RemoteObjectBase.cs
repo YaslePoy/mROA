@@ -55,7 +55,7 @@ namespace mROA.Implementation
         protected async Task<T> GetResultAsync<T>(int methodId, object?[]? parameters = null,
             CancellationToken cancellationToken = default)
         {
-            var request = new DefaultCallRequest
+            var request = new CallRequest
             {
                 Id = RequestId.Generate(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
@@ -100,7 +100,7 @@ namespace mROA.Implementation
         protected async Task CallAsync(int methodId, object?[]? parameters = null,
             CancellationToken cancellationToken = default)
         {
-            var request = new DefaultCallRequest
+            var request = new CallRequest
             {
                 Id = RequestId.Generate(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };
@@ -147,7 +147,7 @@ namespace mROA.Implementation
 
         protected async Task CallUntrustedAsync(int methodId, object?[]? parameters = null)
         {
-            var request = new DefaultCallRequest
+            var request = new CallRequest
             {
                 Id = RequestId.Generate(), CommandId = methodId, ObjectId = _identifier, Parameters = parameters
             };

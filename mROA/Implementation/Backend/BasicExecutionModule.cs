@@ -19,17 +19,12 @@ namespace mROA.Implementation.Backend
             _serialization = serialization;
         }
 
-        public ICommandExecution? Execute(ICallRequest command, IInstanceRepository instanceRepository,
+        public ICommandExecution? Execute(CallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext)
         {
             // _logger.LogInformation("Executing {0}", command.Id);
             try
             {
-                if (command is CancelRequest)
-                {
-                    return CancelExecution(command);
-                }
-
                 var invoker = _methodRepo.GetMethod(command.CommandId);
                 if (invoker == null)
                     throw new Exception($"Command {command.CommandId} not found");
@@ -63,7 +58,7 @@ namespace mROA.Implementation.Backend
             }
         }
 
-        private ICommandExecution? ExecuteRequest(ICallRequest command, IInstanceRepository instanceRepository,
+        private ICommandExecution? ExecuteRequest(CallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext, IMethodInvoker invoker,
             object context, object?[]? castedParams, RequestContext execContext)
         {
@@ -87,7 +82,7 @@ namespace mROA.Implementation.Backend
             }
         }
 
-        private static object GetInstance(ICallRequest command, IInstanceRepository instanceRepository,
+        private static object GetInstance(CallRequest command, IInstanceRepository instanceRepository,
             IMethodInvoker invoker, IEndPointContext endPointContext)
         {
             var context = command.ObjectId.ContextId != -1
@@ -97,7 +92,7 @@ namespace mROA.Implementation.Backend
             return context;
         }
 
-        private object?[] CastedParams(ICallRequest command, IMethodInvoker invoker, IEndPointContext context)
+        private object?[] CastedParams(CallRequest command, IMethodInvoker invoker, IEndPointContext context)
         {
             object?[] castedParams = new object[invoker.ParameterTypes.Length];
             for (var i = 0; i < castedParams.Length; i++)
@@ -108,7 +103,7 @@ namespace mROA.Implementation.Backend
             return castedParams;
         }
 
-        private FinalCommandExecution CancelExecution(ICallRequest command)
+        public ICommandExecution Cancel(CancelRequest command)
         {
             var cts = _cancellationRepo.GetCancellation(command.Id);
             if (cts == null)
@@ -123,7 +118,7 @@ namespace mROA.Implementation.Backend
         }
 
         private static ICommandExecution? Execute(MethodInvoker invoker, object instance, object?[] parameter,
-            ICallRequest command, RequestContext executionContext)
+            CallRequest command, RequestContext executionContext)
         {
             var finalResult = invoker.Invoke(instance, parameter, new object[] { executionContext });
 
@@ -148,7 +143,7 @@ namespace mROA.Implementation.Backend
         }
 
         private ICommandExecution? ExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
-            ICallRequest command, ICancellationRepository cancellationRepository,
+            CallRequest command, ICancellationRepository cancellationRepository,
             IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)
         {
             var tokenSource = new CancellationTokenSource();
@@ -177,7 +172,7 @@ namespace mROA.Implementation.Backend
         }
 
         private ICommandExecution? TypedExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
-            ICallRequest command, ICancellationRepository cancellationRepository,
+            CallRequest command, ICancellationRepository cancellationRepository,
             IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)
         {
             var tokenSource = new CancellationTokenSource();

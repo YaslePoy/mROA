@@ -18,7 +18,7 @@ namespace mROA.Cbor
 
         private readonly IOrdinaryStructureParser[] _parsers =
         {
-            new DefaultCallRequestParser(), new FinalCommandExecutionParser(),
+            new CallRequestParser(), new FinalCommandExecutionParser(),
             new FinalCommandExecutionResultlessParser()
         };
 
@@ -27,7 +27,7 @@ namespace mROA.Cbor
 
         private bool FindParser(Type t, out IOrdinaryStructureParser parser)
         {
-            if (t == typeof(DefaultCallRequest))
+            if (t == typeof(CallRequest))
             {
                 parser = _parsers[0];
                 return true;

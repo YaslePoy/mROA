@@ -29,7 +29,7 @@ namespace mROA.Codegen
                             Console.WriteLine($"Try to send to {ownerId} with hash code {context.GetHashCode()}");
                             <!I callFilter>
                             Console.WriteLine("Sending event...");
-                            var request = new DefaultCallRequest
+                            var request = new CallRequest
                             {
                                 Id = RequestId.Generate(),
                                 CommandId = <!L commandId>, 

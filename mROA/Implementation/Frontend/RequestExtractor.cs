@@ -41,15 +41,15 @@ namespace mROA.Implementation.Frontend
             switch (originalType)
             {
                 case EMessageType.CallRequest:
-                    HandleCallRequest((DefaultCallRequest)parced);
+                    HandleCallRequest((CallRequest)parced);
                     break;
                 case EMessageType.ClientDisconnect:
                     return;
                 case EMessageType.EventRequest:
-                    HandleEventRequest((DefaultCallRequest)parced);
+                    HandleEventRequest((CallRequest)parced);
                     break;
                 case EMessageType.CancelRequest:
-                    HandleCancelRequest((parced as CancelRequest)!);
+                    HandleCancelRequest((CancelRequest)parced);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -62,18 +62,18 @@ namespace mROA.Implementation.Frontend
 
         public Func<NetworkMessage, Type?>[] Converters { get; } =
         {
-            m => m.MessageType == EMessageType.CallRequest ? typeof(DefaultCallRequest) : null,
+            m => m.MessageType == EMessageType.CallRequest ? typeof(CallRequest) : null,
             m => m.MessageType == EMessageType.CancelRequest ? typeof(CancelRequest) : null,
-            m => m.MessageType == EMessageType.EventRequest ? typeof(DefaultCallRequest) : null,
+            m => m.MessageType == EMessageType.EventRequest ? typeof(CallRequest) : null,
             m => m.MessageType == EMessageType.ClientDisconnect ? typeof(ClientDisconnect) : null
         };
 
         private void HandleCancelRequest(CancelRequest req)
         {
-            _executeModule.Execute(req, _context.RealRepository, _representationModule, _context);
+            _executeModule.Cancel(req);
         }
 
-        private void HandleCallRequest(DefaultCallRequest request)
+        private void HandleCallRequest(CallRequest request)
         {
             var result = _executeModule.Execute(request, _context.RealRepository, _representationModule, _context);
             
@@ -86,7 +86,7 @@ namespace mROA.Implementation.Frontend
             _representationModule.PostCallMessageAsync(request.Id, resultType, result, _context).ConfigureAwait(false);
         }
 
-        private void HandleEventRequest(DefaultCallRequest request)
+        private void HandleEventRequest(CallRequest request)
         {
             _executeModule.Execute(request, _context.RemoteRepository, _representationModule, _context);
         }
