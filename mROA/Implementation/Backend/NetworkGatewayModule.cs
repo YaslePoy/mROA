@@ -106,7 +106,7 @@ namespace mROA.Implementation.Backend
             _extractorsTokenSources[interaction.ConnectionId] = cts;
 
             _hub.RegisterInteraction(interaction);
-            var requestExtractor = _hre.HubOnOnConnected(new RepresentationModule(interaction, _serialization));
+            var requestExtractor = _hre.HubOnOnConnected(new RepresentationModule(interaction, _serialization.Clone()));
 
             if (_distribution.DistributionType != EDistributionType.Channeled)
             {

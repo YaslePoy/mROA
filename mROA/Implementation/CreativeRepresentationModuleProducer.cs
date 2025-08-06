@@ -17,7 +17,7 @@ namespace mROA.Implementation
         {
             var interaction = _hub.GetInteraction(id);
 
-            var produced = new RepresentationModule(interaction, _serialization);
+            var produced = new RepresentationModule(interaction, _serialization.Clone());
 
             return produced;
         }

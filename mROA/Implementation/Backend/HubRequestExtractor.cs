@@ -25,15 +25,15 @@ namespace mROA.Implementation.Backend
 
         public IRequestExtractor this[int id] => _producedExtractors[id];
 
-        public IRequestExtractor HubOnOnConnected(IRepresentationModule interaction)
+        public IRequestExtractor HubOnOnConnected(IRepresentationModule representationModule)
         {
-            var extractor = CreateExtractor(interaction);
+            var extractor = CreateExtractor(representationModule);
             if (_mode.DistributionType == EDistributionType.Channeled)
             {
-                extractor.StartExtraction().ContinueWith(_ => OnDisconnected(interaction));
+                extractor.StartExtraction().ContinueWith(_ => OnDisconnected(representationModule));
             }
 
-            _producedExtractors[interaction.Id] = extractor;
+            _producedExtractors[representationModule.Id] = extractor;
             return extractor;
         }
 
