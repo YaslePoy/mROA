@@ -13,7 +13,6 @@ namespace mROA.Implementation
             _serialization = serialization;
         }
 
-
         public IRepresentationModule Produce(int id)
         {
             var interaction = _hub.GetInteraction(id);

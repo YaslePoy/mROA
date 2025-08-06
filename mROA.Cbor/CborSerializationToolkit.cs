@@ -14,7 +14,7 @@ namespace mROA.Cbor
 {
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
-        private readonly CborWriter _writer = new(initialCapacity: 512);
+        private readonly CborWriter _writer = new(initialCapacity: 2048);
 
         private readonly IOrdinaryStructureParser[] _parsers =
         {
@@ -116,6 +116,11 @@ namespace mROA.Cbor
             }
 
             return Convert.ChangeType(nonCasted, type);
+        }
+
+        public IContextualSerializationToolKit Clone()
+        {
+            return new CborSerializationToolkit();
         }
 
         public void WriteData(object? obj, CborWriter writer, IEndPointContext? context)

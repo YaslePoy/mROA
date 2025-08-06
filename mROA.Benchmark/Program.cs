@@ -10,7 +10,7 @@ using mROA.Implementation;
 Console.WriteLine("Hello, World!");
 var test = new CborTest();
 test.ArrayWrite();
-BenchmarkRunner.Run<VirtualOverhead>();
+BenchmarkRunner.Run<IdGeneration>();
 
 public static class CborExtensions
 {

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using mROA.Implementation;
 
@@ -5,17 +6,15 @@ namespace mROA.Benchmark;
 
 public class VirtualOverhead
 {
-    private ICallRequest _request;
     private CallRequest _directRequest;
     private RawCallRequest _rawRequest;
-
-    public VirtualOverhead()
-    {
-        _request = new CallRequest
+    
+    [GlobalSetup]
+    public void Setup()    {
+        _directRequest = new CallRequest
         {
             CommandId = 5, Id = new RequestId(), ObjectId = ComplexObjectIdentifier.Null, Parameters = null
         };
-        _directRequest = (CallRequest)_request;
         _rawRequest = new RawCallRequest
         {
             CommandId = _directRequest.CommandId, Id = _directRequest.Id, ObjectId = _directRequest.ObjectId,
@@ -24,18 +23,6 @@ public class VirtualOverhead
     }
 
     [Benchmark(Baseline = true)]
-    public long VirtualUsage()
-    {
-        var req = _request;
-        long acc = 0;
-        acc += req.CommandId;
-        acc += (long)(req.Id.P1 + req.Id.P0);
-        acc += req.ObjectId.ContextId + req.ObjectId.OwnerId;
-        acc += (req.Parameters ?? []).Length;
-        return acc;
-    }
-
-    [Benchmark]
     public long DirectUsage()
     {
         var req = _directRequest;
@@ -51,6 +38,40 @@ public class VirtualOverhead
     public long RawUsage()
     {
         var req = _rawRequest;
+        long acc = 0;
+        acc += req.CommandId;
+        acc += (long)(req.Id.P1 + req.Id.P0);
+        acc += req.ObjectId.ContextId + req.ObjectId.OwnerId;
+        acc += (req.Parameters ?? []).Length;
+        return acc;
+    }
+
+    [Benchmark]
+    public long ParamUsage()
+    {
+        return Call(_directRequest);
+    }
+
+    [Benchmark]
+    public long ParamInUsage()
+    {
+        return CallIn(in _directRequest);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public long Call(CallRequest req)
+    {
+        long acc = 0;
+        acc += req.CommandId;
+        acc += (long)(req.Id.P1 + req.Id.P0);
+        acc += req.ObjectId.ContextId + req.ObjectId.OwnerId;
+        acc += (req.Parameters ?? []).Length;
+        return acc;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public long CallIn(in CallRequest req)
+    {
         long acc = 0;
         acc += req.CommandId;
         acc += (long)(req.Id.P1 + req.Id.P0);
