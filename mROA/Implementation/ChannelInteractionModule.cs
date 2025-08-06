@@ -186,7 +186,6 @@ namespace mROA.Implementation
 
             private async Task Send(NetworkMessage message, CancellationToken token = default)
             {
-                Thread.SpinWait(10000);
                 var meta = message.ToMeta();
                 MemoryMarshal.Write(_buffer.Span, ref meta);
                 message.Data.CopyTo(_buffer.Span[19..]);
