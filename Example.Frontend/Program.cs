@@ -86,14 +86,12 @@ class Program
                 DemoCheck.EventCallback = true;
             };
             Console.WriteLine("Printer created");
-            Thread.Sleep(100);
 
             frontendBridge.Obstacle();
             var name = disposingPrinter.GetName();
             DemoCheck.BasicNonParamsCall = true;
             Console.WriteLine("Printer name : {0}", name);
 
-            Thread.Sleep(100);
 
             disposingPrinter.SomeoneIsApproaching("Mikhail");
             Console.WriteLine("Approaching detected");
@@ -102,17 +100,14 @@ class Program
             factory.Register(disposingPrinter);
             DemoCheck.ClientBasedImplementation = true;
             Console.WriteLine("Registered printer");
-            Thread.Sleep(100);
 
 
             var registered = factory.GetFirstPrinter();
             Console.WriteLine("First printer");
-            Thread.Sleep(100);
 
             Console.WriteLine(registered);
             Console.WriteLine("Collecting all printers");
             var names = factory.CollectAllNames();
-            Thread.Sleep(100);
 
             Console.WriteLine("Names: " + string.Join(", ", names));
 
