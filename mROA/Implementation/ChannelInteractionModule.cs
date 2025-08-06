@@ -170,6 +170,9 @@ namespace mROA.Implementation
                 }
 
                 var message = meta.ToMessage(_buffer.Span);
+#if TRACE
+                Console.WriteLine("RECV " + message);
+#endif
                 MessageReceived(message);
             }
 
@@ -183,11 +186,15 @@ namespace mROA.Implementation
 
             private async Task Send(NetworkMessage message, CancellationToken token = default)
             {
+                Thread.SpinWait(10000);
                 var meta = message.ToMeta();
                 MemoryMarshal.Write(_buffer.Span, ref meta);
                 message.Data.CopyTo(_buffer.Span[19..]);
                 var sendingSpan = _buffer[..(19 + meta.BodyLength)];
                 await _ioStream.WriteAsync(sendingSpan, token);
+                #if TRACE
+                Console.WriteLine("SEND " + message);
+                #endif
                 // _logger.LogTrace("SEND {0}", message.ToString());
             }
 
