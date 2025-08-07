@@ -2,8 +2,6 @@
 
 namespace mROA.Implementation
 {
-
-
     public struct CallRequest
     {
         public RequestId Id { get; set; }

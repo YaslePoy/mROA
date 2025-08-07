@@ -5,4 +5,4 @@ using mROA.Benchmark;
 
 Console.WriteLine("Hello, World!");
 
-BenchmarkRunner.Run<IdGeneration>();
+BenchmarkRunner.Run<ConcurrentAlloc>();

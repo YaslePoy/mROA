@@ -153,16 +153,16 @@ namespace mROA.Implementation
             }
 
             public Action<NetworkMessage> MessageReceived = _ => { };
-            
+
             public async Task SingleReceive(CancellationToken token = default)
             {
                 var firstRead = await _ioStream.ReadAsync(_buffer, token);
-                
+
                 var meta = MemoryMarshal.Read<NetworkMessage.NetworkMessageMeta>(_buffer.Span);
-                
+
                 var len = meta.BodyLength;
                 var readLen = firstRead - 19;
-                
+
                 if (readLen != len)
                 {
                     var lastPart = _buffer[firstRead..(len + 19)];
@@ -191,9 +191,9 @@ namespace mROA.Implementation
                 message.Data.CopyTo(_buffer.Span[19..]);
                 var sendingSpan = _buffer[..(19 + meta.BodyLength)];
                 await _ioStream.WriteAsync(sendingSpan, token);
-                #if TRACE
+#if TRACE
                 Console.WriteLine("SEND " + message);
-                #endif
+#endif
                 // _logger.LogTrace("SEND {0}", message.ToString());
             }
 

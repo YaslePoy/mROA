@@ -36,20 +36,20 @@ namespace mROA.Implementation.Frontend
             }
         }
 
-        public void PushMessage(object parced, EMessageType originalType)
+        public void PushMessage(object parsed, EMessageType originalType)
         {
             switch (originalType)
             {
                 case EMessageType.CallRequest:
-                    HandleCallRequest((CallRequest)parced);
+                    HandleCallRequest((CallRequest)parsed);
                     break;
                 case EMessageType.ClientDisconnect:
                     return;
                 case EMessageType.EventRequest:
-                    HandleEventRequest((CallRequest)parced);
+                    HandleEventRequest((CallRequest)parsed);
                     break;
                 case EMessageType.CancelRequest:
-                    HandleCancelRequest((CancelRequest)parced);
+                    HandleCancelRequest((CancelRequest)parsed);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -76,7 +76,7 @@ namespace mROA.Implementation.Frontend
         private void HandleCallRequest(CallRequest request)
         {
             var result = _executeModule.Execute(request, _context.RealRepository, _representationModule, _context);
-            
+
             if (result is null)
             {
                 return;

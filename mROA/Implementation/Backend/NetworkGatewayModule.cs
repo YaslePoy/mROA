@@ -79,7 +79,7 @@ namespace mROA.Implementation.Backend
             switch (connectionRequest.MessageType)
             {
                 case EMessageType.ClientConnect:
-                    
+
                     HandleNewClient(context, interaction, streamExtractor, cts, connectionRequest);
                     break;
                 case EMessageType.ClientRecovery:
@@ -94,7 +94,8 @@ namespace mROA.Implementation.Backend
         }
 
         private void HandleNewClient(EndPointContext context, ChannelInteractionModule interaction,
-            ChannelInteractionModule.StreamExtractor streamExtractor, CancellationTokenSource cts, NetworkMessage connection)
+            ChannelInteractionModule.StreamExtractor streamExtractor, CancellationTokenSource cts,
+            NetworkMessage connection)
         {
             context.HostId = 0;
             context.OwnerId = -interaction.ConnectionId;
@@ -126,8 +127,8 @@ namespace mROA.Implementation.Backend
                     {
                         var func = converters[i];
                         if (func(message) is not { } t) continue;
-                        
-                        var deserialized = _serialization.Deserialize(message.Data, t, context);
+
+                        var deserialized = _serialization.Deserialize(message.Data, t, context)!;
                         Task.Run(() => requestExtractor.PushMessage(deserialized, message.MessageType));
                         break;
                     }

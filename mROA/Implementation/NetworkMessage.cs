@@ -37,6 +37,7 @@ namespace mROA.Implementation
         public byte[] Data { get; set; }
         public object Serialized { get; set; }
         public IEndPointContext Context { get; set; }
+
         public override string ToString()
         {
             return $" {Id}:{MessageType} [{Data.Length}]";
@@ -51,7 +52,7 @@ namespace mROA.Implementation
                 Id = Id
             };
         }
-        
+
         public struct NetworkMessageMeta
         {
             public RequestId Id;

@@ -7,7 +7,7 @@ namespace mROA.Abstract
     {
         ICommandExecution? Execute(CallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext context);
-        ICommandExecution Cancel(CancelRequest command);
 
+        ICommandExecution Cancel(CancelRequest command);
     }
 }

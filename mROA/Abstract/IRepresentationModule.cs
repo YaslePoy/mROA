@@ -25,7 +25,8 @@ namespace mROA.Abstract
         void PostCallMessage<T>(RequestId id, EMessageType eMessageType, T payload, IEndPointContext? context)
             where T : notnull;
 
-        Task PostCallMessageUntrustedAsync<T>(RequestId id, EMessageType eMessageType, T payload, IEndPointContext? context)
+        Task PostCallMessageUntrustedAsync<T>(RequestId id, EMessageType eMessageType, T payload,
+            IEndPointContext? context)
             where T : notnull;
     }
 }

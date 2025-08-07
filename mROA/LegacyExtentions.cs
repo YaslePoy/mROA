@@ -9,7 +9,8 @@ namespace mROA
     {
         public static async ValueTask<int> ReadExactlyAsync(this Stream stream, byte[] buffer, int offset, int count)
         {
-            return await stream.ReadAtLeastAsyncCore(buffer.AsMemory(offset, count), count, true, CancellationToken.None);
+            return await stream.ReadAtLeastAsyncCore(buffer.AsMemory(offset, count), count, true,
+                CancellationToken.None);
         }
 
         public static ValueTask<int> ReadExactlyAsync(this Stream stream, Memory<byte> buffer,
