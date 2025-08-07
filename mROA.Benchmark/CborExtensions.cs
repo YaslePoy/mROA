@@ -19,17 +19,30 @@ public static class CborExtensions
         MemoryMarshal.Write(span, ref id);
         writer.WriteByteString(span);
     }
-    
+
     public static void WriteToDest(this RequestId id, Span<byte> destination)
     {
         MemoryMarshal.Write(destination, ref id);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe void WriteToCborOpt(this RequestId id, CborWriter writer)
     {
         Span<byte> span = stackalloc byte[16];
         MemoryMarshal.Write(span, ref id);
         writer.WriteByteString(span);
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RequestId ReadFromTrueCbor(CborReader reader)
+    {
+        var enc = reader.ReadEncodedValue(true);
+        return MemoryMarshal.Read<RequestId>(enc.Span[1..]);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RequestId ReadFromCbor(CborReader reader)
+    {
+        var enc = reader.ReadEncodedValue();
+        return MemoryMarshal.Read<RequestId>(enc.Span[1..]);
     }
 }

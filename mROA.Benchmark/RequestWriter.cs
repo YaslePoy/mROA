@@ -5,9 +5,8 @@ using mROA.Implementation;
 [MemoryDiagnoser]
 public class RequestWriter
 {
-    private const int N = 1000;
-    public RequestId Id = RequestId.Generate();
-    private CborWriter _writer;
+    public RequestId Id;
+    private readonly CborWriter _writer;
 
     public RequestWriter()
     {

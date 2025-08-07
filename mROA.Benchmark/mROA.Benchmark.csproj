@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\mROA.Cbor\mROA.Cbor.csproj" />
       <ProjectReference Include="..\mROA\mROA.csproj" />
     </ItemGroup>
 

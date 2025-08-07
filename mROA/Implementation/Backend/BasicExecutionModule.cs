@@ -22,7 +22,6 @@ namespace mROA.Implementation.Backend
         public ICommandExecution? Execute(CallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext)
         {
-            // _logger.LogInformation("Executing {0}", command.Id);
             try
             {
                 var invoker = _methodRepo.GetMethod(command.CommandId);

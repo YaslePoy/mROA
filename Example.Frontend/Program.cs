@@ -76,7 +76,14 @@ class Program
 
         using (var disposingPrinter = factory.Create("Test"))
         {
-            disposingPrinter.SetFingerPrint(new[] { 1, 2, 3 }).ContinueWith(r => { Console.WriteLine(r.Status); });
+            disposingPrinter.SetFingerPrint(new[] { 1, 2, 3 }).ContinueWith(r =>
+            {
+                Console.WriteLine(r.Status);
+                if (r.Status == TaskStatus.Faulted)
+                {
+                    Console.WriteLine(r.Exception);
+                }
+            });
 
             await disposingPrinter.IntTest(new MyData { Id = 5, Score = 7, Name = "Test" });
             DemoCheck.CreatingPrinter = true;

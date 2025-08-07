@@ -27,6 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\mROA.Benchmark\mROA.Benchmark.csproj" />
       <ProjectReference Include="..\mROA.Cbor\mROA.Cbor.csproj" />
       <ProjectReference Include="..\mROA\mROA.csproj" />
     </ItemGroup>

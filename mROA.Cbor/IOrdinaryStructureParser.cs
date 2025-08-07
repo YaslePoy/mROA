@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Formats.Cbor;
+using System.Runtime.InteropServices;
 using mROA.Abstract;
 using mROA.Implementation;
 using mROA.Implementation.CommandExecution;
@@ -14,7 +16,8 @@ namespace mROA.Cbor
 
     public class CallRequestParser : IOrdinaryStructureParser
     {
-        public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
+        public void Write(CborWriter writer, object value, IEndPointContext context,
+            CborSerializationToolkit serialization)
         {
             var v = (CallRequest)value;
             writer.WriteStartArray(4);
@@ -33,7 +36,8 @@ namespace mROA.Cbor
             {
                 Id = new RequestId(reader.ReadByteString()),
                 CommandId = reader.ReadInt32(),
-                ObjectId = (ComplexObjectIdentifier)ComplexObjectIdentifierParser.Instance.Read(reader, context, serialization),
+                ObjectId = (ComplexObjectIdentifier)ComplexObjectIdentifierParser.Instance.Read(reader, context,
+                    serialization),
                 Parameters = serialization.ReadData(reader, typeof(object[]), context) as object[]
             };
             reader.ReadEndArray();
@@ -44,7 +48,9 @@ namespace mROA.Cbor
     public class ComplexObjectIdentifierParser : IOrdinaryStructureParser
     {
         public static readonly ComplexObjectIdentifierParser Instance = new();
-        public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
+
+        public void Write(CborWriter writer, object value, IEndPointContext context,
+            CborSerializationToolkit serialization)
         {
             writer.WriteUInt64(((ComplexObjectIdentifier)value).Flat);
         }
@@ -58,7 +64,8 @@ namespace mROA.Cbor
 
     public class FinalCommandExecutionParser : IOrdinaryStructureParser
     {
-        public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
+        public void Write(CborWriter writer, object value, IEndPointContext context,
+            CborSerializationToolkit serialization)
         {
             var v = (FinalCommandExecution<object>)value;
             writer.WriteStartArray(2);
@@ -76,18 +83,18 @@ namespace mROA.Cbor
                 Id = new RequestId(reader.ReadByteString()),
                 Result = serialization.ReadData(reader, typeof(object), context),
             };
-             reader.ReadEndArray();
-             return result;
+            reader.ReadEndArray();
+            return result;
         }
     }
-    
+
     public class FinalCommandExecutionResultlessParser : IOrdinaryStructureParser
     {
-        public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
+        public void Write(CborWriter writer, object value, IEndPointContext context,
+            CborSerializationToolkit serialization)
         {
             var v = (FinalCommandExecution)value;
             writer.WriteStartArray(1);
-            // writer.WriteByteString(v.Id.ToByteArray());
             v.Id.WriteToCborInline(writer);
             writer.WriteEndArray();
         }
