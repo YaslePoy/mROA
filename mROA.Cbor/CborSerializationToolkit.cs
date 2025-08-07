@@ -115,6 +115,11 @@ namespace mROA.Cbor
                 return new RequestId((byte[])nonCasted);
             }
 
+            if (type.IsInterface)
+            {
+                return ReadSharedShell(type, context, (ulong)nonCasted);
+            }
+            
             return Convert.ChangeType(nonCasted, type);
         }
 
@@ -235,9 +240,7 @@ namespace mROA.Cbor
                     Activator.CreateInstance(sharedShell, obj, context) as
                         ISharedObjectShell;
 
-                writer.WriteStartArray(1);
                 writer.WriteUInt64(so.Identifier.Flat);
-                writer.WriteEndArray();
 
                 return;
             }
@@ -267,7 +270,10 @@ namespace mROA.Cbor
                         return reader.ReadInt64();
                     if (type == typeof(uint))
                         return reader.ReadUInt32();
-
+                    if (type.IsInterface)
+                    {
+                        return ReadSharedShell(type, context, reader.ReadUInt64());
+                    }
                     return reader.ReadUInt64();
                 case CborReaderState.ByteString:
                     if (type == typeof(RequestId))
@@ -378,19 +384,9 @@ namespace mROA.Cbor
 
             if (type.IsInterface)
             {
-                var sharedShell = typeof(SharedObjectShellShell<>).MakeGenericType(type);
-                var so =
-                    Activator.CreateInstance(sharedShell) as
-                        ISharedObjectShell;
-                if (context != null)
-                    so.EndPointContext = context;
-
-                reader.ReadStartArray();
                 var identifier = reader.ReadUInt64();
-                reader.ReadEndArray();
 
-                so.Identifier = ComplexObjectIdentifier.FromFlat(identifier);
-                return so.UniversalValue;
+                return ReadSharedShell(type, context, identifier);
             }
 
             var instance = Activator.CreateInstance(type)!;
@@ -398,6 +394,20 @@ namespace mROA.Cbor
             FillObject(instance, type, reader, context);
 
             return instance;
+        }
+
+        private static object ReadSharedShell(Type type, IEndPointContext? context, ulong identifier)
+        {
+            var sharedShell = typeof(SharedObjectShellShell<>).MakeGenericType(type);
+            var so =
+                Activator.CreateInstance(sharedShell) as
+                    ISharedObjectShell;
+            if (context != null)
+                so.EndPointContext = context;
+
+
+            so.Identifier = ComplexObjectIdentifier.FromFlat(identifier);
+            return so.UniversalValue;
         }
 
         private ISharedObjectShell ReadSharedObject(CborReader reader, Type type, IEndPointContext? context)

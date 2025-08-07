@@ -21,9 +21,7 @@ namespace mROA.Cbor
             v.Id.WriteToCborInline(writer);
             // writer.WriteByteString(v.Id.ToByteArray());
             writer.WriteInt32(v.CommandId);
-            writer.WriteStartArray(1);
             writer.WriteUInt64(v.ObjectId.Flat);
-            writer.WriteEndArray();
             serialization.WriteData(v.Parameters, writer, context);
             writer.WriteEndArray();
         }
@@ -48,16 +46,12 @@ namespace mROA.Cbor
         public static readonly ComplexObjectIdentifierParser Instance = new();
         public void Write(CborWriter writer, object value, IEndPointContext context, CborSerializationToolkit serialization)
         {
-            writer.WriteStartArray(1);
             writer.WriteUInt64(((ComplexObjectIdentifier)value).Flat);
-            writer.WriteEndArray();
         }
 
         public object Read(CborReader reader, IEndPointContext context, CborSerializationToolkit serialization)
         {
-            reader.ReadStartArray();
             var value = new ComplexObjectIdentifier { Flat = reader.ReadUInt64() };
-            reader.ReadEndArray();
             return value;
         }
     }
