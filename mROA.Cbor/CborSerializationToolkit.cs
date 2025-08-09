@@ -89,8 +89,17 @@ namespace mROA.Cbor
 
         public object? Deserialize(ReadOnlyMemory<byte> rawMemory, Type type, IEndPointContext? context)
         {
-            var reader = new CborReader(rawMemory);
-            return ReadData(reader, type, context);
+            try
+            {
+                var reader = new CborReader(rawMemory);
+                return ReadData(reader, type, context);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Bad deserialization. Bytes: {rawMemory.ToArray().Select(b => $"{b:X}")}");
+                throw;
+            }
+            
         }
 
         public T Cast<T>(object nonCasted, IEndPointContext? context)

@@ -26,7 +26,6 @@ class Program
         builder.Services.AddOptions();
         var listening = new IPEndPoint(IPAddress.Any, 4567);
         builder.Services.Configure<GatewayOptions>(options => options.Endpoint = listening);
-        builder.Services.Configure<DistributionOptions>(o => o.DistributionType = EDistributionType.ExtractorFirst);
         builder.Services.AddSingleton<IDistributionModule, ExtractorFirstDistributionModule>();
         
         builder.Services.AddSingleton<HubRequestExtractor>();
