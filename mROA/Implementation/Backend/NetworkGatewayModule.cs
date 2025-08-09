@@ -14,15 +14,14 @@ namespace mROA.Implementation.Backend
         private readonly TcpListener _tcpListener;
         private readonly IConnectionHub _hub;
         private readonly HubRequestExtractor _hre;
-        private readonly DistributionOptions _distribution;
+        private readonly IDistributionModule _distribution;
         private readonly IContextualSerializationToolKit _serialization;
         private readonly Dictionary<int, CancellationTokenSource> _extractorsTokenSources = new();
         private readonly ICallIndexProvider _callIndexProvider;
         private readonly IIdentityGenerator _identityGenerator;
 
         public NetworkGatewayModule(IOptions<GatewayOptions> options, IIdentityGenerator identityGenerator,
-            IContextualSerializationToolKit serialization, ICallIndexProvider callIndexProvider, IConnectionHub hub,
-            IOptions<DistributionOptions> distribution, HubRequestExtractor hre)
+            IContextualSerializationToolKit serialization, ICallIndexProvider callIndexProvider, IConnectionHub hub, HubRequestExtractor hre, IDistributionModule distribution)
         {
             _tcpListener = new(options.Value.Endpoint);
             _identityGenerator = identityGenerator;
@@ -30,7 +29,7 @@ namespace mROA.Implementation.Backend
             _callIndexProvider = callIndexProvider;
             _hub = hub;
             _hre = hre;
-            _distribution = distribution.Value;
+            _distribution = distribution;
         }
 
         public void Run()
@@ -107,12 +106,10 @@ namespace mROA.Implementation.Backend
             _extractorsTokenSources[interaction.ConnectionId] = cts;
 
             _hub.RegisterInteraction(interaction);
-            var requestExtractor = _hre.HubOnOnConnected(new RepresentationModule(interaction, _serialization.Clone()));
+            _hre.HubOnOnConnected(new RepresentationModule(interaction, _serialization.Clone()));
 
-            if (_distribution.DistributionType != EDistributionType.Channeled)
-            {
-                BindRequestFirstDistribution(context, interaction, streamExtractor, requestExtractor);
-            }
+            streamExtractor.MessageReceived = _distribution.GetDistributionAction(interaction.ConnectionId);
+
         }
 
         private void BindRequestFirstDistribution(IEndPointContext context, IChannelInteractionModule interaction,
@@ -156,12 +153,8 @@ namespace mROA.Implementation.Backend
             };
             _ = streamExtractor.SendFromChannel(recoveryInteraction.TrustedPostChanel, cts.Token);
 
-            if (_distribution.DistributionType == EDistributionType.ExtractorFirst)
-            {
-                BindRequestFirstDistribution(recoveryInteraction.Context, recoveryInteraction, streamExtractor,
-                    _hre[recoveryInteraction.ConnectionId]);
-            }
-
+            streamExtractor.MessageReceived = _distribution.GetDistributionAction(recoveryInteraction.ConnectionId);
+            
             Task.Run(async () => await streamExtractor.LoopedReceive(cts.Token).ConfigureAwait(false));
 
             recoveryInteraction.Restart(false);
