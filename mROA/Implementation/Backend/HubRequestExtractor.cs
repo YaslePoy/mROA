@@ -10,17 +10,18 @@ namespace mROA.Implementation.Backend
         private readonly IRealStoreInstanceRepository _contextRepository;
         private readonly IInstanceRepository _remoteContextRepository;
         private readonly IExecuteModule _executeModule;
-        private readonly DistributionOptions _mode;
+        private readonly IDistributionModule _distribution;
         private readonly Dictionary<int, IRequestExtractor> _producedExtractors = new();
 
         public HubRequestExtractor(IRealStoreInstanceRepository contextRepository,
             IInstanceRepository remoteContextRepository, IExecuteModule executeModule,
-            IOptions<DistributionOptions> mode)
+            IDistributionModule distribution)
         {
             _contextRepository = contextRepository;
             _remoteContextRepository = remoteContextRepository;
             _executeModule = executeModule;
-            _mode = mode.Value;
+            _distribution = distribution;
+            
         }
 
         public IRequestExtractor this[int id] => _producedExtractors[id];
@@ -28,7 +29,7 @@ namespace mROA.Implementation.Backend
         public IRequestExtractor HubOnOnConnected(IRepresentationModule representationModule)
         {
             var extractor = CreateExtractor(representationModule);
-            if (_mode.DistributionType == EDistributionType.Channeled)
+            if (_distribution is ChannelDistributionModule)
             {
                 extractor.StartExtraction().ContinueWith(_ => OnDisconnected(representationModule));
             }
