@@ -27,7 +27,7 @@ class Program
         var listening = new IPEndPoint(IPAddress.Any, 4567);
         builder.Services.Configure<GatewayOptions>(options => options.Endpoint = listening);
         builder.Services.AddSingleton<IDistributionModule, ExtractorFirstDistributionModule>();
-
+        builder.Services.Configure<SerializationBufferOffset>(options => options.Offset = 0);
         builder.Services.AddSingleton<HubRequestExtractor>();
         builder.Services.AddSingleton<IExecuteModule, BasicExecutionModule>();
         builder.Services.AddSingleton<IRepresentationModuleProducer, CreativeRepresentationModuleProducer>();

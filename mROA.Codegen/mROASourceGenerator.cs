@@ -316,11 +316,14 @@ namespace mROA.Codegen
 
             var parametersInsertList = new List<string>();
 
+            var useCancellationToken = false;
+            
             foreach (var parameter in method.Parameters)
                 switch (parameter.Type.Name)
                 {
                     case "CancellationToken":
                         parametersInsertList.Add("(CancellationToken)special[1]");
+                        useCancellationToken = true;
                         break;
                     case "RequestContext":
                         parametersInsertList.Add("(RequestContext)special[0]");
@@ -359,6 +362,7 @@ namespace mROA.Codegen
                 invokerTemplate.DefineSuitableType(baseInterface.ToUnityString());
                 invokerTemplate.DefineFuncInvoking(funcInvoking);
                 invokerTemplate.DefineIsTrusted((!isUntrusted).ToString().ToLower());
+                invokerTemplate.DefineCancellation(useCancellationToken.ToString().ToLower());
                 backend = invokerTemplate.Compile();
             }
             else
@@ -370,6 +374,7 @@ namespace mROA.Codegen
                 invokerTemplate.DefineSuitableType(baseInterface.ToUnityString());
                 invokerTemplate.DefineFuncInvoking(funcInvoking);
                 invokerTemplate.DefineIsTrusted((!isUntrusted).ToString().ToLower());
+                
                 backend = invokerTemplate.Compile();
             }
 

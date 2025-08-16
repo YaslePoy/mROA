@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Formats.Cbor;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.Options;
 using mROA.Abstract;
 using mROA.Implementation;
 using mROA.Implementation.Attributes;
@@ -15,7 +16,12 @@ namespace mROA.Cbor
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
         private readonly CborWriter _writer = new(initialCapacity: 2048);
+        private readonly int _offset;
 
+        public CborSerializationToolkit(IOptions<SerializationBufferOffset> offsetOptions) : this(offsetOptions.Value.Offset)
+        {
+        }
+        
         private readonly IOrdinaryStructureParser[] _parsers =
         {
             new CallRequestParser(), new FinalCommandExecutionParser(),
@@ -23,6 +29,12 @@ namespace mROA.Cbor
         };
 
         private readonly Dictionary<Type, List<PropertyInfo>> _propertiesCache = new();
+
+        public CborSerializationToolkit(int offset)
+        {
+            _offset = offset;
+        }
+
         public static TimeSpan SerializationTime = TimeSpan.Zero;
 
         private bool FindParser(Type t, out IOrdinaryStructureParser parser)
@@ -56,7 +68,9 @@ namespace mROA.Cbor
             {
                 _writer.Reset();
                 WriteData(objectToSerialize, _writer, context);
-                result = _writer.Encode();
+                result = new byte[_offset + _writer.BytesWritten];
+                var span = result.AsSpan();
+                _writer.Encode(span[_offset..]);
             }
 
             return result;
@@ -94,16 +108,11 @@ namespace mROA.Cbor
                 var reader = new CborReader(rawMemory);
                 return ReadData(reader, type, context);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine($"Bad deserialization. Bytes: {rawMemory.ToArray().Select(b => $"{b:X}")}");
+                Console.WriteLine($"Bad deserialization. Bytes: {BitConverter.ToString(rawMemory.ToArray())}");
                 throw;
             }
-        }
-
-        public T Cast<T>(object nonCasted, IEndPointContext? context)
-        {
-            return (T)Cast(nonCasted, typeof(T), context);
         }
 
         public object? Cast(object? nonCasted, Type type, IEndPointContext? context)
@@ -133,7 +142,7 @@ namespace mROA.Cbor
 
         public IContextualSerializationToolKit Clone()
         {
-            return new CborSerializationToolkit();
+            return new CborSerializationToolkit(_offset) ;
         }
 
         public void WriteData(object? obj, CborWriter writer, IEndPointContext? context)
@@ -465,7 +474,7 @@ namespace mROA.Cbor
                             value = Convert.ChangeType(value, typeof(byte));
                         }
                     }
-                    
+
                     property.SetValue(obj, value);
                 }
 

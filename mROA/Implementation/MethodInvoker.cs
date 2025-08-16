@@ -37,7 +37,7 @@ namespace mROA.Implementation
         public Type[] ParameterTypes { get; set; } = Type.EmptyTypes;
         public Type? ReturnType { get; set; }
         public Type SuitableType { get; set; } = typeof(object);
-
+        public bool RequireCancellation { get; set; } = true;
         public Action<object, object?[]?, object[], Action<object?>> Invoking { get; set; } =
             (_, _, _, post) => { post.Invoke(null); };
 

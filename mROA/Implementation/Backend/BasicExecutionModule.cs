@@ -145,20 +145,29 @@ namespace mROA.Implementation.Backend
             CallRequest command, ICancellationRepository cancellationRepository,
             IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)
         {
-            var tokenSource = new CancellationTokenSource();
-            cancellationRepository.RegisterCancellation(command.Id, tokenSource);
-            var token = tokenSource.Token;
+            CancellationToken? token = null;
+            if (invoker.RequireCancellation)
+            {
+                var tokenSource = new CancellationTokenSource();
+                cancellationRepository.RegisterCancellation(command.Id, tokenSource);
+
+                token = tokenSource.Token;
+            }
 
             invoker.Invoke(instance, parameters, new object[] { executionContext, token }, _ =>
             {
-                if (token.IsCancellationRequested)
-                    return;
+                if (invoker.RequireCancellation)
+                {
+                    _cancellationRepo.FreeCancellation(command.Id);
+                
+                    if (token.Value.IsCancellationRequested)
+                        return;   
+                }
 
                 var payload = new FinalCommandExecution
                 {
                     Id = command.Id
                 };
-                _cancellationRepo.FreeCancellation(command.Id);
 
 
                 if (invoker.IsTrusted)
@@ -174,20 +183,31 @@ namespace mROA.Implementation.Backend
             CallRequest command, ICancellationRepository cancellationRepository,
             IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)
         {
-            var tokenSource = new CancellationTokenSource();
-            cancellationRepository.RegisterCancellation(command.Id, tokenSource);
+            CancellationToken? token = null;
+            if (invoker.RequireCancellation)
+            {
+                var tokenSource = new CancellationTokenSource();
+                cancellationRepository.RegisterCancellation(command.Id, tokenSource);
 
-            var token = tokenSource.Token;
+                token = tokenSource.Token;
+            }
 
             invoker.Invoke(instance, parameters, new object[] { executionContext, token },
                 finalResult =>
                 {
+                    if (invoker.RequireCancellation)
+                    {
+                        _cancellationRepo.FreeCancellation(command.Id);
+                
+                        if (token.Value.IsCancellationRequested)
+                            return;   
+                    }
+                    
                     var payload = new FinalCommandExecution<object>
                     {
                         Id = command.Id,
                         Result = finalResult
                     };
-                    _cancellationRepo.FreeCancellation(command.Id);
 
                     representationModule.PostCallMessageAsync(command.Id, EMessageType.FinishedCommandExecution,
                         payload, context);

@@ -46,6 +46,7 @@ class Program
         builder.Services.AddOptions();
         builder.Services.Configure<GatewayOptions>(options => options.Endpoint = serverEndPoint);
         builder.Services.Configure<DistributionOptions>(o => o.DistributionType = EDistributionType.Channeled);
+        builder.Services.Configure<SerializationBufferOffset>(options => options.Offset = 0);
 
         builder.Services.AddSingleton<IRepresentationModuleProducer, StaticRepresentationModuleProducer>();
         builder.Services.AddSingleton<IRequestExtractor, RequestExtractor>();

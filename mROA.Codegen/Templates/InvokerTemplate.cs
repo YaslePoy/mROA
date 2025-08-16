@@ -9,6 +9,7 @@ namespace mROA.Codegen.Templates
         private const string ParametersTypeTag = "parametersType";
         private const string SuitableTypeTag = "suitableType";
         private const string FuncInvokingTag = "funcInvoking";
+        private const string CancellationTag = "cancellation";
         private const string IsTrustedTag = "isTrusted";
 
         public InvokerTemplate(TemplateDocument template) : base(template) { }
@@ -41,6 +42,11 @@ namespace mROA.Codegen.Templates
         public void DefineIsTrusted(string value)
         {
             Define(IsTrustedTag, value);
+        }
+
+        public void DefineCancellation(string value)
+        {
+            Define(CancellationTag, value);
         }
     }
 }
