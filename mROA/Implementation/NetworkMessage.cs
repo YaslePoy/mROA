@@ -35,8 +35,6 @@ namespace mROA.Implementation
         public EMessageType MessageType { get; set; }
 
         public byte[] Data { get; set; }
-        public object Serialized { get; set; }
-        public IEndPointContext Context { get; set; }
 
         public override string ToString()
         {

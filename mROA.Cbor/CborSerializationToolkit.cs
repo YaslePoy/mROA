@@ -58,7 +58,7 @@ namespace mROA.Cbor
                 WriteData(objectToSerialize, _writer, context);
                 result = _writer.Encode();
             }
-            
+
             return result;
         }
 
@@ -99,7 +99,6 @@ namespace mROA.Cbor
                 Console.WriteLine($"Bad deserialization. Bytes: {rawMemory.ToArray().Select(b => $"{b:X}")}");
                 throw;
             }
-            
         }
 
         public T Cast<T>(object nonCasted, IEndPointContext? context)
@@ -128,7 +127,7 @@ namespace mROA.Cbor
             {
                 return ReadSharedShell(type, context, (ulong)nonCasted);
             }
-            
+
             return Convert.ChangeType(nonCasted, type);
         }
 
@@ -196,9 +195,20 @@ namespace mROA.Cbor
                     WriteObject(sharedObject, writer, context);
                     break;
                 default:
-                    if (obj.GetType().IsEnum)
+                    var objType = obj.GetType();
+                    if (objType.IsEnum)
                     {
-                        writer.WriteInt32((int)obj);
+                        var basicType = Enum.GetUnderlyingType(obj.GetType());
+
+                        if (basicType == typeof(byte))
+                        {
+                            writer.WriteInt32((byte)obj);
+                        }
+                        else if (basicType == typeof(int))
+                        {
+                            writer.WriteInt32((byte)obj);
+                        }
+
                         break;
                     }
 
@@ -283,6 +293,7 @@ namespace mROA.Cbor
                     {
                         return ReadSharedShell(type, context, reader.ReadUInt64());
                     }
+
                     return reader.ReadUInt64();
                 case CborReaderState.ByteString:
                     if (type == typeof(RequestId))
@@ -446,6 +457,15 @@ namespace mROA.Cbor
                 {
                     var property = properties[index];
                     var value = ReadData(reader, property.PropertyType, context);
+
+                    if (property.PropertyType.IsEnum)
+                    {
+                        if (property.PropertyType.GetEnumUnderlyingType() == typeof(byte))
+                        {
+                            value = Convert.ChangeType(value, typeof(byte));
+                        }
+                    }
+                    
                     property.SetValue(obj, value);
                 }
 

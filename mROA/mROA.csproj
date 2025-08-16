@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
         <Title>mROA</Title>
-        <Version>2.0.8</Version>
+        <Version>3.0.3</Version>
         <Authors>YaslePoy</Authors>
         <Description>Fast and easy RPC with contex</Description>
         <RepositoryUrl>https://github.com/YaslePoy/mROA</RepositoryUrl>
@@ -38,11 +38,4 @@
             <PackagePath></PackagePath>
         </None>
     </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="Microsoft.Extensions.Logging.Abstractions">
-            <HintPath>..\..\..\..\.nuget\packages\microsoft.extensions.logging.abstractions\9.0.7\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
-        </Reference>
-    </ItemGroup>
-
 </Project>

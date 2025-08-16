@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>2.0.7</Version>
+        <Version>3.0.3</Version>
         <LangVersion>9</LangVersion>
         <PackageIcon>mroaLogo.png</PackageIcon>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -31,6 +31,6 @@
 
 
     <ItemGroup>
-        <PackageReference Include="System.Formats.Cbor" Version="9.0.7" />
+        <PackageReference Include="System.Formats.Cbor" Version="9.0.8" />
     </ItemGroup>
 </Project>

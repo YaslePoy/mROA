@@ -22,12 +22,12 @@ class Program
         builder.Services.AddSingleton<IGatewayModule, NetworkGatewayModule>();
         builder.Services.AddSingleton<IUntrustedGateway, UdpGateway>();
         builder.Services.AddSingleton<IConnectionHub, ConnectionHub>();
-        
+
         builder.Services.AddOptions();
         var listening = new IPEndPoint(IPAddress.Any, 4567);
         builder.Services.Configure<GatewayOptions>(options => options.Endpoint = listening);
         builder.Services.AddSingleton<IDistributionModule, ExtractorFirstDistributionModule>();
-        
+
         builder.Services.AddSingleton<HubRequestExtractor>();
         builder.Services.AddSingleton<IExecuteModule, BasicExecutionModule>();
         builder.Services.AddSingleton<IRepresentationModuleProducer, CreativeRepresentationModuleProducer>();
@@ -55,6 +55,9 @@ class Program
 //
         new RemoteTypeBinder();
 //
+
+        var contextualSerializationToolKit = host.Services.GetService<IContextualSerializationToolKit>(); 
+        contextualSerializationToolKit.Deserialize<NetworkMessage>(contextualSerializationToolKit.Serialize(new NetworkMessage(), null), null);
         _ = host.Services.GetService<IUntrustedGateway>()!.Start();
         var gateway = host.Services.GetService<IGatewayModule>();
         gateway.Run();

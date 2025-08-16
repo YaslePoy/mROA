@@ -3,6 +3,6 @@
 using BenchmarkDotNet.Running;
 using mROA.Benchmark;
 
-Console.WriteLine("Hello, World!");
+Console.WriteLine("Hello, Performance!");
 
-BenchmarkRunner.Run<InvokePerformance>();
+BenchmarkRunner.Run<MethodAccess>();
