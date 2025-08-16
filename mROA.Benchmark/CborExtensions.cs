@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using mROA.Implementation;
 
+namespace mROA.Benchmark;
+
 public static class CborExtensions
 {
     public static unsafe void WriteToCbor(this RequestId id, CborWriter writer)

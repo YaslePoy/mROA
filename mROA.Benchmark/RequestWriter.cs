@@ -2,6 +2,8 @@ using System.Formats.Cbor;
 using BenchmarkDotNet.Attributes;
 using mROA.Implementation;
 
+namespace mROA.Benchmark;
+
 [MemoryDiagnoser]
 public class RequestWriter
 {
