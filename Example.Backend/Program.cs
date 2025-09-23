@@ -50,6 +50,7 @@ class Program
         builder.Services.AddSingleton<ICallIndexProvider, GeneratedCallIndexProvider>();
 
         builder.Services.AddSingleton<ICancellationRepository, CancellationRepository>();
+        builder.Services.Configure<DistributionOptions>(o => o.DistributionType = EDistributionType.ExtractorFirst);
 
         var host = builder.Build();
 //

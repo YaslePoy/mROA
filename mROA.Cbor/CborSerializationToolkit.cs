@@ -110,7 +110,7 @@ namespace mROA.Cbor
             }
             catch (Exception)
             {
-                Console.WriteLine($"Bad deserialization. Bytes: {BitConverter.ToString(rawMemory.ToArray())}");
+                Console.WriteLine($"Bad deserialization for type {type}. Bytes: {BitConverter.ToString(rawMemory.ToArray())}");
                 throw;
             }
         }

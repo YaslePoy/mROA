@@ -18,7 +18,7 @@ public class TaskWaiting
     private readonly FastRepresentationModule _representationModule;
     public TaskWaiting()
     {
-        _executionModule = new BasicExecutionModule(new CancellationRepository(),  new TestMethodRepo(), new CborSerializationToolkit());
+        _executionModule = new BasicExecutionModule(new CancellationRepository(),  new TestMethodRepo(), new CborSerializationToolkit(null));
         _syncRequest = new CallRequest{CommandId = 0, Parameters = null, Id = RequestId.Generate(), ObjectId = new ComplexObjectIdentifier(-1, 0)};
         _asyncRequest = new CallRequest{CommandId = 1, Parameters = null, Id = RequestId.Generate(), ObjectId = new ComplexObjectIdentifier(-1, 0)};
         _instanceRepo = new InstanceRepository(null);

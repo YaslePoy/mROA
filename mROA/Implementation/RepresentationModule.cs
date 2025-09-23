@@ -33,8 +33,7 @@ namespace mROA.Implementation
         {
             var writer = _interaction.ReceiveChanel.Writer;
             var reader = _interaction.ReceiveChanel.Reader;
-
-
+            
             await foreach (var message in reader.ReadAllAsync(token))
             {
                 if (!rule(message))

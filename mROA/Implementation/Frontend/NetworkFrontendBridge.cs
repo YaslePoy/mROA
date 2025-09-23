@@ -50,8 +50,7 @@ namespace mROA.Implementation.Frontend
                 throw new Exception(
                     $"Incorrect message type. Must be IdAssigning, current : {idMessage.MessageType.ToString()}");
             }
-
-
+            
             _ = Task.Run(async () => await _currentExtractor.LoopedReceive(_rawExtractorCancellation.Token));
 
             var assignment = _serialization.Deserialize<IdAssignment>(idMessage.Data, _context);

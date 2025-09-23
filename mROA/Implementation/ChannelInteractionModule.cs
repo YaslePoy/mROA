@@ -143,17 +143,13 @@ namespace mROA.Implementation
         public class StreamExtractor
         {
             private const int BufferSize = ushort.MaxValue + 19;
-
             private readonly Stream _ioStream;
             private readonly Memory<byte> _buffer = new byte[BufferSize];
-
             public StreamExtractor(Stream ioStream)
             {
                 _ioStream = ioStream;
             }
-
             public Action<NetworkMessage> MessageReceived = _ => { };
-
             public async Task SingleReceive(CancellationToken token = default)
             {
                 var firstRead = await _ioStream.ReadAsync(_buffer, token);
@@ -170,12 +166,9 @@ namespace mROA.Implementation
                 }
 
                 var message = meta.ToMessage(_buffer.Span);
-#if TRACE
-                Console.WriteLine("RECV " + message);
-#endif
+
                 MessageReceived(message);
             }
-
             public async Task LoopedReceive(CancellationToken token = default)
             {
                 while (token.IsCancellationRequested == false && IsConnected)
@@ -183,7 +176,6 @@ namespace mROA.Implementation
                     await SingleReceive(token);
                 }
             }
-
             private async Task Send(NetworkMessage message, CancellationToken token = default)
             {
                 var meta = message.ToMeta();
@@ -191,12 +183,7 @@ namespace mROA.Implementation
                 message.Data.CopyTo(_buffer.Span[19..]);
                 var sendingSpan = _buffer[..(19 + meta.BodyLength)];
                 await _ioStream.WriteAsync(sendingSpan, token);
-#if TRACE
-                Console.WriteLine("SEND " + message);
-#endif
-                // _logger.LogTrace("SEND {0}", message.ToString());
             }
-
             public async Task SendFromChannel(ChannelReader<NetworkMessage> channel,
                 CancellationToken token = default)
             {
@@ -206,7 +193,6 @@ namespace mROA.Implementation
                     await Send(message, token);
                 }
             }
-
             public bool IsConnected => _ioStream is { CanRead: true, CanWrite: true };
         }
     }

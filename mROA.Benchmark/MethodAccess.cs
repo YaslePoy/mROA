@@ -6,12 +6,13 @@ using mROA.Implementation;
 namespace mROA.Benchmark;
 
 [MemoryDiagnoser]
-[DisassemblyDiagnoser]
+// [DisassemblyDiagnoser]
 public class MethodAccess
 {
-    private CollectableMethodRepository _current =  new();
+    private CollectableMethodRepository _current = new();
     private FastMethodRepository _fast = new();
     private readonly int _count = new GeneratedInvokersCollection().Count;
+
     [GlobalSetup]
     public void SetupMethodAccess()
     {
@@ -53,8 +54,8 @@ public class MethodAccess
     // {
     //     return _fast.GetMethodBaked(-1);
     // }
-    
-    
+
+
     [Benchmark(Baseline = true)]
     public IMethodInvoker CurrentAll()
     {
@@ -63,9 +64,10 @@ public class MethodAccess
         {
             inv = _current.GetMethod(i);
         }
+
         return inv;
     }
-    
+
     [Benchmark]
     public IMethodInvoker FastAll()
     {
@@ -74,9 +76,10 @@ public class MethodAccess
         {
             inv = _fast.GetMethod(i);
         }
+
         return inv;
     }
-    
+
     [Benchmark]
     public IMethodInvoker FastAllBaked()
     {
@@ -85,26 +88,46 @@ public class MethodAccess
         {
             inv = _fast.GetMethodBaked(i);
         }
+
+        return inv;
+    }
+    
+    [Benchmark]
+    public IMethodInvoker FastAllBakedPreicrement()
+    {
+        IMethodInvoker inv = null;
+        for (int i = -1; i < _count; i++)
+        {
+            inv = _fast.GetMethodBakedPreicrement(i);
+        }
+
         return inv;
     }
 }
 
-internal class FastMethodRepository: IMethodRepository
+internal class FastMethodRepository : IMethodRepository
 {
     private readonly List<IMethodInvoker> _methods = [MethodInvoker.Dispose];
     private IMethodInvoker[] _baked = [];
+
     public void AppendInvokers(IEnumerable<IMethodInvoker> methodInvokers)
     {
         _methods.AddRange(methodInvokers);
         _baked = _methods.ToArray();
     }
+
     public IMethodInvoker GetMethod(int id)
     {
         return _methods[id + 1];
     }
-    
+
     public IMethodInvoker GetMethodBaked(int id)
     {
         return _baked[id + 1];
+    }
+    
+    public IMethodInvoker GetMethodBakedPreicrement(int id)
+    {
+        return _baked[++id];
     }
 }

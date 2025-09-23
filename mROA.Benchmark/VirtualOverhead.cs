@@ -68,7 +68,7 @@ public class VirtualOverhead
         acc += (req.Parameters ?? []).Length;
         return acc;
     }
-
+ 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public long CallIn(in CallRequest req)
     {
