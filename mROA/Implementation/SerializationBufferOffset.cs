@@ -2,6 +2,6 @@ namespace mROA.Implementation
 {
     public class SerializationBufferOffset
     {
-        public int Offset { get; set; } = 19;
+        public int Offset { get; set; } = 0;
     }
 }
