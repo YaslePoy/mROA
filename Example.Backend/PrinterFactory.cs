@@ -11,7 +11,7 @@ namespace Example.Backend
     {
         private readonly List<IPrinter> _printers = new();
 
-        public IPrinter Create(string printerName)
+        public IPrinter Create(in string printerName)
         {
             Console.WriteLine("Creating printer");
             return new Printer { Name = printerName };

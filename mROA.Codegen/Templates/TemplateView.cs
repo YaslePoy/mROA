@@ -6,12 +6,12 @@ namespace mROA.Codegen.Templates
     public abstract class TemplateView
     {
         private readonly TemplateDocument _template;
-        
+
         protected TemplateView(string templateFile)
         {
             _template = TemplateReader.FromEmbeddedResource(templateFile);
         }
-        
+
         protected TemplateView(TemplateDocument template)
         {
             _template = template;

@@ -5,11 +5,13 @@ namespace mROA.Codegen.Templates
     public partial class ObjectBinderTemplate : TemplateView
     {
         private const string EventBinderTemplateTag = "eventBinderTemplate";
-            
+
         private const string TypeTag = "type";
         private const string EventBinderTag = "eventBinder";
 
-        public ObjectBinderTemplate(TemplateDocument template) : base(template) { }
+        public ObjectBinderTemplate(TemplateDocument template) : base(template)
+        {
+        }
 
         public void DefineType(string value)
         {
@@ -20,7 +22,7 @@ namespace mROA.Codegen.Templates
         {
             Insert(EventBinderTag, value);
         }
-            
+
         public EventBinderTemplate CloneInnerEventBinder()
         {
             var template = CloneInner(EventBinderTemplateTag);

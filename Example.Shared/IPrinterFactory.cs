@@ -6,7 +6,7 @@ namespace Example.Shared
     [SharedObjectInterface]
     public interface IPrinterFactory : IShared
     {
-        IPrinter Create(string printerName);
+        IPrinter Create(in string printerName);
         void Register(IPrinter printer);
         IPrinter GetPrinterByName(string printerName);
         IPrinter GetFirstPrinter();
