@@ -31,7 +31,7 @@ namespace Example.Frontend
 
         public string GetName()
         {
-            Console.WriteLine("ClientBasedPrinter called from server!!!!!!!!!!! Vova likes that:)");
+            Console.WriteLine("ClientBasedPrinter called from server!!!!!!!!!!!");
             DemoCheck.BackwardCall = true;
 
             return "ClientBasedPrinter from mroa";

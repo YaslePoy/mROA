@@ -12,7 +12,8 @@ namespace Example.Shared
     {
         double Resource { get; set; }
         string GetName();
-        Task<IPage> Print(string text, bool someParameter, RequestContext context, CancellationToken cancellationToken);
+        Task<IPage> Print(string text, bool someParameter,
+            RequestContext context, CancellationToken cancellationToken);
         event Action<IPage, RequestContext> OnPrint;
 
         [Untrusted]

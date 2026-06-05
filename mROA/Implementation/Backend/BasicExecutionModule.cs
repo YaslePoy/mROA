@@ -10,7 +10,6 @@ namespace mROA.Implementation.Backend
         private readonly ICancellationRepository _cancellationRepo;
         private readonly IMethodRepository _methodRepo;
         private readonly IContextualSerializationToolKit _serialization;
-
         public BasicExecutionModule(ICancellationRepository cancellationRepo, IMethodRepository methodRepo,
             IContextualSerializationToolKit serialization)
         {
@@ -18,7 +17,6 @@ namespace mROA.Implementation.Backend
             _methodRepo = methodRepo;
             _serialization = serialization;
         }
-
         public ICommandExecution? Execute(CallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext)
         {
@@ -56,7 +54,6 @@ namespace mROA.Implementation.Backend
                 };
             }
         }
-
         private ICommandExecution? ExecuteRequest(CallRequest command, IInstanceRepository instanceRepository,
             IRepresentationModule representationModule, IEndPointContext endPointContext, IMethodInvoker invoker,
             object context, object?[]? castedParams, RequestContext execContext)
@@ -80,7 +77,6 @@ namespace mROA.Implementation.Backend
                     return result;
             }
         }
-
         private static object GetInstance(CallRequest command, IInstanceRepository instanceRepository,
             IMethodInvoker invoker, IEndPointContext endPointContext)
         {
@@ -90,7 +86,6 @@ namespace mROA.Implementation.Backend
 
             return context;
         }
-
         private object?[] CastedParams(CallRequest command, IMethodInvoker invoker, IEndPointContext context)
         {
             object?[] castedParams = new object[invoker.ParameterTypes.Length];
@@ -101,7 +96,6 @@ namespace mROA.Implementation.Backend
 
             return castedParams;
         }
-
         public ICommandExecution Cancel(CancelRequest command)
         {
             var cts = _cancellationRepo.GetCancellation(command.Id);
@@ -115,7 +109,6 @@ namespace mROA.Implementation.Backend
                 Id = command.Id
             };
         }
-
         private static ICommandExecution? Execute(MethodInvoker invoker, object instance, object?[] parameter,
             CallRequest command, RequestContext executionContext)
         {
@@ -140,7 +133,6 @@ namespace mROA.Implementation.Backend
                 Id = command.Id
             };
         }
-
         private ICommandExecution? ExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
             CallRequest command, ICancellationRepository cancellationRepository,
             IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)
@@ -178,7 +170,6 @@ namespace mROA.Implementation.Backend
 
             return null;
         }
-
         private ICommandExecution? TypedExecuteAsync(AsyncMethodInvoker invoker, object instance, object?[]? parameters,
             CallRequest command, ICancellationRepository cancellationRepository,
             IRepresentationModule representationModule, RequestContext executionContext, IEndPointContext context)

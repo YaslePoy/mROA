@@ -16,7 +16,6 @@ using mROA.Implementation;
 using mROA.Implementation.Backend;
 using mROA.Implementation.Frontend;
 
-
 class Program
 {
     public static async Task Main(string[] args)
@@ -40,7 +39,7 @@ class Program
         builder.Services.AddSingleton<IChannelInteractionModule, ChannelInteractionModule>();
         builder.Services.AddSingleton<IUntrustedInteractionModule, UdpUntrustedInteraction>();
         builder.Services.AddSingleton<IRepresentationModule, RepresentationModule>();
-        var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
+        var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 9000);
         builder.Services.AddSingleton<IFrontendBridge, NetworkFrontendBridge>();
         
         builder.Services.AddOptions();
@@ -95,7 +94,7 @@ class Program
             };
             Console.WriteLine("Printer created");
 
-            frontendBridge.Obstacle();
+            // frontendBridge.Obstacle();
             var name = disposingPrinter.GetName();
             DemoCheck.BasicNonParamsCall = true;
             Console.WriteLine("Printer name : {0}", name);
@@ -148,13 +147,14 @@ class Program
         var token = cts.Token;
         var t = Task.Run(async () => await loadSingleton!.AsyncTest(token));
 
-        Thread.Sleep(5000);
+        Console.WriteLine("Waiting for timer");
+        Thread.Sleep(2000);
         cts.Cancel();
         Console.WriteLine($"Token state {cts.Token.IsCancellationRequested}");
         DemoCheck.TaskCancelation = true;
 #endif
 
-        const int iterations = 10_000;
+        const int iterations = 5;
         var timer = Stopwatch.StartNew();
         var x = 0;
         for (int i = 0; i < iterations; i++)

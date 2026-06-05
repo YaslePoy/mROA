@@ -40,7 +40,6 @@ class Program
 
             return repo;
         }));
-
         builder.Services.AddSingleton<IMethodRepository>(p =>
         {
             var methodRepo = new CollectableMethodRepository();
@@ -48,7 +47,6 @@ class Program
             return methodRepo;
         });
         builder.Services.AddSingleton<ICallIndexProvider, GeneratedCallIndexProvider>();
-
         builder.Services.AddSingleton<ICancellationRepository, CancellationRepository>();
         builder.Services.Configure<DistributionOptions>(o => o.DistributionType = EDistributionType.ExtractorFirst);
 

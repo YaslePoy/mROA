@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
+using System.Runtime;
 using Example.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -9,14 +11,13 @@ using mROA.Implementation;
 using mROA.Implementation.Backend;
 using mROA.Implementation.Frontend;
 
-
 const int C = 100;
 var time = TimeSpan.FromSeconds(10);
 Console.WriteLine($"Starting bench for {time} from {C} connections");
 var cts = new CancellationTokenSource();
 new RemoteTypeBinder();
 var eps = await GetLoadEndpoints(C);
-var tasks = new Task<int>[C];
+var tasks = new Task<(int, double[])>[C];
 for (int i = 0; i < C; i++)
 {
     tasks[i] = Requests(cts.Token, i, eps[i]);
@@ -28,9 +29,17 @@ Console.WriteLine("Start waiting");
 await Task.WhenAll(tasks);
 Console.WriteLine("End waiting");
 
-var totalRequests = tasks.Sum(i => i.Result);
+var totalRequests = tasks.Sum(i => i.Result.Item1);
+var totalLatency = tasks.SelectMany(i => i.Result.Item2).ToList();
+totalLatency.Sort();
+var n = totalLatency.Count;
+
+var p50 = totalLatency[(int)(n * 50f / 100f)];
+var p95 = totalLatency[(int)(n * 95f / 100f)];
+var p99 = totalLatency[(int)(n * 99f / 100f)];
 Console.WriteLine($"Total requests: {totalRequests:N0}");
 Console.WriteLine($"Results: {totalRequests / time.TotalSeconds:N} RPS");
+Console.WriteLine("Latency (µs): p50={0} p95={1} p99={2}", p50, p95, p99);
 File.AppendAllText("results.txt", $"[FAST ID] {totalRequests}\r\n");
 
 async Task<List<ILoadTest>> GetLoadEndpoints(int count)
@@ -94,10 +103,12 @@ async Task<List<ILoadTest>> GetLoadEndpoints(int count)
     }
 }
 
-async Task<int> Requests(CancellationToken token, int id, ILoadTest load)
+async Task<(int, double[])> Requests(CancellationToken token, int id, ILoadTest load)
 {
     try
     {
+        var latencyList = new List<double>();
+        var sw = new Stopwatch();
         int count = 0;
         while (true)
         {
@@ -106,11 +117,14 @@ async Task<int> Requests(CancellationToken token, int id, ILoadTest load)
                 break;
             }
 
+            sw.Restart();
             await load.Next(2);
+            sw.Stop();
+            latencyList.Add(sw.Elapsed.TotalMicroseconds);
             count++;
         }
         
-        return count;
+        return (count,  latencyList.ToArray());
     }
     catch (Exception e)
     {
