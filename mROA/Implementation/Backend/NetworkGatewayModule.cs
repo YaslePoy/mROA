@@ -57,6 +57,7 @@ namespace mROA.Implementation.Backend
 
         private async Task HandleConnection(TcpClient client)
         {
+            client.NoDelay = true;
             Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
             var interaction = new ChannelInteractionModule(_serialization, _identityGenerator);
 

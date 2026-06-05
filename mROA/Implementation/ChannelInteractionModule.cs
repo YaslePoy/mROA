@@ -145,30 +145,34 @@ namespace mROA.Implementation
             private const int BufferSize = ushort.MaxValue + 19;
             private readonly Stream _ioStream;
             private readonly Memory<byte> _buffer = new byte[BufferSize];
+
             public StreamExtractor(Stream ioStream)
             {
                 _ioStream = ioStream;
             }
+
             public Action<NetworkMessage> MessageReceived = _ => { };
+
             public async Task SingleReceive(CancellationToken token = default)
             {
-                var firstRead = await _ioStream.ReadAsync(_buffer, token);
 
-                var meta = MemoryMarshal.Read<NetworkMessage.NetworkMessageMeta>(_buffer.Span);
+                    _ = await _ioStream.ReadExactlyAsync(_buffer[..19], token);
 
-                var len = meta.BodyLength;
-                var readLen = firstRead - 19;
+                    var meta = MemoryMarshal.Read<NetworkMessage.NetworkMessageMeta>(_buffer.Span);
 
-                if (readLen != len)
-                {
-                    var lastPart = _buffer[firstRead..(len + 19)];
+                    var len = meta.BodyLength;
+
+                    var range = 19..(len + 19);
+                    // Console.WriteLine($"{range} {_buffer.Length}");
+                    var lastPart = _buffer[range];
                     await _ioStream.ReadExactlyAsync(lastPart, cancellationToken: token);
-                }
+                    
+                    var message = meta.ToMessage(_buffer.Span);
+                    // Console.WriteLine("RECV " + message);
 
-                var message = meta.ToMessage(_buffer.Span);
-
-                MessageReceived(message);
+                    MessageReceived(message);
             }
+
             public async Task LoopedReceive(CancellationToken token = default)
             {
                 while (token.IsCancellationRequested == false && IsConnected)
@@ -176,14 +180,17 @@ namespace mROA.Implementation
                     await SingleReceive(token);
                 }
             }
+
             private async Task Send(NetworkMessage message, CancellationToken token = default)
             {
                 var meta = message.ToMeta();
                 MemoryMarshal.Write(_buffer.Span, ref meta);
                 message.Data.CopyTo(_buffer.Span[19..]);
                 var sendingSpan = _buffer[..(19 + meta.BodyLength)];
+                // Console.WriteLine("SEND " + message);
                 await _ioStream.WriteAsync(sendingSpan, token);
             }
+
             public async Task SendFromChannel(ChannelReader<NetworkMessage> channel,
                 CancellationToken token = default)
             {
@@ -193,6 +200,7 @@ namespace mROA.Implementation
                     await Send(message, token);
                 }
             }
+
             public bool IsConnected => _ioStream is { CanRead: true, CanWrite: true };
         }
     }
