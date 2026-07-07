@@ -8,6 +8,7 @@ namespace mROA.Implementation
     public class RemoteInstanceRepository : IInstanceRepository
     {
         private readonly List<RemoteObjectBase> _producedProxies = new();
+        private readonly List<RemoteObjectBase> _producedSingletonProxies = new();
         private readonly ICallIndexProvider _callIndexProvider;
 
         private readonly IRepresentationModuleProducer _representationProducer;
@@ -32,9 +33,9 @@ namespace mROA.Implementation
 
         public T GetObject<T>(ComplexObjectIdentifier id, IEndPointContext context) where T : class
         {
-            var index = _producedProxies.Find(i => i.Identifier.Equals(id));
-            if (index is not null)
-                return (T)(index as object);
+            var existing = _producedProxies.Find(i => i.Identifier.Equals(id));
+            if (existing is not null)
+                return (T)(existing as object);
 
             if (!_callIndexProvider.Activators.TryGetValue(typeof(T), out var remoteType))
                 throw new NotSupportedException();
@@ -55,6 +56,10 @@ namespace mROA.Implementation
 
         public object GetSingletonObject(Type type, IEndPointContext context)
         {
+            var existing = _producedSingletonProxies.Find(i => i.GetType() == type);
+            if (existing is not null)
+                return existing;
+            
             var representationModule =
                 _representationProducer.Produce(context.OwnerId);
 
@@ -62,6 +67,7 @@ namespace mROA.Implementation
                 _callIndexProvider.GetIndices(type))!;
 
             _producedProxies.Add(instance);
+            _producedSingletonProxies.Add(instance);
 
             return _producedProxies.Last();
         }
