@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Formats.Cbor;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Microsoft.Extensions.Options;
 using mROA.Abstract;
 using mROA.Implementation;
@@ -15,13 +15,14 @@ namespace mROA.Cbor
 {
     public class CborSerializationToolkit : IContextualSerializationToolKit
     {
-        private readonly CborWriter _writer = new(initialCapacity: 2048);
+        private readonly ThreadLocal<CborWriter> _writer = new(() => new CborWriter(initialCapacity: 2048));
         private readonly int _offset;
 
-        public CborSerializationToolkit(IOptions<SerializationBufferOffset> offsetOptions) : this(offsetOptions.Value.Offset)
+        public CborSerializationToolkit(IOptions<SerializationBufferOffset> offsetOptions) : this(offsetOptions.Value
+            .Offset)
         {
         }
-        
+
         private readonly IOrdinaryStructureParser[] _parsers =
         {
             new CallRequestParser(), new FinalCommandExecutionParser(),
@@ -63,27 +64,24 @@ namespace mROA.Cbor
 
         public byte[] Serialize(object objectToSerialize, IEndPointContext context)
         {
-            byte[] result;
-            lock (_writer)
-            {
-                _writer.Reset();
-                WriteData(objectToSerialize, _writer, context);
-                result = new byte[_offset + _writer.BytesWritten];
-                var span = result.AsSpan();
-                _writer.Encode(span[_offset..]);
-            }
+            var writer = _writer.Value;
+            writer.Reset();
+            WriteData(objectToSerialize, writer, context);
+            var result = new byte[_offset + writer.BytesWritten];
+            var span = result.AsSpan();
+            writer.Encode(span[_offset..]);
+
 
             return result;
         }
-
+        
         public int Serialize(object objectToSerialize, Span<byte> destination, IEndPointContext context)
         {
-            lock (_writer)
-            {
-                _writer.Reset();
-                WriteData(objectToSerialize, _writer, context);
-                return _writer.Encode(destination);
-            }
+            var writer = _writer.Value;
+            writer.Reset();
+                WriteData(objectToSerialize, writer, context);
+                return writer.Encode(destination);
+            
         }
 
         public T Deserialize<T>(byte[] rawData, IEndPointContext? context)
@@ -110,7 +108,8 @@ namespace mROA.Cbor
             }
             catch (Exception)
             {
-                Console.WriteLine($"Bad deserialization for type {type}. Bytes: {BitConverter.ToString(rawMemory.ToArray())}");
+                Console.WriteLine(
+                    $"Bad deserialization for type {type}. Bytes: {BitConverter.ToString(rawMemory.ToArray())}");
                 throw;
             }
         }
@@ -142,7 +141,7 @@ namespace mROA.Cbor
 
         public IContextualSerializationToolKit Clone()
         {
-            return new CborSerializationToolkit(_offset) ;
+            return new CborSerializationToolkit(_offset);
         }
 
         public void WriteData(object? obj, CborWriter writer, IEndPointContext? context)

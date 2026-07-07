@@ -14,15 +14,17 @@ namespace mROA.Implementation.Backend
     {
         private readonly IConnectionHub _hub;
         private readonly UdpClient _client;
-        private readonly Dictionary<IPEndPoint, int> _reservedPorts = new();
+        private readonly Dictionary<IPEndPoint, Action<NetworkMessage>> _distributionActions = new();
         private readonly CancellationTokenSource _tokenSource = new();
         private readonly IContextualSerializationToolKit _serializationToolkit;
-
+        private readonly IDistributionModule _distribution;
+        
         public UdpGateway(IOptions<GatewayOptions> options, IConnectionHub hub,
-            IContextualSerializationToolKit serializationToolkit)
+            IContextualSerializationToolKit serializationToolkit, IDistributionModule distribution)
         {
             _hub = hub;
             _serializationToolkit = serializationToolkit;
+            _distribution = distribution;
             _client = new UdpClient(options.Value.Endpoint);
         }
 
@@ -49,13 +51,12 @@ namespace mROA.Implementation.Backend
                         {
                             case UntrustedConnect:
                                 channelId = BitConverter.ToInt32(parsed.Data);
-                                _reservedPorts[incoming.RemoteEndPoint] = channelId;
+                                _distributionActions[incoming.RemoteEndPoint] = _distribution.GetDistributionAction(channelId);
                                 _ = UntrustedSend(_hub.GetInteraction(channelId), incoming.RemoteEndPoint);
                                 break;
                             default:
-                                channelId = _reservedPorts[incoming.RemoteEndPoint];
-                                var interaction = _hub.GetInteraction(channelId);
-                                await interaction.ReceiveChanel.Writer.WriteAsync(parsed, token);
+                                _distributionActions[incoming.RemoteEndPoint].Invoke(parsed);
+                                
                                 break;
                         }
                     }

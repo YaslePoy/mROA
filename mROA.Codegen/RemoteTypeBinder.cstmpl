@@ -26,7 +26,6 @@ namespace mROA.Codegen
                         <!T eventBinderTemplate>
                         (instance as <!L type>).<!L eventName> += (<!L parametersDeclaration>) => 
                         {
-                            Console.WriteLine($"Try to send to {ownerId} with hash code {context.GetHashCode()}");
                             <!I callFilter>
                             Console.WriteLine("Sending event...");
                             var request = new CallRequest

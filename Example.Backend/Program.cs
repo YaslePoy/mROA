@@ -51,12 +51,8 @@ class Program
         builder.Services.Configure<DistributionOptions>(o => o.DistributionType = EDistributionType.ExtractorFirst);
 
         var host = builder.Build();
-//
         new RemoteTypeBinder();
-//
 
-        // var contextualSerializationToolKit = host.Services.GetService<IContextualSerializationToolKit>(); 
-        // contextualSerializationToolKit.Deserialize<NetworkMessage>(contextualSerializationToolKit.Serialize(new NetworkMessage(), null), null);
         _ = host.Services.GetService<IUntrustedGateway>()!.Start();
         var gateway = host.Services.GetService<IGatewayModule>();
         gateway.Run();

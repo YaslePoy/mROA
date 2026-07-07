@@ -39,7 +39,7 @@ class Program
         builder.Services.AddSingleton<IChannelInteractionModule, ChannelInteractionModule>();
         builder.Services.AddSingleton<IUntrustedInteractionModule, UdpUntrustedInteraction>();
         builder.Services.AddSingleton<IRepresentationModule, RepresentationModule>();
-        var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 9000);
+        var serverEndPoint = new IPEndPoint(IPAddress.Loopback, 4567);
         builder.Services.AddSingleton<IFrontendBridge, NetworkFrontendBridge>();
         
         builder.Services.AddOptions();

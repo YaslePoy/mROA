@@ -55,7 +55,7 @@ namespace mROA.Implementation.Frontend
             var initMessage = new NetworkMessage
             {
                 MessageType = EMessageType.UntrustedConnect, Id = RequestId.Generate(),
-                Data = BitConverter.GetBytes(_channelInteractionModule.ConnectionId)
+                Data = BitConverter.GetBytes(-_channelInteractionModule.ConnectionId)
             };
 
             var initParsed = _serializationToolkit.Serialize(initMessage, _context);
